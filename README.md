@@ -10,6 +10,8 @@ Projekt zawiera **trzy warianty** tego samego asystenta — z tą samą wiedzą,
 | **ai** | Model językowy Claude przez nasz serwer-pośrednik | płatne za wiadomość | najlepsze, rozumie literówki i swobodny język | tak (Cloudflare Worker, darmowy plan wystarcza) |
 | **trained** | Nasz model uczony na naszych przykładach (Naive Bayes) | 0 zł | dobre w obrębie tego, czego go nauczymy | nie |
 
+Możliwy jest też **wariant 4 — własny model na serwerze z GPU** (dane pacjentów nie opuszczają serwera kliniki). Nie jest zaimplementowany; opis, koszty i ryzyka: [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md).
+
 Podgląd: otwórz `index.html` (porównanie trzech wariantów obok siebie) lub `demo/floating.html` (tak będzie wyglądał na stronie).
 
 ## Struktura
@@ -60,6 +62,7 @@ npm run serve      # lokalny podgląd: http://localhost:8080
 - [docs/WDROZENIE.md](docs/WDROZENIE.md) — jak wstawić czat na lekarzeiterapeuci.pl, konfiguracja, RODO.
 - [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera dla wariantu AI (klucz API, model Claude Haiku).
 - [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami: limity, Turnstile, rate limiting, prompt caching.
+- [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md) — informacyjnie: wariant z własnym modelem na serwerze z GPU.
 - [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystenta (także: czy da się „wytrenować własny model”).
 - [CHANGES.md](CHANGES.md) — historia zmian i zasady wersjonowania.
 

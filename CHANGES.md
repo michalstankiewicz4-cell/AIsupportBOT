@@ -15,6 +15,9 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### Dokumentacja (bez zmiany wersji wariantów)
+- Dodano `docs/WARIANT-4-LOKALNY.md` — informacyjny opis opcjonalnego wariantu 4: własny model językowy na serwerze z GPU (architektura, modele, sprzęt, koszty, ryzyka, ścieżka wdrożenia).
+
 ### ai 1.1.1
 - Dokumentacja: docs/ZABEZPIECZENIA.md — instrukcja krok po kroku ochrony przed kosztami
 

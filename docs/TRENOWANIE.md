@@ -8,7 +8,7 @@
 |---|---|---|---|
 | 1. Wiedza + prompt | Model „uczy się” z dokumentu wiedzy i zasad doklejanych do każdego pytania (tzw. RAG / prompt engineering) | prompter — wystarczy edytować tekst | wariant **ai** (`knowledge.js` + `ai/server/prompt.js`) |
 | 2. Własny mały model | Uczymy klasyfikator na naszych przykładach pytań; on wybiera gotową, sprawdzoną odpowiedź | prompter — dopisujesz przykłady do JSON i uruchamiasz jedno polecenie | wariant **trained** |
-| 3. Fine-tuning dużego modelu | Douczanie modelu językowego na setkach–tysiącach par pytanie/odpowiedź | potrzebny programista ML, budżet, czas | nie robimy — patrz niżej |
+| 3. Fine-tuning dużego modelu | Douczanie modelu językowego na setkach–tysiącach par pytanie/odpowiedź | potrzebny programista ML, serwer z GPU, budżet, czas | nie robimy — patrz niżej i [WARIANT-4-LOKALNY.md](WARIANT-4-LOKALNY.md) |
 
 **Wniosek:** do tego zadania nie trzeba (i nie warto) douczać dużego modelu. Asystent nie ma „umieć medycyny” — ma umieć **kierować**. To świetnie robią poziomy 1 i 2, a przy medycynie mają ogromną zaletę: odpowiedzi są przewidywalne i sprawdzone przez człowieka. Fine-tuning ma sens dopiero, gdy uzbieramy tysiące prawdziwych, zanonimizowanych rozmów — i nadal wymaga kontroli, bo douczony model może „zmyślać”.
 
