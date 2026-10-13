@@ -31,6 +31,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      # Guard: do not deploy if versions/CHANGES/model are out of sync or tests fail.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Version check
+        run: node tools/check-versions.js
+      - name: Tests
+        run: node tools/test.js
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

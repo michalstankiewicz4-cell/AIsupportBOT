@@ -1,0 +1,13 @@
+{
+  "name": "aisupportbot",
+  "private": true,
+  "type": "module",
+  "description": "Asystent pacjenta dla lekarzeiterapeuci.pl — trzy warianty: bot, ai, trained",
+  "scripts": {
+    "train": "node trained/train.js",
+    "test": "node tools/test.js",
+    "check": "node tools/check-versions.js",
+    "bump": "node tools/bump.js",
+    "serve": "npx --yes http-server -p 8080 -c-1 ."
+  }
+}

@@ -1,0 +1,17 @@
+/* Styles of the demo/comparison page only (not used by the widget). */
+:root { --accent: #0e7c86; --ink: #17252a; --muted: #5d6b70; --line: #e3e8ea; --bg: #f5f7f8; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }
+.top { display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-end; padding: 28px 32px 8px; max-width: 1320px; margin: 0 auto; }
+.top h1 { margin: 0 0 6px; font-size: 24px; }
+.top p { margin: 0; color: var(--muted); }
+.top nav { display: flex; gap: 10px; align-items: center; }
+.top nav a, .top nav button { font: inherit; font-size: 14px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); text-decoration: none; cursor: pointer; }
+.top nav a:hover, .top nav button:hover { border-color: var(--accent); color: var(--accent); }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; padding: 20px 32px; max-width: 1320px; margin: 0 auto; }
+.col h2 { font-size: 18px; margin: 0 0 4px; }
+.col p { font-size: 13.5px; color: var(--muted); margin: 0 0 12px; min-height: 3.6em; }
+.tag { font-size: 12px; font-weight: 600; color: var(--accent); background: #e6f2f3; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+code { font-size: 12.5px; }
+.bottom { max-width: 1320px; margin: 0 auto; padding: 0 32px 40px; color: var(--muted); font-size: 13.5px; }
+@media (max-width: 600px) { .top, .grid, .bottom { padding-left: 16px; padding-right: 16px; } }

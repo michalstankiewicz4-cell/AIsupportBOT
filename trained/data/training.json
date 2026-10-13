@@ -1,0 +1,362 @@
+{
+  "_info": "Dane treningowe asystenta 'trained'. Klucz = id intencji z shared/js/knowledge.js, wartość = przykładowe pytania pacjentów. Po każdej zmianie uruchom: npm run train",
+  "psychiatra": [
+    "od miesięcy mam depresję i nic mnie nie cieszy",
+    "mam ataki paniki w pracy",
+    "potrzebuję psychiatry",
+    "kończą mi się leki antydepresyjne od psychiatry",
+    "ciągle czuję lęk i niepokój",
+    "podejrzewam u siebie adhd",
+    "mam stany lękowe od kilku tygodni",
+    "jestem ciągle smutny i bez energii",
+    "mam natręctwa i myśli których nie mogę zatrzymać",
+    "chcę zmienić leki psychiatryczne",
+    "czy mogę porozmawiać z psychiatrą online",
+    "mam zaburzenia nastroju",
+    "boję się wychodzić z domu",
+    "ciągle się boję i mam lęki"
+  ],
+  "psycholog": [
+    "potrzebuję z kimś porozmawiać",
+    "szukam psychologa",
+    "chciałabym zacząć terapię",
+    "jestem wypalony zawodowo",
+    "mam problemy w związku",
+    "przeżywam rozstanie i sobie nie radzę",
+    "bardzo dużo stresu w ostatnim czasie",
+    "umarł mi ktoś bliski i nie mogę się pozbierać",
+    "czuję się samotny",
+    "czy jest u was psychoterapeuta",
+    "potrzebuję wsparcia terapeuty"
+  ],
+  "bezsennosc": [
+    "nie mogę spać w nocy",
+    "mam bezsenność",
+    "budzę się co noc o trzeciej",
+    "nie mogę zasnąć od tygodnia",
+    "jakiego lekarza w sprawie problemów ze snem",
+    "źle śpię i jestem zmęczony",
+    "potrzebuję czegoś na sen",
+    "mam problem z zasypianiem"
+  ],
+  "otylosc": [
+    "chcę schudnąć",
+    "mam otyłość",
+    "mam nadwagę co robić",
+    "czy prowadzicie leczenie otyłości",
+    "interesuje mnie ozempic",
+    "nie mogę zrzucić kilogramów",
+    "moje bmi jest za wysokie",
+    "pomoc w odchudzaniu",
+    "wegovy lub mounjaro na receptę"
+  ],
+  "cukrzyca": [
+    "mam cukrzycę",
+    "wysoki cukier we krwi",
+    "potrzebuję omówić poziom glukozy",
+    "biorę metforminę",
+    "cukrzyca typu 2",
+    "kontrola cukrzycy online",
+    "insulina recepta cukrzyca"
+  ],
+  "serce": [
+    "mam wysokie ciśnienie",
+    "nadciśnienie leki",
+    "kołatanie serca",
+    "szukam kardiologa",
+    "ciśnienie 160 na 100",
+    "wysoki cholesterol",
+    "nieregularne bicie serca",
+    "problemy z sercem"
+  ],
+  "tarczyca": [
+    "mam hashimoto",
+    "niedoczynność tarczycy",
+    "wysokie tsh",
+    "biorę euthyrox",
+    "problem z tarczycą",
+    "szukam endokrynologa",
+    "zaburzenia hormonalne tarczycy"
+  ],
+  "migrena": [
+    "boli mnie głowa",
+    "mam migrenę",
+    "częste bóle głowy",
+    "migrena z aurą",
+    "ból głowy od kilku dni",
+    "szukam neurologa w sprawie migreny",
+    "napady migreny co tydzień"
+  ],
+  "zoladek": [
+    "boli mnie brzuch",
+    "mam zgagę",
+    "refluks",
+    "problemy z trawieniem",
+    "biegunka od trzech dni",
+    "ciągłe wzdęcia",
+    "zaparcia",
+    "nudności po jedzeniu",
+    "problemy żołądkowe",
+    "szukam gastrologa"
+  ],
+  "uklad_moczowy": [
+    "pieczenie przy sikaniu",
+    "zapalenie pęcherza",
+    "częste oddawanie moczu",
+    "infekcja dróg moczowych",
+    "szukam urologa",
+    "ból przy oddawaniu moczu"
+  ],
+  "skora": [
+    "mam trądzik",
+    "wysypka na rękach",
+    "szukam dermatologa",
+    "swędzi mnie skóra",
+    "łuszczyca",
+    "atopowe zapalenie skóry",
+    "wypadają mi włosy",
+    "pieprzyk zmienił kolor",
+    "pryszcze na twarzy",
+    "problem z paznokciami",
+    "egzema",
+    "swędzi mnie skóra głowy"
+  ],
+  "alergia": [
+    "mam alergię",
+    "uczulenie na pyłki",
+    "katar sienny",
+    "astma",
+    "potrzebuję inhalatora",
+    "leki wziewne na astmę",
+    "alergia na kota",
+    "kicham na wiosnę"
+  ],
+  "infekcja": [
+    "mam gorączkę",
+    "przeziębienie",
+    "boli mnie gardło",
+    "kaszel od tygodnia",
+    "chyba mam grypę",
+    "katar i ból zatok",
+    "jestem chory co robić",
+    "mam infekcję",
+    "covid objawy",
+    "potrzebuję antybiotyku"
+  ],
+  "ginekologia": [
+    "szukam ginekologa",
+    "nieregularny okres",
+    "bolesna miesiączka",
+    "jestem w ciąży",
+    "objawy menopauzy",
+    "infekcja intymna",
+    "upławy",
+    "konsultacja ginekologiczna"
+  ],
+  "antykoncepcja": [
+    "tabletki antykoncepcyjne",
+    "chcę zacząć antykoncepcję",
+    "recepta na antykoncepcję",
+    "zmiana tabletek antykoncepcyjnych",
+    "plastry antykoncepcyjne",
+    "dobór antykoncepcji"
+  ],
+  "dzien_po": [
+    "tabletka dzień po",
+    "pękła prezerwatywa",
+    "antykoncepcja awaryjna",
+    "ellaone",
+    "potrzebuję tabletki po",
+    "escapelle recepta"
+  ],
+  "trt": [
+    "niski testosteron",
+    "terapia testosteronem",
+    "trt",
+    "spadek libido",
+    "problemy z erekcją",
+    "szukam androloga",
+    "zdrowie mężczyzny testosteron"
+  ],
+  "recepta": [
+    "potrzebuję recepty",
+    "e-recepta",
+    "jak dostać receptę online",
+    "czy wystawicie receptę",
+    "recepta na lek który biorę",
+    "wypisanie recepty",
+    "ile czeka się na receptę"
+  ],
+  "l4": [
+    "potrzebuję l4",
+    "zwolnienie lekarskie",
+    "chcę zwolnienie z pracy",
+    "czy dostanę l4 online",
+    "zwolnienie chorobowe",
+    "l4 do zus"
+  ],
+  "wyniki": [
+    "mam wyniki badań do omówienia",
+    "co oznaczają moje wyniki",
+    "morfologia wyniki",
+    "omówienie wyników krwi",
+    "interpretacja badań",
+    "chcę żeby lekarz spojrzał na wyniki"
+  ],
+  "skierowanie": [
+    "potrzebuję skierowania",
+    "skierowanie na badania",
+    "skierowanie do specjalisty",
+    "skierowanie na rezonans",
+    "czy wystawiacie skierowania"
+  ],
+  "kontynuacja": [
+    "chcę przedłużyć leczenie",
+    "kontynuacja leczenia",
+    "leki na stałe",
+    "kończą mi się leki które biorę na stałe",
+    "przedłużenie terapii",
+    "stałe leki recepta"
+  ],
+  "badania_dom": [
+    "badania w domu",
+    "pobranie krwi w domu",
+    "czy przyjedzie pielęgniarka",
+    "badania z dojazdem",
+    "jak zrobić badania bez wychodzenia z domu"
+  ],
+  "inny_specjalista": [
+    "boli mnie ucho",
+    "szukam okulisty",
+    "pogorszył mi się wzrok",
+    "boli mnie ząb",
+    "czy macie pediatrę",
+    "boli mnie kręgosłup",
+    "potrzebuję ortopedy",
+    "bolą mnie stawy",
+    "laryngolog online",
+    "boli mnie kolano"
+  ],
+  "jaki_specjalista": [
+    "do jakiego lekarza mam iść",
+    "jakiego specjalisty potrzebuję",
+    "nie wiem do kogo się zgłosić",
+    "który lekarz mi pomoże",
+    "jaki specjalista",
+    "do kogo z tym problemem",
+    "potrzebuję lekarza rodzinnego",
+    "szukam internisty"
+  ],
+  "cennik": [
+    "ile kosztuje wizyta",
+    "cennik",
+    "jaka cena konsultacji",
+    "ile zapłacę za receptę",
+    "czy są ukryte opłaty",
+    "koszt l4",
+    "czy to jest na nfz",
+    "ile kosztuje psycholog",
+    "ceny usług"
+  ],
+  "jak_dziala": [
+    "jak to działa",
+    "jak wygląda konsultacja online",
+    "czy lekarz oddzwania",
+    "ile trwa konsultacja",
+    "czy to jest legalne",
+    "czy konsultacja jest przez wideo",
+    "czy to bezpieczne"
+  ],
+  "umow": [
+    "jak umówić wizytę",
+    "chcę się zapisać",
+    "umów mnie na konsultację",
+    "jak zarezerwować termin",
+    "gdzie jest formularz",
+    "wolne terminy",
+    "chcę zamówić wizytę"
+  ],
+  "kontakt": [
+    "numer telefonu",
+    "kontakt",
+    "jak się z wami skontaktować",
+    "godziny otwarcia",
+    "infolinia",
+    "adres email",
+    "do kiedy jesteście czynni",
+    "chcę zadzwonić"
+  ],
+  "dla_lekarzy": [
+    "jestem lekarzem i chcę współpracować",
+    "praca dla lekarza",
+    "rekrutacja terapeutów",
+    "oferta dla firm",
+    "zatrudnienie psychologa"
+  ],
+  "konto": [
+    "nie mogę się zalogować",
+    "zapomniałem hasła",
+    "jak założyć konto",
+    "logowanie",
+    "rejestracja konta",
+    "mój profil"
+  ],
+  "prawne": [
+    "regulamin",
+    "polityka prywatności",
+    "rodo dane osobowe",
+    "jak złożyć reklamację",
+    "zwrot pieniędzy",
+    "faktura za wizytę",
+    "pliki cookies"
+  ],
+  "powitanie": [
+    "dzień dobry",
+    "cześć",
+    "hej",
+    "witam",
+    "halo jest tam ktoś",
+    "dobry wieczór"
+  ],
+  "podziekowanie": [
+    "dziękuję",
+    "dzięki za pomoc",
+    "super dzięki",
+    "dziękuję bardzo",
+    "ok dziękuję"
+  ],
+  "opinia": [
+    "jaką dawkę leku mam brać",
+    "ile tabletek mogę wziąć",
+    "czy to rak",
+    "czy to groźne",
+    "co mi jest",
+    "co to może być",
+    "postaw mi diagnozę",
+    "czy mogę łączyć te leki",
+    "jaki lek mam brać",
+    "czy mogę brać ibuprofen z alkoholem",
+    "jakie są skutki uboczne",
+    "czy to coś poważnego"
+  ],
+  "offtopic": [
+    "jaka będzie jutro pogoda",
+    "kto wygra wybory",
+    "co sądzisz o rządzie",
+    "kto jest prezydentem",
+    "jaki był wynik meczu",
+    "opowiedz żart",
+    "napisz wiersz",
+    "przepis na pizzę",
+    "polecisz jakiś film",
+    "ile kosztuje bitcoin",
+    "napisz mi kod w javascript",
+    "jaki jest sens życia wszechświata",
+    "asdfgh qwerty",
+    "lubisz koty",
+    "zagrajmy w grę",
+    "który serial obejrzeć",
+    "co myślisz o polityce",
+    "czy będzie padać"
+  ]
+}

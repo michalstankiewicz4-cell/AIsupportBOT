@@ -1,0 +1,12 @@
+# Cloudflare Worker config for the "ai" assistant proxy.
+# Deploy from this folder:  npx wrangler deploy
+# Set the API key once:     npx wrangler secret put ANTHROPIC_API_KEY
+name = "lekarze-ai-assistant"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Pages allowed to call the Worker (comma-separated, no trailing slash).
+ALLOWED_ORIGINS = "https://lekarzeiterapeuci.pl,https://www.lekarzeiterapeuci.pl,https://michalstankiewicz4-cell.github.io"
+# Optional: override the model.
+# MODEL = "claude-haiku-5-5"

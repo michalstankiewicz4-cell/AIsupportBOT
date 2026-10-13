@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIsupportBOT — porównanie asystentów</title>
+  <link rel="stylesheet" href="demo/demo.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Asystent pacjenta — lekarzeiterapeuci.pl</h1>
+      <p>Trzy warianty tego samego asystenta. Zadaj to samo pytanie każdemu i porównaj odpowiedzi.</p>
+    </div>
+    <nav>
+      <button type="button" id="reset">Wyczyść rozmowy</button>
+      <a href="demo/floating.html?variant=bot">Podgląd na stronie (pływający)</a>
+    </nav>
+  </header>
+
+  <main class="grid">
+    <section class="col">
+      <h2>1. Bot <span class="tag">regułowy</span></h2>
+      <p>Dopasowuje słowa kluczowe. Darmowy, przewidywalny, działa offline. Rozumie tylko słowa, które mu wpisaliśmy.</p>
+      <div id="bot"></div>
+    </section>
+    <section class="col">
+      <h2>2. AI <span class="tag">model językowy</span></h2>
+      <p>Claude przez nasz serwer-pośrednik. Najlepiej rozumie swobodne pytania. Płatny za wiadomość. Bez skonfigurowanego serwera odpowiada bot.</p>
+      <div id="ai"></div>
+    </section>
+    <section class="col">
+      <h2>3. Trained <span class="tag">nasz wyuczony model</span></h2>
+      <p>Klasyfikator uczony na naszych przykładach (<code>trained/data/training.json</code>). Darmowy, offline, uczy się z nowych przykładów.</p>
+      <div id="trained"></div>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <p>Przykładowe pytania: „mam wysypkę na rękach”, „potrzebuję L4”, „ile kosztuje psychiatra”, „jaką dawkę ibuprofenu?”, „jaka jutro pogoda”, „boli mnie w klatce piersiowej”.</p>
+    <p id="versions"></p>
+  </footer>
+
+  <script type="module">
+    import { mountWidget } from './shared/js/widget.js';
+    import { botEngine } from './bot/bot-engine.js';
+    import { aiEngine } from './ai/ai-engine.js';
+    import { trainedEngine } from './trained/trained-engine.js';
+
+    const cssUrl = new URL('./shared/css/widget.css', import.meta.url).href;
+    const widgets = [botEngine, aiEngine, trainedEngine].map((engine) =>
+      mountWidget({ engine, cssUrl, container: document.getElementById(engine.name), title: 'Asystent pacjenta' })
+    );
+
+    document.getElementById('reset').addEventListener('click', () => widgets.forEach((w) => w.reset()));
+    document.getElementById('versions').textContent =
+      `Wersje: bot ${botEngine.version} · ai ${aiEngine.version} · trained ${trainedEngine.version}` +
+      (aiEngine.configured ? '' : ' · AI: tryb offline (brak endpointu w ai/config.js)');
+  </script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Podgląd widżetu na stronie</title>
+  <link rel="stylesheet" href="demo.css">
+  <style>
+    .page { max-width: 900px; margin: 0 auto; padding: 32px; }
+    .fake { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; min-height: 60vh; }
+    .switch a { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <p class="switch">Wariant: <a href="?variant=bot">bot</a><a href="?variant=ai">ai</a><a href="?variant=trained">trained</a> · <a href="../index.html">← porównanie</a></p>
+    <div class="fake">
+      <h1>Przykładowa strona kliniki</h1>
+      <p>Tak będzie wyglądał asystent na lekarzeiterapeuci.pl — przycisk w prawym dolnym rogu.</p>
+    </div>
+  </div>
+  <script>
+    // Load the chosen variant exactly like the production site will.
+    var v = new URLSearchParams(location.search).get('variant');
+    if (['bot', 'ai', 'trained'].indexOf(v) < 0) v = 'bot';
+    var s = document.createElement('script');
+    s.src = '../' + v + '/embed.js';
+    s.dataset.open = 'true';
+    document.body.appendChild(s);
+  </script>
+</body>
+</html>
