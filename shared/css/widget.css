@@ -101,7 +101,23 @@
 .logo svg { width: 26px; height: 26px; }
 .brand-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
 
-.intro-form { margin-top: auto; padding-top: 32px; display: flex; flex-direction: column; }
+/* Logo zajmuje wolne miejsce i zmniejsza się na niskich ekranach. */
+.intro-logo {
+  flex: 1 1 auto;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0 8px;
+}
+.intro-logo img {
+  display: block;
+  max-width: min(220px, 70%);
+  max-height: 100%;
+  min-height: 0;
+  object-fit: contain;
+}
+.intro-form { padding-top: 12px; display: flex; flex-direction: column; }
 .intro-title {
   margin: 0;
   font-size: 30px;
@@ -138,7 +154,7 @@
 }
 .primary:hover { filter: brightness(1.12); }
 .primary:active { transform: scale(0.99); }
-.intro-hint { margin: 16px 0 auto; text-align: center; font-size: 13px; color: var(--muted); }
+.intro-hint { margin: 16px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
 
 /* ---------- Nagłówek rozmowy ---------- */
 .header {

@@ -106,7 +106,14 @@ export function mountWidget(opts) {
   start.type = 'submit';
   const hint = el('p', 'intro-hint', 'Twoje imię będzie widoczne w historii rozmowy.');
   nameForm.append(h, lead, label, nameInput, start, hint);
-  intro.append(introTop, nameForm);
+  // Logo kliniki w wolnym miejscu między nagłówkiem a formularzem.
+  const introLogo = el('div', 'intro-logo');
+  const logoImg = el('img');
+  logoImg.src = new URL('../img/logo.png', import.meta.url).href;
+  logoImg.alt = title;
+  logoImg.decoding = 'async';
+  introLogo.append(logoImg);
+  intro.append(introTop, introLogo, nameForm);
 
   // --- Ekran 2: rozmowa ------------------------------------------------------
   const chatView = el('div', 'chat-view');

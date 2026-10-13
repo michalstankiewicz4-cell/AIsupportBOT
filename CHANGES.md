@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### bot 1.1.1
+- Logo kliniki na ekranie powitalnym (shared/img/logo.png, przezroczyste tło, skaluje się do wysokości ekranu)
+
+### ai 1.2.1
+- Logo kliniki na ekranie powitalnym (shared/img/logo.png, przezroczyste tło, skaluje się do wysokości ekranu)
+
+### trained 1.1.1
+- Logo kliniki na ekranie powitalnym (shared/img/logo.png, przezroczyste tło, skaluje się do wysokości ekranu)
+
 ### bot 1.1.0
 - Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
 
