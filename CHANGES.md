@@ -15,6 +15,9 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### ai 1.1.0
+- Prompt caching promptu systemowego (odczyt ~10% ceny), Cloudflare Turnstile + sesja 30 min przeciw botom, sekcja „Ochrona przed kosztami” w dokumentacji
+
 ### ai 1.0.1
 - Dokumentacja: szczegółowa konfiguracja Claude Haiku (klucz API, limity, wdrożenie i test Workera)
 

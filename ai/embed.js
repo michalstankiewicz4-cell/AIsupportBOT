@@ -2,7 +2,7 @@
  * Embed script for the "ai" assistant.
  * Paste on any page (e.g. before </body>):
  *   <script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/ai/embed.js" defer></script>
- * Optional attributes: data-title, data-accent="#0e7c86", data-position="left", data-open="true", data-endpoint="https://<worker>.workers.dev"
+ * Optional attributes: data-title, data-accent="#0e7c86", data-position="left", data-open="true", data-endpoint="https://<worker>.workers.dev", data-turnstile="<site key>"
  */
 (function () {
   var script = document.currentScript;

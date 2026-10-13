@@ -5,9 +5,11 @@
 // Deploy: see docs/AI-SERWER.md  (wrangler deploy, wrangler secret put ANTHROPIC_API_KEY)
 //
 // Environment variables (wrangler.toml [vars] / secrets):
-//   ANTHROPIC_API_KEY  secret, required
-//   ALLOWED_ORIGINS    comma-separated list of origins allowed to call the Worker
-//   MODEL              optional, defaults to DEFAULT_MODEL
+//   ANTHROPIC_API_KEY     secret, required
+//   TURNSTILE_SECRET_KEY  secret, optional — enables Cloudflare Turnstile anti-bot check
+//   ALLOWED_ORIGINS       comma-separated list of origins allowed to call the Worker
+//   MODEL                 optional, defaults to DEFAULT_MODEL
+//   CACHE_TTL             optional, "5m" (default) or "1h" — prompt cache lifetime
 import { buildSystemPrompt } from './prompt.js';
 import { checkSafety, cleanInput } from '../../shared/js/safety.js';
 import { SITE, OFFTOPIC_REPLY } from '../../shared/js/knowledge.js';
@@ -16,6 +18,7 @@ const DEFAULT_MODEL = 'claude-haiku-5-5';
 const MAX_HISTORY = 6; // last N messages sent as context
 const MAX_TOKENS = 400;
 const RATE_LIMIT = 20; // requests per IP per minute (best effort, per isolate)
+const SESSION_TTL_MS = 30 * 60 * 1000; // after one Turnstile check, trust the browser for 30 min
 
 const SYSTEM_PROMPT = buildSystemPrompt();
 const hits = new Map();
@@ -50,15 +53,26 @@ export default {
     const message = cleanInput(body.message);
     if (!message) return json({ error: 'empty' }, 400, cors);
 
+    // Anti-bot: valid session token, or a fresh Turnstile token that we verify.
+    let session = null;
+    if (env.TURNSTILE_SECRET_KEY) {
+      const okSession = await verifySession(body.session, ip, env.TURNSTILE_SECRET_KEY);
+      if (!okSession) {
+        const human = body.turnstile && (await verifyTurnstile(body.turnstile, ip, env.TURNSTILE_SECRET_KEY));
+        if (!human) return json({ error: 'turnstile_required' }, 401, cors);
+        session = await createSession(ip, env.TURNSTILE_SECRET_KEY);
+      }
+    }
+
     // Safety layer runs on the server too (never trust the client).
     const urgent = checkSafety(message);
-    if (urgent) return json({ reply: urgent }, 200, cors);
+    if (urgent) return json({ reply: urgent, session }, 200, cors);
 
     const history = sanitizeHistory(body.history);
 
     try {
       const text = await callModel(env, [...history, { role: 'user', content: message }]);
-      return json({ reply: { text: stripForeignLinks(text), intent: 'ai' } }, 200, cors);
+      return json({ reply: { text: stripForeignLinks(text), intent: 'ai' }, session }, 200, cors);
     } catch (err) {
       console.error('LLM error', err);
       return json({ error: 'upstream', reply: { ...OFFTOPIC_REPLY, intent: 'error' } }, 502, cors);
@@ -78,12 +92,23 @@ async function callModel(env, messages) {
       model: env.MODEL || DEFAULT_MODEL,
       max_tokens: MAX_TOKENS,
       temperature: 0.2,
-      system: SYSTEM_PROMPT,
+      // Prompt caching: the long system prompt (rules + site knowledge) is
+      // identical for every patient, so Anthropic caches it and bills
+      // repeated reads at ~10% of the normal input price.
+      system: [
+        {
+          type: 'text',
+          text: SYSTEM_PROMPT,
+          cache_control: env.CACHE_TTL === '1h' ? { type: 'ephemeral', ttl: '1h' } : { type: 'ephemeral' },
+        },
+      ],
       messages,
     }),
   });
   if (!res.ok) throw new Error(`Anthropic API ${res.status}: ${await res.text()}`);
   const data = await res.json();
+  // Visible in "wrangler tail" / Workers logs — check cache_read_input_tokens > 0.
+  console.log('usage', JSON.stringify(data.usage));
   return (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
 }
 
@@ -112,6 +137,42 @@ function stripForeignLinks(text) {
     }
   });
 }
+
+// --- Turnstile + session -----------------------------------------------------
+
+async function verifyTurnstile(token, ip, secret) {
+  const form = new FormData();
+  form.append('secret', secret);
+  form.append('response', String(token).slice(0, 2048));
+  form.append('remoteip', ip);
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+  const out = await res.json().catch(() => ({}));
+  return out.success === true;
+}
+
+// Session token = "<expiry>.<hmac(expiry|ip)>", signed with a key derived
+// from the Turnstile secret. Bound to the IP so it cannot be shared.
+async function hmac(secret, data) {
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode('session:' + secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/[+/=]/g, (c) => ({ '+': '-', '/': '_', '=': '' })[c]);
+}
+
+async function createSession(ip, secret) {
+  const exp = Date.now() + SESSION_TTL_MS;
+  return `${exp}.${await hmac(secret, `${exp}|${ip}`)}`;
+}
+
+async function verifySession(token, ip, secret) {
+  if (typeof token !== 'string' || !token.includes('.')) return false;
+  const [exp, sig] = token.split('.');
+  if (!(Number(exp) > Date.now())) return false;
+  return sig === (await hmac(secret, `${exp}|${ip}`));
+}
+
+// --- helpers -----------------------------------------------------------------
 
 function isRateLimited(ip) {
   const now = Date.now();

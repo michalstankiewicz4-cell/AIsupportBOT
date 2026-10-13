@@ -21,7 +21,8 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 
 <!-- Wariant 2: AI (wymaga serwera, patrz AI-SERWER.md) -->
 <script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/ai/embed.js"
-        data-endpoint="https://lekarze-ai-assistant.TWOJE-KONTO.workers.dev" defer></script>
+        data-endpoint="https://lekarze-ai-assistant.TWOJE-KONTO.workers.dev"
+        data-turnstile="0x4AAAAAAA...TWÓJ-SITE-KEY" defer></script>
 
 <!-- Wariant 3: nasz wyuczony model -->
 <script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/trained/embed.js" defer></script>
@@ -36,6 +37,7 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 | `data-position` | `"left"` | Przycisk po lewej (domyślnie prawa strona) |
 | `data-open` | `"true"` | Czat otwarty od razu |
 | `data-endpoint` | URL Workera | Tylko wariant AI |
+| `data-turnstile` | site key Turnstile | Tylko wariant AI — ochrona przed botami (patrz AI-SERWER.md) |
 
 ### Sterowanie z poziomu strony
 

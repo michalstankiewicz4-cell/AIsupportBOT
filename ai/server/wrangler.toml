@@ -10,3 +10,6 @@ compatibility_date = "2026-10-01"
 ALLOWED_ORIGINS = "https://lekarzeiterapeuci.pl,https://www.lekarzeiterapeuci.pl,https://michalstankiewicz4-cell.github.io"
 # Optional: override the model.
 # MODEL = "claude-haiku-5-5"
+# Prompt cache lifetime: "5m" (default, cheaper writes) or "1h" (better for low traffic).
+# CACHE_TTL = "1h"
+# Turnstile secret is set as a secret, not here:  npx wrangler secret put TURNSTILE_SECRET_KEY
