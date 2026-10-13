@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### bot 1.1.2
+- Nazwa „Lekarze i Terapeuci” wszędzie z wielkimi literami L i T
+
+### ai 1.2.2
+- Nazwa „Lekarze i Terapeuci” wszędzie z wielkimi literami L i T
+
+### trained 1.1.2
+- Nazwa „Lekarze i Terapeuci” wszędzie z wielkimi literami L i T
+
 ### bot 1.1.1
 - Logo kliniki na ekranie powitalnym (shared/img/logo.png, przezroczyste tło, skaluje się do wysokości ekranu)
 
@@ -25,13 +34,13 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 - Logo kliniki na ekranie powitalnym (shared/img/logo.png, przezroczyste tło, skaluje się do wysokości ekranu)
 
 ### bot 1.1.0
-- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
+- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i Terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
 
 ### ai 1.2.0
-- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
+- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i Terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
 
 ### trained 1.1.0
-- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
+- Nowy wygląd czatu: ekran powitalny z imieniem pacjenta, nagłówek „Lekarze i Terapeuci · Wirtualny konsultant · online”, podpisy Konsultant/imię nad dymkami, data rozmowy, okrągłe pole i przycisk wysyłania; imię zostaje w przeglądarce (nie trafia do AI). Trained: przykłady „wizyta u terapeuty”.
 
 ### bot 1.0.1
 - Komentarze w kodzie przetłumaczone na polski (na prośbę klienta); bez zmian w działaniu

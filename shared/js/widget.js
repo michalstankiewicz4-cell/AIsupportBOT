@@ -37,7 +37,7 @@ const DEGRADED_NOTE = {
  * @param {object} opts
  * @param {object} opts.engine   silnik z { name, label, version, ask() }
  * @param {string} opts.cssUrl   pełny adres shared/css/widget.css
- * @param {string} [opts.title]  nazwa w nagłówku (domyślnie „Lekarze i terapeuci”)
+ * @param {string} [opts.title]  nazwa w nagłówku (domyślnie „Lekarze i Terapeuci”)
  * @param {string} [opts.accent] kolor przewodni (CSS) — przyciski i dymki pacjenta
  * @param {'left'|'right'} [opts.position]
  * @param {boolean} [opts.open]  otwarty od razu po załadowaniu
@@ -45,7 +45,7 @@ const DEGRADED_NOTE = {
  */
 export function mountWidget(opts) {
   const { engine } = opts;
-  const title = opts.title || 'Lekarze i terapeuci';
+  const title = opts.title || 'Lekarze i Terapeuci';
   const storeKey = `lt-chat:${engine.name}`;
   const state = loadState(storeKey) || { open: !!opts.open, name: '', startedAt: 0, messages: [] };
 

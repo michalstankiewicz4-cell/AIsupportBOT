@@ -32,7 +32,7 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 
 | Atrybut | Przykład | Działanie |
 |---|---|---|
-| `data-title` | `"Lekarze i terapeuci"` | Nazwa w nagłówku i na ekranie powitalnym (domyślnie „Lekarze i terapeuci”) |
+| `data-title` | `"Lekarze i Terapeuci"` | Nazwa w nagłówku i na ekranie powitalnym (domyślnie „Lekarze i Terapeuci”) |
 | `data-accent` | `"#2e2787"` | Kolor przycisków i dymków pacjenta (domyślnie granat) |
 | `data-position` | `"left"` | Przycisk po lewej (domyślnie prawa strona) |
 | `data-open` | `"true"` | Czat otwarty od razu |
