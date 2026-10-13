@@ -28,6 +28,7 @@ const CASES = [
   ['mam wysokie ciśnienie', 'serce'],
   ['mam depresję', 'psychiatra'],
   ['chcę porozmawiać z psychologiem', 'psycholog'],
+  ['Chciałabym umówić wizytę u terapeuty', 'psycholog'],
   ['pękła prezerwatywa', 'dzien_po'],
   ['nie mogę zasnąć', 'bezsennosc'],
   ['mam hashimoto', 'tarczyca'],

@@ -2,7 +2,7 @@
  * Skrypt osadzający asystenta "ai".
  * Wklej na dowolnej stronie (np. przed </body>):
  *   <script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/ai/embed.js" defer></script>
- * Atrybuty opcjonalne: data-title, data-accent="#0e7c86", data-position="left", data-open="true", data-endpoint="https://<worker>.workers.dev", data-turnstile="<site key>"
+ * Atrybuty opcjonalne: data-title, data-accent="#2e2787", data-position="left", data-open="true", data-endpoint="https://<worker>.workers.dev", data-turnstile="<site key>"
  */
 (function () {
   var script = document.currentScript;

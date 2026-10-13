@@ -32,8 +32,8 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 
 | Atrybut | Przykład | Działanie |
 |---|---|---|
-| `data-title` | `"Asystent pacjenta"` | Tytuł w nagłówku czatu |
-| `data-accent` | `"#0e7c86"` | Kolor przewodni (dopasuj do strony) |
+| `data-title` | `"Lekarze i terapeuci"` | Nazwa w nagłówku i na ekranie powitalnym (domyślnie „Lekarze i terapeuci”) |
+| `data-accent` | `"#2e2787"` | Kolor przycisków i dymków pacjenta (domyślnie granat) |
 | `data-position` | `"left"` | Przycisk po lewej (domyślnie prawa strona) |
 | `data-open` | `"true"` | Czat otwarty od razu |
 | `data-endpoint` | URL Workera | Tylko wariant AI |
@@ -62,4 +62,5 @@ Gdy na stronie zmienią się zakładki, ceny lub numer infolinii — popraw `sha
 - **Bot i trained** działają w całości w przeglądarce pacjenta — treść pytań **nigdzie nie jest wysyłana**.
 - **AI** wysyła treść pytania do Cloudflare i do dostawcy modelu (Anthropic). Pytania o zdrowie to dane szczególnej kategorii (art. 9 RODO), więc przed uruchomieniem wariantu AI klient powinien: uwzględnić to w polityce prywatności, mieć umowy powierzenia (DPA) z dostawcami i ocenić transfer danych poza EOG. Czat i tak prosi pacjenta, by nie podawał danych osobowych.
 - Asystent nie stawia diagnoz, tylko kieruje do usług — warto jednak, by klient potwierdził z prawnikiem, że taka forma nie wymaga certyfikacji jako wyrób medyczny.
+- Imię pacjenta (ekran powitalny) służy tylko do wyświetlania w oknie czatu: zostaje w przeglądarce i **nie jest wysyłane** do serwera AI.
 - Rozmowa jest zapamiętywana tylko w `sessionStorage` przeglądarki (znika po zamknięciu karty), żeby nie ginęła przy przejściu na inną zakładkę strony.
