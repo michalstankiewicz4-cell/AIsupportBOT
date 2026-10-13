@@ -39,6 +39,12 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 | `data-endpoint` | URL Workera | Tylko wariant AI |
 | `data-turnstile` | site key Turnstile | Tylko wariant AI — ochrona przed botami (patrz AI-SERWER.md) |
 
+### Imię konsultantki i logo
+
+- Imię wirtualnej konsultantki („Ilona”) ustawia się w `shared/js/knowledge.js` → `SITE.assistant` (oraz `SITE.assistantWith` — forma „z Iloną”). Zmienia się wtedy wszędzie: w czacie i w prompcie AI.
+- Konsultantka zawsze przedstawia się jako **wirtualna** — nie udaje człowieka (ważne także prawnie: pacjent musi wiedzieć, że rozmawia z AI).
+- Logo na ekranie powitalnym: `shared/img/logo.png`; miniatura przy imieniu konsultantki: `shared/img/avatar.png`.
+
 ### Sterowanie z poziomu strony
 
 Po załadowaniu dostępny jest obiekt `window.LTChat`, np. przycisk „Zapytaj asystenta”:

@@ -1,5 +1,5 @@
 // Interfejs widżetu czatu, wspólny dla trzech asystentów.
-// Dwa ekrany: (1) podanie imienia, (2) rozmowa z "wirtualnym konsultantem".
+// Dwa ekrany: (1) podanie imienia, (2) rozmowa z wirtualną konsultantką (SITE.assistant).
 // Renderowany w Shadow DOM, żeby CSS strony go nie psuł
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
@@ -14,14 +14,15 @@ const ICON_CLOSE =
 const ICON_SEND =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-const BOT_LABEL = 'Konsultant';
+const BOT_LABEL = SITE.assistant; // np. „Ilona”
+const AVATAR_URL = new URL('../img/avatar.png', import.meta.url).href;
 const CHIPS = ['Jakiego specjalisty potrzebuję?', 'Cennik', 'Jak umówić wizytę?', 'Kontakt'];
 const NAME_MAX = 40;
 
 const greetingFor = (name) => ({
   role: 'bot',
   greeting: true, // nie wysyłamy do AI — imię zostaje w przeglądarce
-  text: `Dzień dobry, ${name}! Jestem wirtualnym konsultantem. W czym mogę pomóc?`,
+  text: `Dzień dobry, ${name}! Jestem ${SITE.assistant}, wirtualna konsultantka. W czym mogę pomóc?`,
   chips: CHIPS,
 });
 
@@ -68,12 +69,12 @@ export function mountWidget(opts) {
 
   const launcher = el('button', 'launcher');
   launcher.type = 'button';
-  launcher.setAttribute('aria-label', 'Otwórz czat z konsultantem');
+  launcher.setAttribute('aria-label', `Otwórz czat — ${SITE.assistant}, wirtualna konsultantka`);
   launcher.innerHTML = ICON_BUBBLE;
 
   const panel = el('section', 'panel');
   panel.setAttribute('role', 'dialog');
-  panel.setAttribute('aria-label', `${title} — wirtualny konsultant`);
+  panel.setAttribute('aria-label', `${title} — ${SITE.assistant}, wirtualna konsultantka`);
 
   const closeBtn = el('button', 'close');
   closeBtn.type = 'button';
@@ -92,7 +93,7 @@ export function mountWidget(opts) {
 
   const nameForm = el('form', 'intro-form');
   const h = el('h2', 'intro-title', 'Dzień dobry! Proszę podać swoje imię.');
-  const lead = el('p', 'intro-lead', 'Proszę wpisać imię, aby rozpocząć rozmowę z konsultantem.');
+  const lead = el('p', 'intro-lead', `Proszę wpisać imię, aby rozpocząć rozmowę z ${SITE.assistantWith}, naszą wirtualną konsultantką.`);
   const nameId = `lt-name-${engine.name}`;
   const label = el('label', 'intro-label', 'Imię');
   label.htmlFor = nameId;
@@ -122,7 +123,7 @@ export function mountWidget(opts) {
   avatar.innerHTML = ICON_BUBBLE;
   avatar.append(el('span', 'status-dot'));
   const titleBox = el('div', 'title');
-  titleBox.append(el('strong', '', title), el('span', 'subtitle', 'Wirtualny konsultant · online'));
+  titleBox.append(el('strong', '', title), el('span', 'subtitle', `${SITE.assistant} · wirtualna konsultantka · online`));
   header.title = `${engine.label} · ${engine.name} v${engine.version}`;
   header.append(avatar, titleBox);
   if (!inline) header.append(closeBtn);
@@ -151,7 +152,7 @@ export function mountWidget(opts) {
   // --- Wyświetlanie ----------------------------------------------------------
   function renderIntroLines() {
     log.append(el('div', 'day', formatDay(state.startedAt)));
-    const notice = el('div', 'notice', 'Konsultant nie udziela porad medycznych. W nagłym zagrożeniu życia dzwoń 112. Infolinia: ');
+    const notice = el('div', 'notice', 'Wirtualna konsultantka nie udziela porad medycznych. W nagłym zagrożeniu życia dzwoń 112. Infolinia: ');
     const tel = el('a', '', SITE.phone);
     tel.href = SITE.phoneHref;
     notice.append(tel);
@@ -160,7 +161,7 @@ export function mountWidget(opts) {
 
   function renderMessage(msg, animate = true) {
     const item = el('div', `msg ${msg.role}${msg.emergency ? ' emergency' : ''}${animate ? ' enter' : ''}`);
-    item.append(el('div', 'who', msg.role === 'user' ? state.name : BOT_LABEL));
+    item.append(whoRow(msg.role === 'user' ? state.name : BOT_LABEL, msg.role !== 'user'));
     const bubble = el('div', 'bubble');
     appendLinkified(bubble, msg.text);
     item.append(bubble);
@@ -196,7 +197,7 @@ export function mountWidget(opts) {
 
   function showTyping() {
     const t = el('div', 'msg bot typing');
-    t.append(el('div', 'who', `${BOT_LABEL} pisze…`));
+    t.append(whoRow(`${BOT_LABEL} pisze…`, true));
     const b = el('div', 'bubble');
     b.append(el('i'), el('i'), el('i'));
     t.append(b);
@@ -329,6 +330,19 @@ export function mountWidget(opts) {
 }
 
 // --- funkcje pomocnicze ------------------------------------------------------
+
+// Podpis nad dymkiem; przy konsultantce — miniatura logo jak zdjęcie profilowe.
+function whoRow(name, withAvatar) {
+  const row = el('div', 'who');
+  if (withAvatar) {
+    const img = el('img', 'who-avatar');
+    img.src = AVATAR_URL;
+    img.alt = '';
+    row.append(img);
+  }
+  row.append(el('span', '', name));
+  return row;
+}
 
 function el(tag, className = '', text) {
   const node = document.createElement(tag);

@@ -8,6 +8,8 @@
 
 export const SITE = {
   name: 'Lekarze i Terapeuci',
+  assistant: 'Ilona', // imię wirtualnej konsultantki widoczne w czacie i w prompcie AI
+  assistantWith: 'Iloną', // to samo imię w narzędniku („rozmowa z Iloną”)
   base: 'https://lekarzeiterapeuci.pl',
   phone: '+48 881 238 227',
   phoneHref: 'tel:+48881238227',
@@ -53,7 +55,7 @@ export const OFFTOPIC_REPLY = {
 // Odpowiedź, gdy nic nie zostało dopasowane z wystarczającą pewnością.
 export const FALLBACK_REPLY = {
   text:
-    'Nie jestem pewien, czego dotyczy pytanie. Proszę opisać krótko, z jakim problemem zdrowotnym lub usługą jest związane ' +
+    'Nie jestem pewna, czego dotyczy pytanie. Proszę opisać krótko, z jakim problemem zdrowotnym lub usługą jest związane ' +
     `(np. „skóra”, „recepta”, „L4”), albo skontaktować się z infolinią: ${SITE.phone}.`,
   links: [PAGES.book, PAGES.phone],
   chips: ['Jakiego specjalisty potrzebuję?', 'Cennik', 'Jak umówić wizytę?'],

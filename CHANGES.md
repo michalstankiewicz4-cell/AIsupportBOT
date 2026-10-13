@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### bot 1.2.0
+- Konsultantka „Ilona” (imię w SITE.assistant) z miniaturą logo przy podpisie jak zdjęcie profilowe; AI przedstawia się jako Ilona, wirtualna konsultantka (nie udaje człowieka); formy żeńskie w odpowiedziach
+
+### ai 1.3.0
+- Konsultantka „Ilona” (imię w SITE.assistant) z miniaturą logo przy podpisie jak zdjęcie profilowe; AI przedstawia się jako Ilona, wirtualna konsultantka (nie udaje człowieka); formy żeńskie w odpowiedziach
+
+### trained 1.2.0
+- Konsultantka „Ilona” (imię w SITE.assistant) z miniaturą logo przy podpisie jak zdjęcie profilowe; AI przedstawia się jako Ilona, wirtualna konsultantka (nie udaje człowieka); formy żeńskie w odpowiedziach
+
 ### bot 1.1.2
 - Nazwa „Lekarze i Terapeuci” wszędzie z wielkimi literami L i T
 

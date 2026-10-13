@@ -4,7 +4,7 @@
 :host { all: initial; }
 
 .chat {
-  --brand: #14937c;          /* zieleń marki: logo, „Konsultant”, status */
+  --brand: #14937c;          /* zieleń marki: logo, imię konsultantki, status */
   --accent: #2e2787;         /* granat: przyciski, dymki pacjenta */
   --accent-ink: #ffffff;
   --mint: #dbf2ea;           /* dymki konsultanta */
@@ -231,7 +231,17 @@
 .msg.user { align-self: flex-end; align-items: flex-end; }
 .msg.bot { align-self: flex-start; }
 
-.who { font-size: 13px; font-weight: 700; }
+.who { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; }
+/* Miniatura logo przy imieniu konsultantki — jak zdjęcie profilowe, ale zaokrąglony kwadrat. */
+.who-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #fff;
+  border: 1px solid var(--line);
+  object-fit: cover;
+  flex: none;
+}
 .bot .who { color: var(--brand); }
 .user .who { color: var(--accent); }
 
