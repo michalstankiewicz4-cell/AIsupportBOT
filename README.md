@@ -58,7 +58,8 @@ npm run serve      # lokalny podgląd: http://localhost:8080
 ## Dokumentacja
 
 - [docs/WDROZENIE.md](docs/WDROZENIE.md) — jak wstawić czat na lekarzeiterapeuci.pl, konfiguracja, RODO.
-- [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera dla wariantu AI (klucz API, koszty).
+- [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera dla wariantu AI (klucz API, model Claude Haiku).
+- [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami: limity, Turnstile, rate limiting, prompt caching.
 - [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystenta (także: czy da się „wytrenować własny model”).
 - [CHANGES.md](CHANGES.md) — historia zmian i zasady wersjonowania.
 
