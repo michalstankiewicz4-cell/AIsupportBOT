@@ -15,6 +15,9 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### ai 1.0.1
+- Dokumentacja: szczegółowa konfiguracja Claude Haiku (klucz API, limity, wdrożenie i test Workera)
+
 ### bot 1.0.0
 - Pierwsza wersja asystenta regułowego: dopasowanie słów kluczowych do 36 intencji (specjaliści, usługi, cennik, kontakt).
 - Odmowa opinii medycznych i dawkowania; przy pytaniu „lek + temat” odmowa połączona ze wskazaniem zakładki.

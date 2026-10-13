@@ -13,20 +13,41 @@ Bez serwera wariant AI też działa — odpowiada wtedy bot regułowy, a w czaci
 
 ## Krok po kroku (Windows, terminal w VS Code)
 
-1. **Klucz API** — załóż konto na [console.anthropic.com](https://console.anthropic.com), utwórz klucz i **ustaw limit wydatków** (Billing → Limits).
-2. **Konto Cloudflare** — darmowe, [dash.cloudflare.com](https://dash.cloudflare.com).
-3. W folderze projektu:
+Model **Claude Haiku 5.5** (`claude-haiku-5-5`) jest ustawiony domyślnie — nic nie trzeba wybierać.
 
-   ```bash
-   cd ai/server
-   npx wrangler login
-   npx wrangler secret put ANTHROPIC_API_KEY     # wklej klucz, gdy poprosi
+1. **Klucz API** — na [console.anthropic.com](https://console.anthropic.com):
+   - załóż konto i doładuj saldo (**Billing**) — API rozlicza się osobno, subskrypcja Claude Pro/Max go nie obejmuje,
+   - w **Settings → Limits** ustaw miesięczny limit wydatków (np. 20 USD),
+   - w **API Keys → Create Key** utwórz klucz i skopiuj go (pokazuje się tylko raz).
+2. **Konto Cloudflare** — darmowe: [dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up).
+3. **Pobierz repo:**
+
+   ```powershell
+   cd C:\Users\micha\vsrepos
+   git clone https://github.com/michalstankiewicz4-cell/AIsupportBOT
+   cd AIsupportBOT\ai\server
+   ```
+
+4. **Wdróż Workera:**
+
+   ```powershell
+   npx wrangler login                          # otworzy przeglądarkę — zaloguj się do Cloudflare
+   npx wrangler secret put ANTHROPIC_API_KEY   # wklej klucz z kroku 1, Enter
    npx wrangler deploy
    ```
 
-   Na końcu pojawi się adres, np. `https://lekarze-ai-assistant.twoje-konto.workers.dev`.
-4. Wpisz ten adres w `ai/config.js` (`endpoint: '...'`) **albo** podaj go na stronie w atrybucie `data-endpoint` (patrz WDROZENIE.md).
-5. Podbij wersję: `npm run bump -- ai patch "Podłączenie serwera AI"` i zrób push.
+   Na końcu pojawi się adres, np. `https://lekarze-ai-assistant.twoja-nazwa.workers.dev`.
+5. **Test:**
+
+   ```powershell
+   Invoke-RestMethod -Method Post -Uri "https://lekarze-ai-assistant.twoja-nazwa.workers.dev" `
+     -Headers @{ Origin = "https://lekarzeiterapeuci.pl" } -ContentType "application/json" `
+     -Body '{"message":"mam wysypkę na rękach"}' | ConvertTo-Json -Depth 5
+   ```
+
+   W odpowiedzi powinien być tekst od modelu z linkiem do „Dermatologia online”. Błąd `forbidden_origin` = brak nagłówka `Origin` lub domeny w `ALLOWED_ORIGINS`.
+6. **Podłącz do czatu** — wpisz adres w `ai/config.js` (`endpoint: '...'`) **albo** podaj go na stronie w atrybucie `data-endpoint` (patrz WDROZENIE.md).
+7. **Podbij wersję i wypchnij:** `npm run bump -- ai patch "Podłączenie serwera AI"`, potem `git push`.
 
 ## Konfiguracja (`ai/server/wrangler.toml`)
 
