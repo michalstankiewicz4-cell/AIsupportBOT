@@ -1,10 +1,10 @@
-// Bumps the version of one (or all) assistants and records the change.
-// Usage:
+// Podbija wersję jednego (lub wszystkich) asystentów i zapisuje zmianę.
+// Użycie:
 //   npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
-// Example:
+// Przykład:
 //   npm run bump -- trained minor "Dodano 20 przykładów o alergiach"
-// Updates <variant>/version.js, versions.json and CHANGES.md;
-// for "trained" also retrains the model so model.json carries the new version.
+// Aktualizuje <wariant>/version.js, versions.json i CHANGES.md;
+// dla "trained" dodatkowo trenuje model, żeby model.json miał nową wersję.
 import { execFileSync } from 'node:child_process';
 import {
   VARIANTS, read, write, path, readVariantVersion, writeVariantVersion, readVersionsJson, bumpSemver,
@@ -31,7 +31,7 @@ for (const v of targets) {
 }
 write('versions.json', JSON.stringify(versions, null, 2) + '\n');
 
-// Insert into CHANGES.md under today's date (newest on top).
+// Wstawia wpis do CHANGES.md pod dzisiejszą datą (najnowsze na górze).
 const today = new Date().toISOString().slice(0, 10);
 let changes = read('CHANGES.md');
 const marker = '<!-- NEW ENTRIES BELOW -->';

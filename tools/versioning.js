@@ -1,4 +1,4 @@
-// Shared helpers for version tooling (check-versions.js, bump.js).
+// Wspólne funkcje narzędzi wersjonowania (check-versions.js, bump.js).
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';

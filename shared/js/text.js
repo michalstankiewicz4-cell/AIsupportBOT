@@ -1,12 +1,12 @@
-// Text utilities shared by all three assistants (bot, ai, trained).
-// Works both in the browser and in Node (pure ES module, no dependencies).
+// Narzędzia tekstowe wspólne dla trzech asystentów (bot, ai, trained).
+// Działa w przeglądarce i w Node (czysty moduł ES, bez zależności).
 
 const DIACRITICS = {
   'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
   'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
 };
 
-// Lowercase, strip Polish diacritics and punctuation, collapse whitespace.
+// Małe litery, usunięcie polskich znaków i interpunkcji, scalenie spacji.
 export function normalize(input) {
   return String(input || '')
     .toLowerCase()
@@ -16,9 +16,9 @@ export function normalize(input) {
     .trim();
 }
 
-// Very light Polish "stemmer": trims common inflection endings so that
-// "glowa", "glowy", "glowie" end up close to each other.
-// Longest suffixes first. Words shorter than 5 chars are left untouched.
+// Bardzo prosty polski "stemmer": obcina typowe końcówki fleksyjne, żeby
+// "glowa", "glowy", "glowie" dawały podobny rdzeń.
+// Najpierw najdłuższe końcówki. Słowa krótsze niż 5 znaków zostają bez zmian.
 const SUFFIXES = [
   'owania', 'owanie', 'ami', 'ach', 'owi', 'ego', 'emu', 'ymi', 'imi',
   'ych', 'ich', 'iem', 'om', 'ow', 'ie', 'ia', 'iu', 'ej', 'em',
@@ -35,7 +35,7 @@ export function stem(word) {
   return word;
 }
 
-// Common Polish stop words that carry no routing signal.
+// Popularne polskie słowa nieistotne dla kierowania (stop words).
 const STOP = new Set([
   'i', 'w', 'z', 'na', 'do', 'od', 'po', 'za', 'o', 'u', 'a', 'ale', 'czy',
   'ze', 'sie', 'to', 'jest', 'jestem', 'mam', 'mi', 'mnie', 'moj', 'moja',
@@ -45,7 +45,7 @@ const STOP = new Set([
   'szukam', 'potrzebuje', 'problem', 'problemy', 'problemem', 'online', 'jakis', 'cos', 'czegos',
 ]);
 
-// Tokenize into stemmed unigrams (stop words removed).
+// Podział na słowa (rdzenie), bez stop words.
 export function tokens(input) {
   return normalize(input)
     .split(' ')
@@ -53,10 +53,10 @@ export function tokens(input) {
     .map(stem);
 }
 
-// Features for the trained classifier:
-//   - stemmed unigrams          ("dermatolog")
-//   - 5-letter word prefixes    ("p:derma") — helps with Polish inflection
-//   - bigrams                   ("bol_glow")
+// Cechy dla klasyfikatora trained:
+//   - rdzenie słów                ("dermatolog")
+//   - 5-literowe początki słów  ("p:derma") — pomagają przy polskiej odmianie
+//   - pary sąsiednich słów       ("bol_glow")
 export function features(input) {
   const t = tokens(input);
   const out = [...t];
@@ -65,8 +65,8 @@ export function features(input) {
   return out;
 }
 
-// True if any of the (already normalized) phrases occurs in the normalized text.
-// Phrases are matched on word boundaries; a trailing "*" means "prefix".
+// true, jeśli którakolwiek (znormalizowana) fraza występuje w znormalizowanym tekście.
+// Frazy dopasowujemy na granicach słów; "*" na końcu oznacza "początek słowa".
 export function containsAny(normText, phrases) {
   const padded = ' ' + normText + ' ';
   return phrases.some((p) => {

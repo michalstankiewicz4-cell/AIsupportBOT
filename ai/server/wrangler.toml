@@ -1,15 +1,15 @@
-# Cloudflare Worker config for the "ai" assistant proxy.
-# Deploy from this folder:  npx wrangler deploy
-# Set the API key once:     npx wrangler secret put ANTHROPIC_API_KEY
+# Konfiguracja Cloudflare Workera — pośrednika asystenta "ai".
+# Wdrożenie z tego folderu:  npx wrangler deploy
+# Klucz API ustaw raz:       npx wrangler secret put ANTHROPIC_API_KEY
 name = "lekarze-ai-assistant"
 main = "worker.js"
 compatibility_date = "2026-10-01"
 
 [vars]
-# Pages allowed to call the Worker (comma-separated, no trailing slash).
+# Strony, które mogą wywoływać Workera (po przecinku, bez ukośnika na końcu).
 ALLOWED_ORIGINS = "https://lekarzeiterapeuci.pl,https://www.lekarzeiterapeuci.pl,https://michalstankiewicz4-cell.github.io"
-# Optional: override the model.
+# Opcjonalnie: zmiana modelu.
 # MODEL = "claude-haiku-5-5"
-# Prompt cache lifetime: "5m" (default, cheaper writes) or "1h" (better for low traffic).
+# Czas życia cache promptu: "5m" (domyślnie, tańszy zapis) lub "1h" (lepsze przy małym ruchu).
 # CACHE_TTL = "1h"
-# Turnstile secret is set as a secret, not here:  npx wrangler secret put TURNSTILE_SECRET_KEY
+# Sekret Turnstile ustawia się jako sekret, nie tutaj:  npx wrangler secret put TURNSTILE_SECRET_KEY

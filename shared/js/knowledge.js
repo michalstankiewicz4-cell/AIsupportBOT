@@ -1,10 +1,10 @@
-// Knowledge base for lekarzeiterapeuci.pl — the single source of truth for
-// all three assistants. Edit here (not in the engines) when the website
-// changes: tabs, prices, phone number, services.
+// Baza wiedzy o lekarzeiterapeuci.pl — jedno źródło prawdy dla
+// wszystkich trzech asystentów. Gdy zmieni się strona (zakładki, ceny, telefon,
+// usługi), poprawiaj tutaj, a nie w silnikach.
 //
-// Keywords are written WITHOUT Polish diacritics and lowercase
-// (see shared/js/text.js normalize()). A trailing "*" means "word prefix",
-// e.g. "alergi*" matches "alergia", "alergii", "alergiczny".
+// Słowa kluczowe piszemy BEZ polskich znaków i małymi literami
+// (patrz normalize() w shared/js/text.js). Gwiazdka "*" na końcu oznacza "początek słowa",
+// np. "alergi*" pasuje do "alergia", "alergii", "alergiczny".
 
 export const SITE = {
   name: 'Lekarze i Terapeuci',
@@ -19,7 +19,7 @@ const B = SITE.base;
 const form = (service) =>
   service ? `${B}/wypelnij-formularz?service=${encodeURIComponent(service).replace(/%20/g, '+')}` : `${B}/wypelnij-formularz`;
 
-// Website tabs / pages the assistant may point to.
+// Zakładki / podstrony, do których asystent może kierować.
 export const PAGES = {
   book: { label: 'Umów wizytę', url: form() },
   services: { label: 'Usługi', url: `${B}/#uslugi` },
@@ -38,11 +38,11 @@ export const PAGES = {
   phone: { label: `Zadzwoń: ${SITE.phone}`, url: SITE.phoneHref },
 };
 
-// Sentence appended to every routing answer — the core rule of the assistant.
+// Zdanie dopisywane do każdej odpowiedzi kierującej — główna zasada asystenta.
 export const DOCTOR_FIRST =
   'Nie oceniam objawów ani nie udzielam porad medycznych — najlepszą drogą jest zawsze konsultacja z lekarzem.';
 
-// Standard reply for off-topic / nonsense questions (as required by the brief).
+// Stała odpowiedź na pytania nie na temat / bez sensu (zgodnie z założeniami).
 export const OFFTOPIC_REPLY = {
   text:
     'Jestem asystentem serwisu Lekarze i Terapeuci i pomagam tylko w sprawach związanych z naszymi usługami i konsultacjami. ' +
@@ -50,7 +50,7 @@ export const OFFTOPIC_REPLY = {
   links: [PAGES.phone, PAGES.contact],
 };
 
-// Reply when nothing matched with enough confidence.
+// Odpowiedź, gdy nic nie zostało dopasowane z wystarczającą pewnością.
 export const FALLBACK_REPLY = {
   text:
     'Nie jestem pewien, czego dotyczy pytanie. Proszę opisać krótko, z jakim problemem zdrowotnym lub usługą jest związane ' +
@@ -59,7 +59,7 @@ export const FALLBACK_REPLY = {
   chips: ['Jakiego specjalisty potrzebuję?', 'Cennik', 'Jak umówić wizytę?'],
 };
 
-// Reply to requests for diagnosis, dosage or an opinion — always declined.
+// Odpowiedź na prośby o diagnozę, dawkowanie lub opinię — zawsze odmowa.
 export const NO_OPINION_REPLY = {
   text:
     'Nie mogę ocenić objawów, postawić diagnozy ani doradzić dawkowania leków — to może zrobić wyłącznie lekarz. ' +
@@ -67,7 +67,7 @@ export const NO_OPINION_REPLY = {
   links: [PAGES.book, PAGES.phone],
 };
 
-// Emergency reply (shown by shared/js/safety.js before any engine runs).
+// Odpowiedź w stanie nagłym (pokazuje ją shared/js/safety.js przed uruchomieniem silnika).
 export const EMERGENCY_REPLY = {
   text:
     'To może być stan nagły. Proszę natychmiast zadzwonić pod numer alarmowy 112 lub 999 (pogotowie) albo udać się na najbliższy SOR. ' +
@@ -90,17 +90,17 @@ export const CRISIS_REPLY = {
 };
 
 // ---------------------------------------------------------------------------
-// Intents. Each intent has:
-//   id        — stable identifier (used by the trained model and tests)
-//   keywords  — routing keywords for the rule-based bot
-//   answer    — { text, links, chips? } shown to the user
-//   routing   — true if this is a "which specialist" answer (adds DOCTOR_FIRST)
+// Intencje. Każda intencja ma:
+//   id        — stały identyfikator (używany przez model trained i testy)
+//   keywords  — słowa kluczowe dla bota regułowego
+//   answer    — { text, links, chips? } pokazywane pacjentowi
+//   routing   — true, jeśli to odpowiedź "do jakiego specjalisty" (dodaje DOCTOR_FIRST)
 // ---------------------------------------------------------------------------
 
 const svc = (label, service) => ({ label, url: form(service) });
 
 export const INTENTS = [
-  // --- Routing to a specialist / service -----------------------------------
+  // --- Kierowanie do specjalisty / usługi -----------------------------------
   {
     id: 'psychiatra',
     routing: true,
@@ -328,7 +328,7 @@ export const INTENTS = [
     },
   },
 
-  // --- Information about the service ---------------------------------------
+  // --- Informacje o serwisie ------------------------------------------------
   {
     id: 'cennik',
     keywords: ['cena', 'ceny', 'cenie', 'cenach', 'cennik*', 'koszt*', 'kosztuj*', 'ile placi*', 'zaplac*', 'platnosc*', 'oplat*', 'zl', 'zlotych', 'nfz', 'refundac*', 'darmow*'],
@@ -347,7 +347,7 @@ export const INTENTS = [
   },
   {
     id: 'umow',
-    weight: 0.8, // generic words — a specific service should win
+    weight: 0.8, // ogólne słowa — konkretna usługa powinna wygrać
     keywords: ['umow*', 'zapis*', 'rezerw*', 'termin*', 'wizyt*', 'konsultacj*', 'zamow*', 'formularz*'],
     answer: {
       text: 'Wizytę umówisz przyciskiem „Umów wizytę”: wybierasz usługę, specjalistę oraz dzień i godzinę konsultacji telefonicznej lub wideo.',
@@ -415,7 +415,7 @@ export const INTENTS = [
 
 export const INTENT_BY_ID = Object.fromEntries(INTENTS.map((i) => [i.id, i]));
 
-// Build the final reply object for an intent id (adds the doctor-first rule).
+// Buduje końcową odpowiedź dla id intencji (dodaje zasadę „najpierw lekarz”).
 export function replyFor(intentId) {
   const intent = INTENT_BY_ID[intentId];
   if (!intent) return { ...FALLBACK_REPLY, intent: 'fallback' };
@@ -424,8 +424,8 @@ export function replyFor(intentId) {
   return { text, links: a.links || [], chips: a.chips || [], intent: intentId };
 }
 
-// Compact plain-text description of the site, injected into the LLM prompt
-// (ai variant), so the model only ever points to real tabs and URLs.
+// Zwięzły tekstowy opis strony wstawiany do promptu modelu
+// (wariant ai), żeby model wskazywał tylko prawdziwe zakładki i adresy.
 export function knowledgeAsText() {
   const lines = [];
   lines.push(`Serwis: ${SITE.name} (${SITE.base}) — konsultacje lekarskie i terapeutyczne online (telefon/wideo).`);
@@ -441,8 +441,8 @@ export function knowledgeAsText() {
   return lines.join('\n');
 }
 
-// When the user asks for an opinion/dosage AND mentions a topic
-// (e.g. "jaki lek na trądzik?"), decline the opinion but still route.
+// Gdy pacjent prosi o opinię/dawkowanie I wspomina temat
+// (np. "jaki lek na trądzik?"), odmawiamy opinii, ale wskazujemy zakładkę.
 export function replyForOpinionWithTopic(routingId) {
   const r = replyFor(routingId);
   return {

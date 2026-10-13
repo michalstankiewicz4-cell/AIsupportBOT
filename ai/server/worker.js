@@ -1,24 +1,24 @@
-// Cloudflare Worker — secure proxy between the website widget and the LLM API.
-// Why a proxy: the API key must NEVER be in the browser (anyone could read it
-// from the page source). The key lives here as a Worker secret.
+// Cloudflare Worker — bezpieczny pośrednik między widżetem na stronie a API modelu.
+// Po co pośrednik: klucz API NIGDY nie może trafić do przeglądarki (każdy mógłby go
+// odczytać ze źródła strony). Klucz jest tu przechowywany jako sekret Workera.
 //
-// Deploy: see docs/AI-SERWER.md  (wrangler deploy, wrangler secret put ANTHROPIC_API_KEY)
+// Wdrożenie: patrz docs/AI-SERWER.md  (wrangler deploy, wrangler secret put ANTHROPIC_API_KEY)
 //
-// Environment variables (wrangler.toml [vars] / secrets):
-//   ANTHROPIC_API_KEY     secret, required
-//   TURNSTILE_SECRET_KEY  secret, optional — enables Cloudflare Turnstile anti-bot check
-//   ALLOWED_ORIGINS       comma-separated list of origins allowed to call the Worker
-//   MODEL                 optional, defaults to DEFAULT_MODEL
-//   CACHE_TTL             optional, "5m" (default) or "1h" — prompt cache lifetime
+// Zmienne środowiskowe (wrangler.toml [vars] / sekrety):
+//   ANTHROPIC_API_KEY     sekret, wymagany
+//   TURNSTILE_SECRET_KEY  sekret, opcjonalny — włącza ochronę przed botami Cloudflare Turnstile
+//   ALLOWED_ORIGINS       lista domen (po przecinku), które mogą wywoływać Workera
+//   MODEL                 opcjonalny, domyślnie DEFAULT_MODEL
+//   CACHE_TTL             opcjonalny, "5m" (domyślnie) lub "1h" — czas życia cache promptu
 import { buildSystemPrompt } from './prompt.js';
 import { checkSafety, cleanInput } from '../../shared/js/safety.js';
 import { SITE, OFFTOPIC_REPLY } from '../../shared/js/knowledge.js';
 
 const DEFAULT_MODEL = 'claude-haiku-5-5';
-const MAX_HISTORY = 6; // last N messages sent as context
+const MAX_HISTORY = 6; // ile ostatnich wiadomości wysyłamy jako kontekst
 const MAX_TOKENS = 400;
-const RATE_LIMIT = 20; // requests per IP per minute (best effort, per isolate)
-const SESSION_TTL_MS = 30 * 60 * 1000; // after one Turnstile check, trust the browser for 30 min
+const RATE_LIMIT = 20; // zapytań z jednego IP na minutę (orientacyjnie, osobno na każdą instancję)
+const SESSION_TTL_MS = 30 * 60 * 1000; // po jednym sprawdzeniu Turnstile ufamy przeglądarce przez 30 min
 
 const SYSTEM_PROMPT = buildSystemPrompt();
 const hits = new Map();
@@ -38,8 +38,8 @@ export default {
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405, cors);
     if (allowed.length && !allowed.includes(origin)) return json({ error: 'forbidden_origin' }, 403, cors);
 
-    // Simple per-IP rate limit. For production also add a Cloudflare
-    // Rate Limiting rule in the dashboard (this one resets per isolate).
+    // Prosty limit zapytań na IP. Na produkcji dodaj też regułę Rate Limiting
+    // w panelu Cloudflare (ten licznik działa osobno na każdej instancji).
     const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
     if (isRateLimited(ip)) return json({ error: 'rate_limited' }, 429, cors);
 
@@ -53,7 +53,7 @@ export default {
     const message = cleanInput(body.message);
     if (!message) return json({ error: 'empty' }, 400, cors);
 
-    // Anti-bot: valid session token, or a fresh Turnstile token that we verify.
+    // Ochrona przed botami: ważny token sesji albo świeży token Turnstile, który weryfikujemy.
     let session = null;
     if (env.TURNSTILE_SECRET_KEY) {
       const okSession = await verifySession(body.session, ip, env.TURNSTILE_SECRET_KEY);
@@ -64,7 +64,7 @@ export default {
       }
     }
 
-    // Safety layer runs on the server too (never trust the client).
+    // Warstwa bezpieczeństwa działa też na serwerze (nie ufamy klientowi).
     const urgent = checkSafety(message);
     if (urgent) return json({ reply: urgent, session }, 200, cors);
 
@@ -92,9 +92,9 @@ async function callModel(env, messages) {
       model: env.MODEL || DEFAULT_MODEL,
       max_tokens: MAX_TOKENS,
       temperature: 0.2,
-      // Prompt caching: the long system prompt (rules + site knowledge) is
-      // identical for every patient, so Anthropic caches it and bills
-      // repeated reads at ~10% of the normal input price.
+      // Prompt caching: długi prompt systemowy (zasady + wiedza o stronie) jest
+      // taki sam dla każdego pacjenta, więc Anthropic trzyma go w cache i liczy
+      // kolejne odczyty za ok. 10% normalnej ceny wejścia.
       system: [
         {
           type: 'text',
@@ -107,12 +107,12 @@ async function callModel(env, messages) {
   });
   if (!res.ok) throw new Error(`Anthropic API ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  // Visible in "wrangler tail" / Workers logs — check cache_read_input_tokens > 0.
+  // Widoczne w "wrangler tail" / logach Workera — sprawdź, czy cache_read_input_tokens > 0.
   console.log('usage', JSON.stringify(data.usage));
   return (data.content || []).filter((c) => c.type === 'text').map((c) => c.text).join('\n').trim();
 }
 
-// Keep only well-formed user/assistant turns, trimmed, alternating.
+// Zostawiamy tylko poprawne, przycięte, naprzemienne wiadomości user/assistant.
 function sanitizeHistory(history) {
   if (!Array.isArray(history)) return [];
   const turns = history
@@ -120,13 +120,13 @@ function sanitizeHistory(history) {
     .slice(-MAX_HISTORY)
     .map((m) => ({ role: m.role, content: cleanInput(m.content) }))
     .filter((m) => m.content);
-  // The API requires the conversation to start with a user message.
+  // API wymaga, by rozmowa zaczynała się od wiadomości użytkownika.
   while (turns.length && turns[0].role !== 'user') turns.shift();
   return turns;
 }
 
-// Remove any URL that is not on the clinic's domain (defence against the
-// model inventing links or being tricked into printing external ones).
+// Usuwamy każdy adres spoza domeny kliniki (ochrona przed tym, że model
+// wymyśli link albo da się namówić na podanie zewnętrznego).
 function stripForeignLinks(text) {
   const host = new URL(SITE.base).hostname;
   return text.replace(/https?:\/\/[^\s)]+/g, (url) => {
@@ -138,7 +138,7 @@ function stripForeignLinks(text) {
   });
 }
 
-// --- Turnstile + session -----------------------------------------------------
+// --- Turnstile + sesja --------------------------------------------------------
 
 async function verifyTurnstile(token, ip, secret) {
   const form = new FormData();
@@ -150,8 +150,8 @@ async function verifyTurnstile(token, ip, secret) {
   return out.success === true;
 }
 
-// Session token = "<expiry>.<hmac(expiry|ip)>", signed with a key derived
-// from the Turnstile secret. Bound to the IP so it cannot be shared.
+// Token sesji = "<ważność>.<hmac(ważność|ip)>", podpisany kluczem wyprowadzonym
+// z sekretu Turnstile. Przypięty do IP, więc nie da się go przekazać innym.
 async function hmac(secret, data) {
   const key = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode('session:' + secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
@@ -172,7 +172,7 @@ async function verifySession(token, ip, secret) {
   return sig === (await hmac(secret, `${exp}|${ip}`));
 }
 
-// --- helpers -----------------------------------------------------------------
+// --- funkcje pomocnicze -------------------------------------------------------
 
 function isRateLimited(ip) {
   const now = Date.now();

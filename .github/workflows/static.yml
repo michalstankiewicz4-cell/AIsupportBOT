@@ -1,28 +1,28 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Prosty workflow publikujący statyczną stronę na GitHub Pages
 name: Deploy static content to Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Uruchamia się przy pushu na gałąź domyślną
   push:
     branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Pozwala uruchomić workflow ręcznie z zakładki Actions
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+# Uprawnienia GITHUB_TOKEN potrzebne do publikacji na GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Tylko jedno wdrożenie naraz; uruchomienia czekające w kolejce między trwającym a najnowszym są pomijane.
+# Trwających wdrożeń NIE przerywamy — produkcyjne wdrożenie ma się dokończyć.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  # Jedno zadanie — tylko publikujemy
   deploy:
     environment:
       name: github-pages
@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      # Guard: do not deploy if versions/CHANGES/model are out of sync or tests fail.
+      # Strażnik: nie publikuj, jeśli wersje/CHANGES/model się rozjechały albo testy nie przechodzą.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -45,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Wysyłamy całe repozytorium
           path: '.'
       - name: Deploy to GitHub Pages
         id: deployment

@@ -1,6 +1,6 @@
-// System prompt for the "ai" assistant (LLM behind the Cloudflare Worker).
-// Built from shared/js/knowledge.js so the model only knows real tabs/URLs.
-// The prompt text is in Polish because the model answers patients in Polish.
+// Prompt systemowy asystenta "ai" (model językowy za Cloudflare Workerem).
+// Budowany z shared/js/knowledge.js, więc model zna tylko prawdziwe zakładki i adresy.
+// Treść promptu jest po polsku, bo model odpowiada pacjentom po polsku.
 import { SITE, knowledgeAsText, OFFTOPIC_REPLY } from '../../shared/js/knowledge.js';
 
 export function buildSystemPrompt() {

@@ -1,8 +1,8 @@
-// Variant 2: "-ai" — a large language model (Claude Haiku) behind our own proxy.
-// Understands free-form questions and typos best, but costs money per
-// message and needs the Worker from ai/server/ to be deployed.
-// If the endpoint is missing or fails, we fall back to the rule-based bot
-// so the patient always gets an answer.
+// Wariant 2: "-ai" — duży model językowy (Claude Haiku) za naszym serwerem-pośrednikiem.
+// Najlepiej rozumie swobodne pytania i literówki, ale każda wiadomość kosztuje
+// i wymaga wdrożonego Workera z ai/server/.
+// Gdy brak adresu serwera lub serwer zawiedzie, odpowiada bot regułowy —
+// pacjent zawsze dostaje odpowiedź.
 import { AI_CONFIG } from './config.js';
 import { getTurnstileToken } from './turnstile.js';
 import { botEngine } from '../bot/bot-engine.js';
@@ -49,12 +49,12 @@ export function createAiEngine(options = {}) {
 
       try {
         const body = { message, history, session };
-        // No session yet and Turnstile enabled -> prove we are a browser first.
+        // Brak sesji, a Turnstile włączony -> najpierw udowodnij, że jesteśmy przeglądarką.
         if (!session && siteKey) body.turnstile = await getTurnstileToken(siteKey);
 
         let { status, data } = await post(body);
 
-        // Session expired -> get a fresh Turnstile token and retry once.
+        // Sesja wygasła -> pobierz nowy token Turnstile i spróbuj jeszcze raz.
         if (status === 401 && data.error === 'turnstile_required' && siteKey) {
           session = null;
           ({ status, data } = await post({ message, history, turnstile: await getTurnstileToken(siteKey) }));

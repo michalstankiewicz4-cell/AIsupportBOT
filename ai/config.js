@@ -1,8 +1,8 @@
-// Configuration of the "ai" assistant (browser side).
-// endpoint:         URL of the deployed Cloudflare Worker (see docs/AI-SERWER.md).
-//                   Leave empty to run in offline mode — the rule-based bot answers instead.
-// turnstileSiteKey: public Cloudflare Turnstile site key (anti-bot). Empty = Turnstile off.
-// Both can be overridden per page:
+// Konfiguracja asystenta "ai" (strona przeglądarki).
+// endpoint:         adres wdrożonego Cloudflare Workera (patrz docs/AI-SERWER.md).
+//                   Puste = tryb offline — zamiast AI odpowiada bot regułowy.
+// turnstileSiteKey: publiczny Site Key Cloudflare Turnstile (ochrona przed botami). Puste = Turnstile wyłączony.
+// Oba można nadpisać na konkretnej stronie:
 //   <script src=".../ai/embed.js" data-endpoint="https://..." data-turnstile="0x4AAA..."></script>
 export const AI_CONFIG = {
   endpoint: '',

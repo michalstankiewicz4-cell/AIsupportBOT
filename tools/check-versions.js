@@ -1,9 +1,9 @@
-// Version guard for the three assistants. Run: npm run check
-// Fails (exit code 1) when:
-//   - <variant>/version.js and versions.json disagree,
-//   - CHANGES.md has no "### <variant> <version>" entry for the current version,
-//   - trained/model.json was built for another version or from other data
-//     (someone edited training.json / knowledge.js without "npm run train").
+// Strażnik wersji trzech asystentów. Uruchom: npm run check
+// Kończy się błędem (kod 1), gdy:
+//   - <wariant>/version.js i versions.json się nie zgadzają,
+//   - CHANGES.md nie ma wpisu "### <wariant> <wersja>" dla bieżącej wersji,
+//   - trained/model.json zbudowano dla innej wersji lub z innych danych
+//     (ktoś zmienił training.json / knowledge.js bez "npm run train").
 import { VARIANTS, SEMVER, read, readVariantVersion, readVersionsJson } from './versioning.js';
 import { datasetHash, withKeywords } from '../trained/naive-bayes.js';
 import { INTENTS } from '../shared/js/knowledge.js';

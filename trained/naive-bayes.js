@@ -1,9 +1,9 @@
-// Multinomial Naive Bayes text classifier — our own small, trainable model.
-// Pure JS, no dependencies: the same file is used by the Node training
-// script (trained/train.js) and by the browser (trained/trained-engine.js).
+// Klasyfikator tekstu Multinomial Naive Bayes — nasz mały, uczony model.
+// Czysty JS, bez zależności: ten sam plik używa skrypt treningowy w Node
+// (trained/train.js) i przeglądarka (trained/trained-engine.js).
 import { features } from '../shared/js/text.js';
 
-// FNV-1a hash — used to detect that model.json is out of date with the data.
+// Skrót FNV-1a — wykrywa, że model.json jest nieaktualny względem danych.
 export function hashString(str) {
   let h = 0x811c9dc5;
   for (let i = 0; i < str.length; i++) {
@@ -18,10 +18,10 @@ export function datasetHash(dataset) {
   return hashString(JSON.stringify(clean));
 }
 
-// dataset: { intentId: ["example", ...], ... }
-// alpha:   Laplace smoothing
-// Priors are uniform on purpose: a big class (e.g. "offtopic") should not
-// win just because it has more examples.
+// dataset: { idIntencji: ["przykład", ...], ... }
+// alpha:   wygładzanie Laplace'a
+// Prawdopodobieństwa a priori są celowo równe: duża klasa (np. "offtopic") nie
+// może wygrywać tylko dlatego, że ma więcej przykładów.
 export function train(dataset, { alpha = 0.1 } = {}) {
   const intents = Object.keys(dataset).filter((k) => !k.startsWith('_'));
   const counts = {};
@@ -52,7 +52,7 @@ export function train(dataset, { alpha = 0.1 } = {}) {
     }
     classes[id] = {
       logPrior: round(Math.log(1 / intents.length)),
-      logUnseen: round(Math.log(alpha / denom)), // known word, never seen in this class
+      logUnseen: round(Math.log(alpha / denom)), // znane słowo, ale nigdy niewidziane w tej klasie
       weights,
     };
   }
@@ -67,16 +67,16 @@ export function train(dataset, { alpha = 0.1 } = {}) {
   };
 }
 
-// Returns [{ id, p }] sorted by probability, plus how many known features hit.
+// Zwraca [{ id, p }] posortowane wg prawdopodobieństwa oraz liczbę rozpoznanych cech.
 export function predict(model, text) {
   const vocab = model._vocabSet || (model._vocabSet = new Set(model.vocabulary));
-  const feats = features(text).filter((f) => vocab.has(f)); // ignore unknown words
+  const feats = features(text).filter((f) => vocab.has(f)); // pomijamy nieznane słowa
   const logScores = Object.entries(model.classes).map(([id, c]) => {
     let s = c.logPrior;
     for (const f of feats) s += c.weights[f] ?? c.logUnseen;
     return { id, s };
   });
-  // Softmax -> probabilities.
+  // Softmax -> prawdopodobieństwa.
   const max = Math.max(...logScores.map((x) => x.s));
   const exps = logScores.map((x) => ({ id: x.id, e: Math.exp(x.s - max) }));
   const sum = exps.reduce((a, x) => a + x.e, 0);
@@ -88,8 +88,8 @@ function round(x) {
   return Math.round(x * 1e4) / 1e4;
 }
 
-// Seed the training data with the bot's keywords from knowledge.js, so the
-// model knows every keyword even before anyone writes example sentences.
+// Dodajemy do danych treningowych słowa kluczowe bota z knowledge.js, żeby
+// model znał każde słowo kluczowe, zanim ktoś dopisze przykładowe zdania.
 export function withKeywords(dataset, intents) {
   const out = {};
   for (const [id, examples] of Object.entries(dataset)) {

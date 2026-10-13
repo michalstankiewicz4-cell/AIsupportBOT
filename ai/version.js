@@ -1,3 +1,3 @@
-// Version of the "ai" assistant. Managed by tools/bump.js — do not edit by hand.
-// Must match versions.json and have an entry in CHANGES.md (checked by npm run check).
-export const VERSION = '1.1.1';
+// Wersja asystenta "ai". Zarządza nią tools/bump.js — nie edytuj ręcznie.
+// Musi zgadzać się z versions.json i mieć wpis w CHANGES.md (sprawdza npm run check).
+export const VERSION = '1.1.2';

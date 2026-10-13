@@ -1,7 +1,7 @@
-// Chat widget UI shared by all three assistants.
-// Rendered inside a Shadow DOM so the host website's CSS cannot break it
-// (and our CSS cannot break the host website).
-// All user and model text is inserted with textContent — never innerHTML.
+// Interfejs widżetu czatu, wspólny dla trzech asystentów.
+// Renderowany w Shadow DOM, żeby CSS strony go nie psuł
+// (a nasz CSS nie psuł strony).
+// Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
 import { SITE } from './knowledge.js';
 
@@ -25,22 +25,22 @@ const DEGRADED_NOTE = {
 };
 
 /**
- * Mount the widget on the page.
+ * Montuje widżet na stronie.
  * @param {object} opts
- * @param {object} opts.engine   engine with { name, label, version, ask() }
- * @param {string} opts.cssUrl   absolute URL of shared/css/widget.css
+ * @param {object} opts.engine   silnik z { name, label, version, ask() }
+ * @param {string} opts.cssUrl   pełny adres shared/css/widget.css
  * @param {string} [opts.title]
- * @param {string} [opts.accent] CSS color for the brand accent
+ * @param {string} [opts.accent] kolor przewodni (CSS)
  * @param {'left'|'right'} [opts.position]
- * @param {boolean} [opts.open]  open on load
- * @param {HTMLElement} [opts.container] mount inline in this element (demo page)
+ * @param {boolean} [opts.open]  otwarty od razu po załadowaniu
+ * @param {HTMLElement} [opts.container] osadź w tym elemencie (strona demo)
  */
 export function mountWidget(opts) {
   const { engine } = opts;
   const storeKey = `lt-chat:${engine.name}`;
   const state = loadState(storeKey) || { open: !!opts.open, messages: [] };
 
-  // --- DOM skeleton --------------------------------------------------------
+  // --- Szkielet DOM ---------------------------------------------------------
   const host = document.createElement('div');
   host.className = 'lt-chat-host';
   const root = host.attachShadow({ mode: 'open' });
@@ -59,7 +59,7 @@ export function mountWidget(opts) {
   const launcher = el('button', 'launcher');
   launcher.type = 'button';
   launcher.setAttribute('aria-label', 'Otwórz czat z asystentem');
-  launcher.innerHTML = ICON_CHAT; // static SVG constant, safe
+  launcher.innerHTML = ICON_CHAT; // stała SVG, bezpieczna
 
   const panel = el('section', 'panel');
   panel.setAttribute('role', 'dialog');
@@ -104,7 +104,7 @@ export function mountWidget(opts) {
   if (!inline) wrap.append(launcher);
   (opts.container || document.body).appendChild(host);
 
-  // --- Rendering -----------------------------------------------------------
+  // --- Wyświetlanie ----------------------------------------------------------
   function renderMessage(msg, animate = true) {
     const item = el('div', `msg ${msg.role}${msg.emergency ? ' emergency' : ''}${animate ? ' enter' : ''}`);
     const bubble = el('div', 'bubble');
@@ -117,7 +117,7 @@ export function mountWidget(opts) {
         const a = el('a', 'link', l.label);
         a.href = l.url;
         if (!l.url.startsWith('tel:')) {
-          a.target = '_top'; // open the tab on the clinic site itself
+          a.target = '_top'; // otwórz zakładkę na stronie kliniki
         }
         links.append(a);
       }
@@ -151,7 +151,7 @@ export function mountWidget(opts) {
     return () => t.remove();
   }
 
-  // --- Behaviour -----------------------------------------------------------
+  // --- Zachowanie ------------------------------------------------------------
   let busy = false;
 
   async function ask(text) {
@@ -173,7 +173,7 @@ export function mountWidget(opts) {
 
     const started = Date.now();
     const reply = await respond(engine, message, history);
-    // Short minimum delay so instant bot answers don't feel abrupt.
+    // Krótkie minimalne opóźnienie, żeby natychmiastowe odpowiedzi bota nie były zbyt nagłe.
     await wait(Math.max(0, 350 - (Date.now() - started)));
     stopTyping();
 
@@ -227,7 +227,7 @@ export function mountWidget(opts) {
     if (e.key === 'Escape' && !inline) setOpen(false);
   });
 
-  // Restore conversation (e.g. after the patient clicked a link to a tab).
+  // Przywrócenie rozmowy (np. gdy pacjent kliknął link do zakładki).
   if (state.messages.length) {
     state.messages.forEach((m) => renderMessage(m, false));
   } else {
@@ -249,7 +249,7 @@ export function mountWidget(opts) {
   };
 }
 
-// --- helpers ---------------------------------------------------------------
+// --- funkcje pomocnicze ----------------------------------------------------
 
 function el(tag, className = '', text) {
   const node = document.createElement(tag);
@@ -258,7 +258,7 @@ function el(tag, className = '', text) {
   return node;
 }
 
-// Turn clinic URLs inside model text into links; everything else stays text.
+// Zamienia adresy kliniki w tekście modelu na linki; reszta zostaje zwykłym tekstem.
 function appendLinkified(parent, text) {
   const host = new URL(SITE.base).hostname;
   const parts = String(text || '').split(/(https?:\/\/[^\s)]+)/g);
@@ -282,7 +282,7 @@ function wait(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// sessionStorage can be blocked (privacy mode, iframes) — never let it crash.
+// sessionStorage może być zablokowany (tryb prywatny, iframe) — nie pozwalamy, by to wywróciło czat.
 function loadState(key) {
   try {
     return JSON.parse(sessionStorage.getItem(key));

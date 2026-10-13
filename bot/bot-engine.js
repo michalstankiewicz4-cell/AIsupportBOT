@@ -1,16 +1,16 @@
-// Variant 1: "-bot" — classic rule-based assistant.
-// No AI, no network. Matches hand-written keywords from shared/js/knowledge.js.
-// Predictable and free, but understands only the words we listed.
+// Wariant 1: "-bot" — klasyczny asystent regułowy.
+// Bez AI i bez sieci. Dopasowuje ręcznie wpisane słowa kluczowe z shared/js/knowledge.js.
+// Przewidywalny i darmowy, ale rozumie tylko słowa, które wpisaliśmy.
 import { normalize, containsAny } from '../shared/js/text.js';
 import { INTENTS, replyFor, replyForOpinionWithTopic } from '../shared/js/knowledge.js';
 import { VERSION } from './version.js';
 
-// Minimum score to accept a match (one keyword, even a generic one).
+// Minimalny wynik, by uznać dopasowanie (jedno słowo kluczowe, nawet ogólne).
 const MIN_SCORE = 3;
 
-// Score every intent: each matched keyword adds its length (longer keyword =
-// more specific match; short codes like "l4" or "tsh" count as 4),
-// multiplied by the intent's optional weight.
+// Punktujemy każdą intencję: każde dopasowane słowo dodaje swoją długość (dłuższe słowo =
+// bardziej konkretne dopasowanie; krótkie skróty jak "l4" czy "tsh" liczą się jako 4),
+// pomnożoną przez opcjonalną wagę intencji.
 export function scoreIntents(message) {
   const t = normalize(message);
   const scores = [];
@@ -40,7 +40,7 @@ export const botEngine = {
     const { id, scores } = classify(message);
     if (!id) return replyFor(null);
 
-    // Opinion request + a topic -> decline opinion, but still route.
+    // Prośba o opinię + temat -> odmawiamy opinii, ale wskazujemy zakładkę.
     const hasOpinion = scores.some((s) => s.id === 'opinia');
     const topic = scores.find((s) => s.routing);
     if (hasOpinion && topic) return replyForOpinionWithTopic(topic.id);

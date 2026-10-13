@@ -1,7 +1,7 @@
-// Training script for the "trained" assistant.
-// Usage (from repo root):  npm run train      (or: node trained/train.js)
-// Reads trained/data/training.json, writes trained/model.json and prints
-// a leave-one-out accuracy report so you can see if new examples helped.
+// Skrypt treningowy asystenta "trained".
+// Użycie (z katalogu głównego):  npm run train      (lub: node trained/train.js)
+// Czyta trained/data/training.json, zapisuje trained/model.json i wypisuje
+// raport trafności leave-one-out, żeby było widać, czy nowe przykłady pomogły.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -15,7 +15,7 @@ const modelPath = join(here, 'model.json');
 
 const dataset = JSON.parse(readFileSync(dataPath, 'utf8'));
 
-// 1. Validate: every intent in the data must exist in the knowledge base.
+// 1. Walidacja: każda intencja z danych musi istnieć w bazie wiedzy.
 const unknown = Object.keys(dataset).filter((k) => !k.startsWith('_') && !INTENT_BY_ID[k]);
 if (unknown.length) {
   console.error(`Nieznane intencje w training.json (brak w knowledge.js): ${unknown.join(', ')}`);
@@ -24,7 +24,7 @@ if (unknown.length) {
 const missing = Object.keys(INTENT_BY_ID).filter((k) => !dataset[k]);
 if (missing.length) console.warn(`Uwaga: intencje bez przykładów (model ich nie rozpozna): ${missing.join(', ')}`);
 
-// 2. Leave-one-out evaluation: train without one example, try to predict it.
+// 2. Ocena leave-one-out: trenujemy bez jednego przykładu i próbujemy go odgadnąć.
 let correct = 0;
 let total = 0;
 const errors = [];
@@ -33,8 +33,8 @@ for (const [id, examples] of Object.entries(dataset)) {
   examples.forEach((ex, i) => {
     const reduced = { ...dataset, [id]: examples.filter((_, j) => j !== i) };
     const { ranked, knownFeatures } = predict(train(withKeywords(reduced, INTENTS)), ex);
-    // No known words at all -> the engine answers with the hotline message,
-    // which is the correct behaviour for off-topic nonsense.
+    // Brak jakichkolwiek znanych słów -> silnik odpowiada komunikatem z infolinią,
+    // co jest poprawnym zachowaniem dla bezsensownych pytań.
     const got = knownFeatures === 0 ? 'offtopic' : ranked[0].id;
     total++;
     if (got === id) correct++;
@@ -42,7 +42,7 @@ for (const [id, examples] of Object.entries(dataset)) {
   });
 }
 
-// 3. Train on everything (examples + knowledge.js keywords) and save.
+// 3. Trening na wszystkim (przykłady + słowa kluczowe z knowledge.js) i zapis.
 const model = { version: VERSION, ...train(withKeywords(dataset, INTENTS)) };
 writeFileSync(modelPath, JSON.stringify(model));
 

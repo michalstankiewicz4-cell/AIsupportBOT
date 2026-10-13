@@ -1,5 +1,5 @@
-// Bootstraps a variant from its <script> tag.
-// Reads data-* attributes, loads the engine and mounts the widget.
+// Uruchamia wariant na podstawie jego tagu <script>.
+// Czyta atrybuty data-*, ładuje silnik i montuje widżet.
 import { mountWidget } from './widget.js';
 
 const ENGINES = {
@@ -19,7 +19,7 @@ export async function start(variant, script) {
     position: data.position,
     open: data.open === 'true',
   });
-  // Expose a small API for the host page, e.g. LTChat.open() from a button.
+  // Udostępnia stronie małe API, np. LTChat.open() wywołane z przycisku.
   window.LTChat = widget;
   return widget;
 }

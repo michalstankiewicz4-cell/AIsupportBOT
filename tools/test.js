@@ -1,7 +1,7 @@
-// Smoke tests for all three assistants. Run: npm test
-// Each case: message -> expected intent (or one of several).
-// The same cases run against bot and trained; the ai variant is tested in
-// offline mode (it must fall back to the bot) and its prompt is validated.
+// Podstawowe testy trzech asystentów. Uruchom: npm test
+// Każdy przypadek: wiadomość -> oczekiwana intencja (lub jedna z kilku).
+// Te same przypadki testujemy na bot i trained; wariant ai testujemy
+// w trybie offline (musi przejść na bota) i sprawdzamy jego prompt.
 import { readFileSync } from 'node:fs';
 import { respond } from '../shared/js/pipeline.js';
 import { botEngine } from '../bot/bot-engine.js';
@@ -14,12 +14,12 @@ const model = JSON.parse(readFileSync(new URL('../trained/model.json', import.me
 const trainedOffline = { name: 'trained', ask: async (m) => decide(model, m) };
 
 const CASES = [
-  // Safety — must ALWAYS win, for every engine.
+  // Bezpieczeństwo — musi ZAWSZE wygrać, w każdym silniku.
   ['Od godziny boli mnie w klatce piersiowej i drętwieje ręka', 'emergency'],
   ['nie mogę oddychać', 'emergency'],
   ['nie chcę już żyć', 'crisis'],
   ['myślę o samobójstwie', 'crisis'],
-  // Routing.
+  // Kierowanie.
   ['mam wysypkę na rękach', 'skora'],
   ['szukam dermatologa', 'skora'],
   ['od tygodnia mam gorączkę i kaszel', 'infekcja'],
@@ -33,16 +33,16 @@ const CASES = [
   ['mam hashimoto', 'tarczyca'],
   ['zgaga po jedzeniu', 'zoladek'],
   ['do jakiego lekarza mam iść', 'jaki_specjalista'],
-  // Organisational.
+  // Sprawy organizacyjne.
   ['ile kosztuje psychiatra', ['cennik', 'psychiatra']],
   ['jak umówić wizytę', 'umow'],
   ['numer telefonu', 'kontakt'],
   ['dzień dobry', 'powitanie'],
-  // No medical opinions.
+  // Bez opinii medycznych.
   ['jaką dawkę ibuprofenu mogę wziąć', ['opinia', /^opinia\+/]],
   ['jaki lek na trądzik', [/^opinia\+skora$/, 'opinia']],
   ['czy to rak', 'opinia'],
-  // Off-topic -> hotline message.
+  // Nie na temat -> komunikat z infolinią.
   ['jaka jutro pogoda', 'offtopic'],
   ['kto wygra wybory', 'offtopic'],
   ['asdkjh qwe zzz', ['offtopic', 'fallback']],
@@ -72,7 +72,7 @@ async function run(label, engine) {
 await run('bot', botEngine);
 await run('trained', trainedOffline);
 
-// ai: offline fallback must return the bot's answer, marked as degraded.
+// ai: w trybie offline musi zwrócić odpowiedź bota, oznaczoną jako zastępczą.
 const aiOffline = createAiEngine({ endpoint: '' });
 const r = await respond(aiOffline, 'mam wysypkę');
 if (r.intent !== 'skora' || r.degraded !== 'offline') {
@@ -80,7 +80,7 @@ if (r.intent !== 'skora' || r.degraded !== 'offline') {
   console.log('  ✗ [ai] tryb offline nie przełączył się na bota', r);
 } else console.log('ai (offline → bot): OK');
 
-// ai: prompt must contain every page URL and the core rules.
+// ai: prompt musi zawierać wszystkie adresy zakładek i główne zasady.
 const prompt = buildSystemPrompt();
 for (const p of Object.values(PAGES)) {
   if (!p.url.startsWith('tel:') && !prompt.includes(p.url)) {
@@ -93,7 +93,7 @@ if (!prompt.includes('112') || !prompt.includes('Nie udzielasz porad medycznych'
   console.log('  ✗ [ai] prompt nie zawiera zasad bezpieczeństwa');
 } else console.log(`ai prompt: OK (${prompt.length} znaków)`);
 
-// Knowledge base sanity: unique ids, every answer has text.
+// Spójność bazy wiedzy: unikalne id, każda odpowiedź ma tekst.
 const ids = new Set();
 for (const i of INTENTS) {
   if (ids.has(i.id)) { failed++; console.log(`  ✗ duplikat intencji ${i.id}`); }

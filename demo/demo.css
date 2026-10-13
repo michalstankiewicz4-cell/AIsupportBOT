@@ -1,4 +1,4 @@
-/* Styles of the demo/comparison page only (not used by the widget). */
+/* Style wyłącznie strony demo/porównania (widżet ich nie używa). */
 :root { --accent: #0e7c86; --ink: #17252a; --muted: #5d6b70; --line: #e3e8ea; --bg: #f5f7f8; }
 * { box-sizing: border-box; }
 body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--bg); }

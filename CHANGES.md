@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-13
 
+### bot 1.0.1
+- Komentarze w kodzie przetłumaczone na polski (na prośbę klienta); bez zmian w działaniu
+
+### ai 1.1.2
+- Komentarze w kodzie przetłumaczone na polski (na prośbę klienta); bez zmian w działaniu
+
+### trained 1.0.1
+- Komentarze w kodzie przetłumaczone na polski (na prośbę klienta); bez zmian w działaniu
+
 ### Dokumentacja (bez zmiany wersji wariantów)
 - Dodano `docs/WARIANT-4-LOKALNY.md` — informacyjny opis opcjonalnego wariantu 4: własny model językowy na serwerze z GPU (architektura, modele, sprzęt, koszty, ryzyka, ścieżka wdrożenia).
 

@@ -20,7 +20,7 @@
     </div>
   </div>
   <script>
-    // Load the chosen variant exactly like the production site will.
+    // Ładujemy wybrany wariant dokładnie tak, jak zrobi to strona produkcyjna.
     var v = new URLSearchParams(location.search).get('variant');
     if (['bot', 'ai', 'trained'].indexOf(v) < 0) v = 'bot';
     var s = document.createElement('script');

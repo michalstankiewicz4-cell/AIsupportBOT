@@ -1,8 +1,8 @@
 /*
- * Embed script for the "bot" assistant.
- * Paste on any page (e.g. before </body>):
+ * Skrypt osadzający asystenta "bot".
+ * Wklej na dowolnej stronie (np. przed </body>):
  *   <script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/bot/embed.js" defer></script>
- * Optional attributes: data-title, data-accent="#0e7c86", data-position="left", data-open="true"
+ * Atrybuty opcjonalne: data-title, data-accent="#0e7c86", data-position="left", data-open="true"
  */
 (function () {
   var script = document.currentScript;

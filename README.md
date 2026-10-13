@@ -75,5 +75,5 @@ npm run serve      # lokalny podgląd: http://localhost:8080
 
 ## Konwencje
 
-- Kod i komentarze w kodzie — po angielsku. Dokumentacja i teksty dla pacjenta — po polsku.
+- Komentarze w kodzie, dokumentacja i teksty dla pacjenta — po polsku. Nazwy w kodzie (zmienne, funkcje) — po angielsku.
 - Czysty JavaScript (moduły ES), bez frameworków i bez bibliotek zewnętrznych.

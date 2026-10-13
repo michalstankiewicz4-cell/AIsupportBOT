@@ -1,5 +1,5 @@
-/* Chat widget styles — loaded inside the widget's Shadow DOM,
-   so nothing here leaks into the host website. */
+/* Style widżetu czatu — ładowane wewnątrz Shadow DOM widżetu,
+   więc nic stąd nie wpływa na stronę, na której jest osadzony. */
 
 :host { all: initial; }
 
@@ -24,7 +24,7 @@
 }
 .chat *, .chat *::before, .chat *::after { box-sizing: border-box; }
 
-/* ---------- Floating layout ---------- */
+/* ---------- Układ pływający ---------- */
 .floating {
   position: fixed;
   bottom: 20px;
@@ -66,7 +66,7 @@
 }
 .open .panel { display: flex; animation: rise 0.22s ease-out; }
 
-/* ---------- Inline layout (demo page) ---------- */
+/* ---------- Układ osadzony (strona demo) ---------- */
 .inline .panel {
   display: flex;
   width: 100%;
@@ -74,7 +74,7 @@
   box-shadow: 0 6px 24px rgba(14, 40, 48, 0.08);
 }
 
-/* ---------- Header ---------- */
+/* ---------- Nagłówek ---------- */
 .header {
   display: flex;
   align-items: center;
@@ -116,7 +116,7 @@
   border-bottom: 1px solid var(--line);
 }
 
-/* ---------- Messages ---------- */
+/* ---------- Wiadomości ---------- */
 .log {
   flex: 1;
   overflow-y: auto;
@@ -190,7 +190,7 @@
 .typing i:nth-child(2) { animation-delay: 0.15s; }
 .typing i:nth-child(3) { animation-delay: 0.3s; }
 
-/* ---------- Composer ---------- */
+/* ---------- Pole wpisywania ---------- */
 .composer {
   display: flex;
   align-items: flex-end;

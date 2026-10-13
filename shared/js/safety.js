@@ -1,10 +1,10 @@
-// Safety layer — runs BEFORE every engine (bot, ai, trained).
-// Emergency detection is deliberately rule-based and never delegated to a
-// model: a missed emergency is the worst possible failure of this assistant.
+// Warstwa bezpieczeństwa — działa PRZED każdym silnikiem (bot, ai, trained).
+// Wykrywanie stanów nagłych celowo opiera się na regułach i nigdy nie jest oddawane
+// modelowi: przeoczony stan nagły to najgorszy możliwy błąd tego asystenta.
 import { normalize, containsAny } from './text.js';
 import { EMERGENCY_REPLY, CRISIS_REPLY } from './knowledge.js';
 
-// Suicide / self-harm signals -> crisis lines + 112.
+// Sygnały myśli samobójczych / samookaleczenia -> telefony kryzysowe + 112.
 const CRISIS = [
   'zabic sie', 'zabije sie', 'odebrac sobie zycie', 'odebrac zycie', 'samoboj*',
   'nie chce zyc', 'nie chce juz zyc', 'nie chce dluzej zyc', 'skonczyc ze soba', 'skoncze ze soba',
@@ -12,7 +12,7 @@ const CRISIS = [
   'powiesic sie', 'skoczyc z mostu', 'nie ma sensu zyc', 'lepiej gdyby mnie nie bylo',
 ];
 
-// Acute somatic emergencies -> 112 / ER.
+// Ostre stany nagłe -> 112 / SOR.
 const EMERGENCY = [
   'bol w klatce', 'boli w klatce', 'boli mnie w klatce', 'bol klatki', 'bola mnie klatka', 'ucisk w klatce', 'zawal*',
   'dusze sie', 'dusi mnie', 'nie moge oddychac', 'brak tchu', 'nie moge zlapac oddechu', 'dusznosc*',
@@ -26,8 +26,8 @@ const EMERGENCY = [
   'potracil*', 'potracony', 'potracona',
 ];
 
-// Returns a ready reply object if the message needs an urgent response,
-// otherwise null.
+// Zwraca gotową odpowiedź, jeśli wiadomość wymaga pilnej reakcji,
+// w przeciwnym razie null.
 export function checkSafety(message) {
   const t = normalize(message);
   if (containsAny(t, CRISIS)) return { ...CRISIS_REPLY, intent: 'crisis' };
@@ -35,7 +35,7 @@ export function checkSafety(message) {
   return null;
 }
 
-// Basic input hygiene shared by all engines.
+// Podstawowe czyszczenie wejścia, wspólne dla wszystkich silników.
 export const MAX_INPUT_CHARS = 500;
 export function cleanInput(message) {
   return String(message || '').replace(/\s+/g, ' ').trim().slice(0, MAX_INPUT_CHARS);
