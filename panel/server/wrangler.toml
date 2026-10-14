@@ -1,0 +1,25 @@
+# Konfiguracja Cloudflare Workera — serwera panelu sterowania.
+# Pierwsze uruchomienie (z tego folderu) — opis w docs/PANEL.md:
+#   npx wrangler d1 create lekarze-panel        -> wklej database_id poniżej
+#   npx wrangler secret put ADMIN_PASSWORD      -> hasło do panelu
+#   npx wrangler deploy
+name = "lekarze-panel"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lekarze-panel"
+database_id = "WKLEJ-TUTAJ-ID-Z-POLECENIA-wrangler-d1-create"
+
+# Codzienne usuwanie wpisów starszych niż czas przechowywania ustawiony w panelu (03:17 UTC).
+[triggers]
+crons = ["17 3 * * *"]
+
+[vars]
+# Strony, z których widżet może wysyłać wpisy do rejestru (po przecinku, bez ukośnika na końcu).
+ALLOWED_ORIGINS = "https://lekarzeiterapeuci.pl,https://www.lekarzeiterapeuci.pl,https://michalstankiewicz4-cell.github.io,http://localhost:5050,http://127.0.0.1:5050"
+# Skąd może działać panel administratora — tylko z Twojego komputera (npm run panel).
+ADMIN_ORIGINS = "http://localhost:5050,http://127.0.0.1:5050"
+# Opcjonalnie: tylko te adresy IP mogą wejść do /admin (dla innych 404). Sprawdź swój IP np. na https://ifconfig.me
+# ADMIN_IPS = "203.0.113.10"

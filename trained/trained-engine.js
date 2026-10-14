@@ -4,7 +4,7 @@
 // Model tylko WYBIERA, którą gotową odpowiedź pokazać — nigdy sam nie pisze
 // treści medycznych, więc nie może „zmyślić” porady.
 import { predict } from './naive-bayes.js';
-import { replyFor, replyForOpinionWithTopic, INTENT_BY_ID, OFFTOPIC_REPLY } from '../shared/js/knowledge.js';
+import { replyFor, replyForOpinionWithTopic, INTENT_BY_ID } from '../shared/js/knowledge.js';
 import { VERSION } from './version.js';
 
 // Progi pewności (dostrajaj po dodaniu danych treningowych).
@@ -31,7 +31,7 @@ export function decide(model, message) {
   const top = ranked[0];
 
   // Nic znanego -> traktujemy jako pytanie nie na temat (komunikat z infolinią).
-  if (knownFeatures === 0) return { ...OFFTOPIC_REPLY, intent: 'offtopic', confidence: 0 };
+  if (knownFeatures === 0) return { ...replyFor('offtopic'), confidence: 0 };
 
   // Prośba o opinię połączona z tematem medycznym -> odmowa + wskazanie zakładki.
   const isRouting = (id) => INTENT_BY_ID[id]?.routing;

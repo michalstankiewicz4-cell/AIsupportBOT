@@ -35,11 +35,15 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Version check
         run: node tools/check-versions.js
       - name: Tests
-        run: node tools/test.js
+        run: node --no-warnings tools/test.js
+      # Panel administratora NIE jest publikowany — działa tylko lokalnie (npm run panel).
+      # Kod serwerów (Workery) też nie jest potrzebny na stronie.
+      - name: Remove private parts from the public site
+        run: rm -rf panel/admin panel/server ai/server tools
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

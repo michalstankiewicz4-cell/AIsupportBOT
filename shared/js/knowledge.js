@@ -40,6 +40,24 @@ export const PAGES = {
   phone: { label: `Zadzwoń: ${SITE.phone}`, url: SITE.phoneHref },
 };
 
+// Fakty ze strony kliniki, które asystentka podaje w odpowiedziach. Kontrola strony
+// (panel → „Kontrola strony”, npm run check-site) sprawdza, czy nadal są na stronie —
+// jeśli którego brakuje, prawdopodobnie zmienił się cennik / telefon / godziny i trzeba
+// poprawić odpowiedzi w tym pliku albo w panelu. Wzorce to wyrażenia regularne.
+export const SITE_FACTS = [
+  { label: 'Numer infolinii +48 881 238 227', url: B, pattern: '881[\\s-]*238[\\s-]*227' },
+  { label: 'E-mail kontakt@lekarzeiterapeuci.pl', url: B, pattern: 'kontakt@lekarzeiterapeuci\\.pl' },
+  { label: 'Godziny pon–pt 8:00–20:00', url: B, pattern: '8[:.]00\\s*[–-]\\s*20[:.]00' },
+  { label: 'Godziny sob–niedz 9:00–18:00', url: B, pattern: '9[:.]00\\s*[–-]\\s*18[:.]00' },
+  { label: 'Cena: e-recepta / kontynuacja od 59 zł', url: B, pattern: '59\\s*zł' },
+  { label: 'Cena: L4 / wizyta / wyniki / skierowanie od 79 zł', url: B, pattern: '79\\s*zł' },
+  { label: 'Cena: leczenie otyłości 129 zł', url: B, pattern: '129\\s*zł' },
+  { label: 'Cena: psycholog 169 zł', url: B, pattern: '169\\s*zł' },
+  { label: 'Cena: psychiatra 259 zł', url: B, pattern: '259\\s*zł' },
+  { label: 'Cena: tabletka „dzień po” od 45 zł', url: `${B}/dla-kobiet-i-mezczyzn`, pattern: '45\\s*zł' },
+  { label: 'Cena: TRT od 199 zł', url: `${B}/dla-kobiet-i-mezczyzn`, pattern: '199\\s*zł' },
+];
+
 // Zdanie dopisywane do każdej odpowiedzi kierującej — główna zasada asystenta.
 export const DOCTOR_FIRST =
   'Nie oceniam objawów ani nie udzielam porad medycznych — najlepszą drogą jest zawsze konsultacja z lekarzem.';
@@ -417,11 +435,40 @@ export const INTENTS = [
 
 export const INTENT_BY_ID = Object.fromEntries(INTENTS.map((i) => [i.id, i]));
 
+// --- Nadpisania z panelu sterowania -------------------------------------------
+// Panel (panel/admin) pozwala zmienić tekst i linki dowolnej odpowiedzi
+// wbudowanej. Nadpisania ustawia panel/client.js; klucz = id intencji,
+// a "fallback" = odpowiedź, gdy asystentka nie rozpoznała pytania.
+// Odpowiedzi w stanach nagłych (112) są celowo NIE do nadpisania.
+let OVERRIDES = {};
+
+export function setAnswerOverrides(map) {
+  OVERRIDES = map && typeof map === 'object' ? map : {};
+}
+
+// Domyślna (wpisana w kod) odpowiedź — panel pokazuje ją obok pola do edycji.
+export function defaultAnswer(intentId) {
+  if (intentId === 'fallback') return FALLBACK_REPLY;
+  return INTENT_BY_ID[intentId]?.answer || null;
+}
+
+// Odpowiedź z uwzględnieniem nadpisania z panelu.
+function answerOf(intentId) {
+  const base = defaultAnswer(intentId);
+  const o = OVERRIDES[intentId];
+  if (!base) return null;
+  if (!o?.text) return base;
+  return { ...base, text: o.text, links: Array.isArray(o.links) ? o.links : base.links };
+}
+
 // Buduje końcową odpowiedź dla id intencji (dodaje zasadę „najpierw lekarz”).
 export function replyFor(intentId) {
   const intent = INTENT_BY_ID[intentId];
-  if (!intent) return { ...FALLBACK_REPLY, intent: 'fallback' };
-  const a = intent.answer;
+  if (!intent) {
+    const f = answerOf('fallback');
+    return { text: f.text, links: f.links || [], chips: f.chips || [], intent: 'fallback' };
+  }
+  const a = answerOf(intentId);
   const text = intent.routing ? `${a.text} ${DOCTOR_FIRST}` : a.text;
   return { text, links: a.links || [], chips: a.chips || [], intent: intentId };
 }
@@ -448,7 +495,7 @@ export function knowledgeAsText() {
 export function replyForOpinionWithTopic(routingId) {
   const r = replyFor(routingId);
   return {
-    text: `${NO_OPINION_REPLY.text} ${INTENT_BY_ID[routingId].answer.text}`,
+    text: `${answerOf('opinia').text} ${answerOf(routingId).text}`,
     links: r.links,
     chips: [],
     intent: `opinia+${routingId}`,

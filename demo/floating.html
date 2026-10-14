@@ -13,7 +13,7 @@
 </head>
 <body>
   <div class="page">
-    <p class="switch">Wariant: <a href="?variant=bot">bot</a><a href="?variant=ai">ai</a><a href="?variant=trained">trained</a> · <a href="../index.html">← porównanie</a></p>
+    <p class="switch">Wariant: <a href="?variant=bot">bot</a><a href="?variant=ai">ai</a><a href="?variant=trained">trained</a><a href="?variant=auto">z panelu</a> · <a href="../index.html">← porównanie</a></p>
     <div class="fake">
       <h1>Przykładowa strona kliniki</h1>
       <p>Tak będzie wyglądał asystent na lekarzeiterapeuci.pl — przycisk w prawym dolnym rogu.</p>
@@ -22,9 +22,9 @@
   <script>
     // Ładujemy wybrany wariant dokładnie tak, jak zrobi to strona produkcyjna.
     var v = new URLSearchParams(location.search).get('variant');
-    if (['bot', 'ai', 'trained'].indexOf(v) < 0) v = 'bot';
+    if (['bot', 'ai', 'trained', 'auto'].indexOf(v) < 0) v = 'bot';
     var s = document.createElement('script');
-    s.src = '../' + v + '/embed.js';
+    s.src = v === 'auto' ? '../embed.js' : '../' + v + '/embed.js';
     s.dataset.open = 'true';
     document.body.appendChild(s);
   </script>

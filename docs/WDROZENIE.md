@@ -5,7 +5,10 @@
 Repozytorium ma gotowy workflow `.github/workflows/static.yml`. Po pushu na gałąź `main`:
 
 1. GitHub Actions uruchamia `check-versions.js` i testy — **jeśli coś się nie zgadza, strona się nie opublikuje**.
-2. Pliki trafiają na GitHub Pages pod adres w stylu `https://michalstankiewicz4-cell.github.io/AIsupportBOT/`.
+2. Przed publikacją usuwany jest panel administratora i kod serwerów (`panel/admin`, `panel/server`, `ai/server`, `tools`) — **panel nie trafia do internetu**.
+3. Pliki trafiają na GitHub Pages pod adres w stylu `https://michalstankiewicz4-cell.github.io/AIsupportBOT/`.
+
+Osobny workflow `site-check.yml` codziennie sprawdza stronę kliniki (linki, ceny, telefon) i przy problemie wysyła e-mail — patrz [PANEL.md](PANEL.md#10-kontrola-strony-kliniki).
 
 Jednorazowo: w repozytorium **Settings → Pages → Source: GitHub Actions**.
 
@@ -13,7 +16,24 @@ Sprawdź dokładny adres w zakładce Actions (krok „Deploy”) — wielkość 
 
 ## 2. Wstawienie czatu na stronę kliniki
 
-Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną linijkę** przed `</body>` (na wszystkich podstronach — zwykle w szablonie stopki). Wybierz jeden wariant:
+Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną linijkę** przed `</body>` (na wszystkich podstronach — zwykle w szablonie stopki).
+
+### Zalecane: uniwersalny skrypt sterowany z panelu
+
+Tryb pracy (bot / nasz model / AI / kombinacja), własne odpowiedzi i rejestrację zmieniasz potem w panelu — bez ponownego dotykania strony kliniki:
+
+```html
+<script src="https://michalstankiewicz4-cell.github.io/AIsupportBOT/embed.js"
+        data-panel="https://lekarze-panel.TWOJE-KONTO.workers.dev"
+        data-endpoint="https://lekarze-ai-assistant.TWOJE-KONTO.workers.dev" defer></script>
+```
+
+- `data-panel` — serwer panelu ([PANEL.md](PANEL.md)). Bez niego: bot regułowy z ustawieniami domyślnymi.
+- `data-endpoint` — serwer AI ([AI-SERWER.md](AI-SERWER.md)); potrzebny tylko, gdy tryb pracy używa AI.
+
+### Alternatywnie: stały silnik
+
+Skrypt konkretnego silnika — tryb pracy z panelu go nie zmienia (własne odpowiedzi i rejestracja z panelu działają, jeśli podasz `data-panel`):
 
 ```html
 <!-- Wariant 1: bot regułowy -->
@@ -37,7 +57,8 @@ Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną li
 | `data-position` | `"left"` | Przycisk po lewej (domyślnie prawa strona) |
 | `data-open` | `"true"` | Czat otwarty od razu |
 | `data-endpoint` | URL Workera | Tylko wariant AI |
-| `data-turnstile` | site key Turnstile | Tylko wariant AI — ochrona przed botami (patrz AI-SERWER.md) |
+| `data-turnstile` | site key Turnstile | Tylko gdy używane AI — ochrona przed botami (patrz ZABEZPIECZENIA.md) |
+| `data-panel` | URL serwera panelu | Ustawienia z panelu sterowania: tryb pracy, własne odpowiedzi, rejestracja |
 
 ### Imię konsultantki i logo
 
@@ -61,7 +82,9 @@ Na lekarzeiterapeuci.pl jest widoczny „czat na żywo”. Przed wdrożeniem ust
 
 ## 4. Aktualizacja wiedzy
 
-Gdy na stronie zmienią się zakładki, ceny lub numer infolinii — popraw `shared/js/knowledge.js`, uruchom `npm run train` i `npm test`, podbij wersję `npm run bump -- all minor "Aktualizacja cennika"`, zrób push. Czat na stronie zaktualizuje się sam (strona kliniki nie wymaga zmian).
+**Szybko, bez programowania:** w panelu sterowania („Odpowiedzi wbudowane”, „Własne odpowiedzi”) — zmiana działa na stronie po ok. minucie. Co się zmieniło na stronie kliniki, pokazuje zakładka **„Kontrola strony”**.
+
+**Na stałe:** gdy na stronie zmienią się zakładki, ceny lub numer infolinii — popraw `shared/js/knowledge.js` (także listę `SITE_FACTS` do kontroli strony), uruchom `npm run train` i `npm test`, podbij wersję `npm run bump -- all minor "Aktualizacja cennika"`, zrób push. Czat na stronie zaktualizuje się sam (strona kliniki nie wymaga zmian).
 
 ## 5. Bezpieczeństwo i RODO — do ustalenia z klientem
 
@@ -69,4 +92,5 @@ Gdy na stronie zmienią się zakładki, ceny lub numer infolinii — popraw `sha
 - **AI** wysyła treść pytania do Cloudflare i do dostawcy modelu (Anthropic). Pytania o zdrowie to dane szczególnej kategorii (art. 9 RODO), więc przed uruchomieniem wariantu AI klient powinien: uwzględnić to w polityce prywatności, mieć umowy powierzenia (DPA) z dostawcami i ocenić transfer danych poza EOG. Czat i tak prosi pacjenta, by nie podawał danych osobowych.
 - Asystent nie stawia diagnoz, tylko kieruje do usług — warto jednak, by klient potwierdził z prawnikiem, że taka forma nie wymaga certyfikacji jako wyrób medyczny.
 - Imię pacjenta (ekran powitalny) służy tylko do wyświetlania w oknie czatu: zostaje w przeglądarce i **nie jest wysyłane** do serwera AI.
+- **Rejestracja rozmów** jest domyślnie wyłączona. Poziomy, zgoda pacjenta, anonimizacja i czas przechowywania — [PANEL.md](PANEL.md#6-rejestracja-rozmów-i-rodo). Poziom 2 i 3 (treść pytań) wymagają zgody pacjenta i zapisu w polityce prywatności.
 - Rozmowa jest zapamiętywana tylko w `sessionStorage` przeglądarki (znika po zamknięciu karty), żeby nie ginęła przy przejściu na inną zakładkę strony.

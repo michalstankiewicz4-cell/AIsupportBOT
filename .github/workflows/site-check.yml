@@ -1,0 +1,23 @@
+# Codzienna automatyczna kontrola strony kliniki: linki w odpowiedziach asystentki,
+# ceny, telefon i godziny. Gdy coś się nie zgadza, uruchomienie kończy się błędem,
+# a GitHub wysyła e-mail do właściciela repozytorium (Settings → Notifications → Actions).
+name: Kontrola strony kliniki
+
+on:
+  schedule:
+    - cron: "23 5 * * *" # codziennie ok. 7:23 czasu polskiego
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sprawdź stronę
+        run: node tools/check-site.js

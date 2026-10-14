@@ -13,6 +13,30 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 <!-- NEW ENTRIES BELOW -->
 
+## 2026-10-14
+
+### bot 1.3.0
+- Panel sterowania: tryb pracy (bot / nasz model / AI / kombinacje), rejestracja rozmów (4 poziomy, zgoda, anonimizacja), własne odpowiedzi na frazy, edycja odpowiedzi wbudowanych, kontrola strony kliniki — szczegóły w sekcji „Panel sterowania” poniżej
+
+### ai 1.4.0
+- Panel sterowania: tryb pracy (bot / nasz model / AI / kombinacje), rejestracja rozmów (4 poziomy, zgoda, anonimizacja), własne odpowiedzi na frazy, edycja odpowiedzi wbudowanych, kontrola strony kliniki — szczegóły w sekcji „Panel sterowania” poniżej
+
+### trained 1.3.0
+- Panel sterowania: tryb pracy (bot / nasz model / AI / kombinacje), rejestracja rozmów (4 poziomy, zgoda, anonimizacja), własne odpowiedzi na frazy, edycja odpowiedzi wbudowanych, kontrola strony kliniki — szczegóły w sekcji „Panel sterowania” poniżej
+
+### Panel sterowania (wspólne — dotyczy bot 1.3.0, ai 1.4.0, trained 1.3.0)
+- Nowy panel administratora `panel/admin/` — działa tylko lokalnie (`npm run panel`, 127.0.0.1), nie jest publikowany na GitHub Pages.
+- Serwer panelu `panel/server/` (Cloudflare Worker + D1): publicznie tylko `GET /config` i `POST /log`; część `/admin/*` z hasłem, blokadą po 10 błędnych próbach, opcjonalnie tylko z wybranych IP (`ADMIN_IPS`, dla innych 404).
+- Tryb pracy z panelu: bot, nasz model, AI lub kombinacje (np. nasz model → AI, gdy nie rozpozna). Domyślnie bot. Nowy uniwersalny skrypt `embed.js` (atrybut `data-panel`).
+- Rejestracja rozmów: 0 wyłączona (domyślnie), 1 statystyki, 2 treść pytań za zgodą, 3 pełne rozmowy za zgodą. Pole zgody na ekranie powitalnym, anonimizacja numerów i e-maili, automatyczne usuwanie po ustalonym czasie, imię i IP nigdy nie są zapisywane.
+- Własne odpowiedzi na frazy (z `*` jako dowolna końcówka) — działają przed każdym silnikiem, po kontroli stanów nagłych; tester odpowiedzi w panelu.
+- Edycja tekstów i linków odpowiedzi wbudowanych (bez stanów nagłych).
+- Zakładka „Rozmowy”: statystyki, najczęstsze tematy, pytania bez odpowiedzi, eksport CSV i eksport do treningu.
+- Kontrola strony kliniki (`panel/site-check.js`): linki z odpowiedzi (404, przekierowania, brakujące sekcje), fakty ze strony (`SITE_FACTS`: ceny, telefon, godziny), zmiany treści. Uruchamiana z panelu, codziennie przez serwer panelu i przez GitHub Actions (`site-check.yml`, e-mail przy problemie) oraz `npm run check-site`.
+- Wskazówki „?” przy polach panelu. Linki w czacie tylko `https://`, `tel:`, `mailto:`.
+- Dokumentacja: nowe `docs/INSTRUKCJA.md` (instrukcja obsługi, słowniczek, FAQ, lista kontrolna) i `docs/PANEL.md`; uzupełnione README, WDROZENIE, TRENOWANIE, ZABEZPIECZENIA, WARIANT-4.
+- Wymagany Node.js 22.13+ (testy serwera panelu na wbudowanym SQLite).
+
 ## 2026-10-13
 
 ### bot 1.2.0

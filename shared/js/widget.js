@@ -5,6 +5,8 @@
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
 import { SITE } from './knowledge.js';
+import { getPanelConfig, logTurn, newSessionId } from '../../panel/client.js';
+import { isSafeUrl } from '../../panel/schema.js';
 
 // Ikony — stałe SVG (bezpieczne do wstawienia przez innerHTML).
 const ICON_BUBBLE =
@@ -47,8 +49,8 @@ const DEGRADED_NOTE = {
 export function mountWidget(opts) {
   const { engine } = opts;
   const title = opts.title || 'Lekarze i Terapeuci';
-  const storeKey = `lt-chat:${engine.name}`;
-  const state = loadState(storeKey) || { open: !!opts.open, name: '', startedAt: 0, messages: [] };
+  const storeKey = opts.storeKey || `lt-chat:${engine.name}`;
+  const state = loadState(storeKey) || { open: !!opts.open, name: '', startedAt: 0, session: '', consent: false, messages: [] };
 
   // --- Szkielet DOM ---------------------------------------------------------
   const host = document.createElement('div');
@@ -106,7 +108,28 @@ export function mountWidget(opts) {
   const start = el('button', 'primary', 'Rozpocznij rozmowę');
   start.type = 'submit';
   const hint = el('p', 'intro-hint', 'Twoje imię będzie widoczne w historii rozmowy.');
-  nameForm.append(h, lead, label, nameInput, start, hint);
+  // Zgoda na zapis treści rozmowy — pokazywana tylko, gdy panel ustawia poziom 2 lub 3.
+  const logging = getPanelConfig().logging;
+  const consentBox = el('label', 'consent');
+  const consentInput = el('input');
+  consentInput.type = 'checkbox';
+  consentBox.append(
+    consentInput,
+    el(
+      'span',
+      '',
+      `Zgadzam się na zapisanie treści tej rozmowy (bez mojego imienia, numerów i adresów e-mail) w celu ulepszania asystentki. ` +
+        `Zapis jest usuwany po ${logging.retentionDays} dniach. Zgoda jest dobrowolna — czat działa także bez niej.`,
+    ),
+  );
+  const privacy = el('a', 'consent-link', 'Polityka prywatności');
+  privacy.href = `${SITE.base}/polityka-prywatnosci`;
+  privacy.target = '_blank';
+  privacy.rel = 'noopener';
+  consentBox.lastChild.append(' ', privacy);
+  nameForm.append(h, lead, label, nameInput);
+  if (logging.level >= 2) nameForm.append(consentBox);
+  nameForm.append(start, hint);
   // Logo kliniki w wolnym miejscu między nagłówkiem a formularzem.
   const introLogo = el('div', 'intro-logo');
   const logoImg = el('img');
@@ -169,6 +192,7 @@ export function mountWidget(opts) {
     if (msg.links?.length) {
       const links = el('div', 'links');
       for (const l of msg.links) {
+        if (!isSafeUrl(l.url)) continue; // tylko https/tel/mailto — nigdy javascript:
         const a = el('a', 'link', l.label);
         a.href = l.url;
         if (!l.url.startsWith('tel:')) a.target = '_top'; // otwórz zakładkę na stronie kliniki
@@ -221,8 +245,10 @@ export function mountWidget(opts) {
   // --- Zachowanie ------------------------------------------------------------
   let busy = false;
 
-  function startConversation(name) {
+  function startConversation(name, consent) {
     state.name = name;
+    state.consent = consent;
+    state.session = newSessionId();
     state.startedAt = Date.now();
     state.messages = [greetingFor(name)];
     saveState(storeKey, state);
@@ -267,6 +293,9 @@ export function mountWidget(opts) {
     renderMessage(botMsg);
     saveState(storeKey, state);
 
+    // Rejestr rozmów (zakres zależy od poziomu z panelu i zgody pacjenta; imię nigdy nie jest wysyłane).
+    logTurn({ session: state.session, consent: state.consent, variant: engine.name, version: engine.version, question: message, reply });
+
     busy = false;
     send.disabled = false;
     input.focus();
@@ -283,7 +312,7 @@ export function mountWidget(opts) {
   nameForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = nameInput.value.replace(/\s+/g, ' ').trim().slice(0, NAME_MAX);
-    if (name) startConversation(name);
+    if (name) startConversation(name, consentInput.checked);
   });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -319,6 +348,9 @@ export function mountWidget(opts) {
     // Czyści rozmowę i imię — wraca do ekranu powitalnego.
     reset() {
       state.name = '';
+      state.consent = false;
+      state.session = '';
+      consentInput.checked = false;
       state.messages = [];
       log.textContent = '';
       nameInput.value = '';

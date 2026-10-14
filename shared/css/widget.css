@@ -139,6 +139,19 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .intro-input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); }
+/* Zgoda na zapis rozmowy (widoczna tylko przy poziomie 2 lub 3). */
+.consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 14px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  cursor: pointer;
+}
+.consent input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--accent); flex: none; }
+.consent-link { color: var(--accent); font-weight: 600; }
 .primary {
   margin-top: 16px;
   font: inherit;

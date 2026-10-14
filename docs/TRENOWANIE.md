@@ -12,6 +12,14 @@
 
 **Wniosek:** do tego zadania nie trzeba (i nie warto) douczać dużego modelu. Asystent nie ma „umieć medycyny” — ma umieć **kierować**. To świetnie robią poziomy 1 i 2, a przy medycynie mają ogromną zaletę: odpowiedzi są przewidywalne i sprawdzone przez człowieka. Fine-tuning ma sens dopiero, gdy uzbieramy tysiące prawdziwych, zanonimizowanych rozmów — i nadal wymaga kontroli, bo douczony model może „zmyślać”.
 
+## Najszybciej: własne odpowiedzi w panelu
+
+Zanim zaczniesz trenować model, sprawdź, czy nie wystarczy **własna odpowiedź** w panelu sterowania (zakładka „Własne odpowiedzi”): fraza → gotowa odpowiedź, działa od razu, we wszystkich trybach, bez trenowania. Idealne dla pytań, które się powtarzają (np. „parking”, „godziny w sobotę”). Patrz [INSTRUKCJA.md](INSTRUKCJA.md#3-typowe-zadania-krok-po-kroku).
+
+## Skąd brać przykłady: rejestr rozmów
+
+Przy rejestracji na poziomie 2 lub 3 (treść pytań za zgodą pacjenta) panel → „Rozmowy” → **Eksport do treningu** zwraca plik w formacie `training.json`: pytania pogrupowane według tematu, a te, których asystentka nie rozpoznała — w `_do_przypisania`. Przenieś je do właściwych tematów, dopisz do `trained/data/training.json` i uruchom trening (niżej). To najlepszy materiał do nauki — prawdziwe sformułowania pacjentów.
+
 ## Wariant trained — jak go uczyć (poziom 2)
 
 Model to klasyfikator **Naive Bayes**: na podstawie przykładów uczy się, które słowa wskazują na którą intencję (np. „wysypka” → `skora`). Potem dla nowego pytania wybiera najbardziej prawdopodobną intencję i pokazuje przygotowaną odpowiedź z `knowledge.js`. Model **nie pisze** własnych odpowiedzi, więc nie poda błędnej porady.

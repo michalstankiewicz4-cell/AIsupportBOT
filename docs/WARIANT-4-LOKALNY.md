@@ -50,6 +50,8 @@ local/
 
 Wersjonowanie: czwarty typ `local` dopisany do `VARIANTS` w `tools/versioning.js`, `versions.json` i `CHANGES.md` — te same zasady co dla pozostałych trzech.
 
+Panel sterowania jest na to przygotowany: wystarczy dopisać `local` do listy silników (`ENGINES` w `panel/schema.js` i `shared/js/embed-core.js`), a tryby pracy pozwolą np. na kolejność „nasz model → model lokalny → AI”.
+
 ## Oprogramowanie do uruchomienia modelu
 
 | Narzędzie | Dla kogo | Uwagi |

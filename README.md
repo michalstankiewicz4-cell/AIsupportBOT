@@ -1,77 +1,111 @@
 # AIsupportBOT — asystent pacjenta dla lekarzeiterapeuci.pl
 
-Czat na stronę, który **kieruje pacjenta do właściwego specjalisty i właściwej zakładki** serwisu, odpowiada na pytania organizacyjne (ceny, kontakt, jak umówić wizytę) i **nigdy nie udziela porad medycznych** — zawsze wskazuje, że najlepszą drogą jest konsultacja z lekarzem. Na pytania nie na temat (polityka, pogoda, żarty) odpowiada stałą regułką z numerem infolinii.
+Czat na stronę, w którym wirtualna konsultantka **Ilona** **kieruje pacjenta do właściwego specjalisty i właściwej zakładki** serwisu, odpowiada na pytania organizacyjne (ceny, kontakt, jak umówić wizytę) i **nigdy nie udziela porad medycznych** — zawsze wskazuje, że najlepszą drogą jest konsultacja z lekarzem. Na pytania nie na temat (polityka, pogoda, żarty) odpowiada stałą regułką z numerem infolinii.
 
-Projekt zawiera **trzy warianty** tego samego asystenta — z tą samą wiedzą, wyglądem i zasadami bezpieczeństwa:
+Projekt zawiera **trzy silniki** tego samego asystenta — z tą samą wiedzą, wyglądem i zasadami bezpieczeństwa — oraz **panel sterowania**, w którym wybierasz silnik albo ich kombinację:
 
-| Wariant | Jak działa | Koszt | Rozumienie pytań | Wymaga serwera |
+| Silnik | Jak działa | Koszt | Rozumienie pytań | Wymaga serwera |
 |---|---|---|---|---|
 | **bot** | Słowa kluczowe wpisane ręcznie | 0 zł | tylko znane słowa | nie |
-| **ai** | Model językowy Claude przez nasz serwer-pośrednik | płatne za wiadomość | najlepsze, rozumie literówki i swobodny język | tak (Cloudflare Worker, darmowy plan wystarcza) |
+| **ai** | Model językowy Claude Haiku przez nasz serwer-pośrednik | płatne za wiadomość | najlepsze, rozumie literówki i swobodny język | tak (Cloudflare Worker, darmowy plan wystarcza) |
 | **trained** | Nasz model uczony na naszych przykładach (Naive Bayes) | 0 zł | dobre w obrębie tego, czego go nauczymy | nie |
+
+Kombinacje (wybierane w panelu), np. **„nasz model, a AI gdy nie rozpozna”** — większość pytań obsługuje darmowy model, za AI płacisz tylko przy trudnych.
 
 Możliwy jest też **wariant 4 — własny model na serwerze z GPU** (dane pacjentów nie opuszczają serwera kliniki). Nie jest zaimplementowany; opis, koszty i ryzyka: [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md).
 
-Podgląd: otwórz `index.html` (porównanie trzech wariantów obok siebie) lub `demo/floating.html` (tak będzie wyglądał na stronie).
+## Panel sterowania
+
+Działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`) — nie jest publikowany w internecie. Zakładki:
+
+- **Tryb pracy** — bot / nasz model / AI albo ich kolejność (domyślnie: bot).
+- **Rejestracja rozmów** — 4 poziomy: wyłączona, statystyki, treść pytań za zgodą, pełne rozmowy za zgodą.
+- **Własne odpowiedzi** — fraza → Twoja odpowiedź; z testerem „co odpowie asystentka”.
+- **Odpowiedzi wbudowane** — zmiana tekstów i linków gotowych odpowiedzi bez programowania.
+- **Rozmowy** — statystyki, pytania bez odpowiedzi, eksport CSV i eksport do treningu.
+- **Kontrola strony** — czy linki z odpowiedzi działają, czy ceny/telefon/godziny są aktualne, co się zmieniło na stronie (także automatycznie codziennie, z e-mailem przy problemie).
+
+Instrukcja krok po kroku: **[docs/INSTRUKCJA.md](docs/INSTRUKCJA.md)**, szczegóły techniczne: [docs/PANEL.md](docs/PANEL.md).
+
+## Podgląd
+
+- Porównanie silników obok siebie (+ tryb z panelu): https://michalstankiewicz4-cell.github.io/AIsupportBOT/
+- Czat tak, jak na stronie kliniki: https://michalstankiewicz4-cell.github.io/AIsupportBOT/demo/floating.html?variant=auto
 
 ## Struktura
 
 ```
 AIsupportBOT/
-├── index.html               strona porównawcza (3 czaty obok siebie)
+├── embed.js                 ★ uniwersalny skrypt na stronę kliniki — tryb pracy z panelu
+├── index.html               strona porównawcza (czaty obok siebie)
 ├── demo/                    podgląd pływającego widżetu + style strony demo
-├── shared/                  WSPÓLNE dla wszystkich wariantów
+├── shared/                  WSPÓLNE dla wszystkich silników
 │   ├── css/widget.css       wygląd czatu
+│   ├── img/                 logo i miniatura konsultantki
 │   └── js/
-│       ├── knowledge.js     ★ WIEDZA: zakładki, usługi, ceny, odpowiedzi, słowa kluczowe
-│       ├── safety.js        stany nagłe (112) i kryzys psychiczny — działa przed każdym silnikiem
-│       ├── pipeline.js      kolejność: czyszczenie → bezpieczeństwo → silnik
+│       ├── knowledge.js     ★ WIEDZA: zakładki, usługi, ceny, odpowiedzi, słowa kluczowe, fakty do kontroli strony
+│       ├── safety.js        stany nagłe (112) i kryzys psychiczny — działa przed wszystkim innym
+│       ├── pipeline.js      kolejność: czyszczenie → bezpieczeństwo → własne odpowiedzi → silnik
+│       ├── router.js        kombinacje silników (np. nasz model → AI)
+│       ├── privacy.js       anonimizacja (numery, e-maile) przed zapisem rozmów
 │       ├── text.js          normalizacja polskiego tekstu
-│       ├── widget.js        okno czatu (Shadow DOM)
-│       └── embed-core.js    uruchamianie wariantu z tagu <script>
-├── bot/                     wariant 1: bot regułowy
-├── ai/                      wariant 2: AI
-│   ├── ai-engine.js, config.js
-│   └── server/              serwer-pośrednik (Cloudflare Worker) + prompt systemowy
-├── trained/                 wariant 3: nasz wyuczony model
+│       ├── widget.js        okno czatu (Shadow DOM), zgoda na zapis rozmowy
+│       └── embed-core.js    uruchamianie z tagu <script>
+├── bot/                     silnik 1: bot regułowy
+├── ai/                      silnik 2: AI
+│   ├── ai-engine.js, config.js, turnstile.js
+│   └── server/              serwer AI (Cloudflare Worker) + prompt systemowy
+├── trained/                 silnik 3: nasz wyuczony model
 │   ├── data/training.json   ★ PRZYKŁADY DO NAUKI
 │   ├── naive-bayes.js       algorytm
 │   ├── train.js             trening (npm run train)
 │   └── model.json           wynik treningu (generowany)
-├── tools/                   testy, kontrola i podbijanie wersji
+├── panel/                   PANEL STEROWANIA
+│   ├── admin/               ★ panel administratora (tylko lokalnie, nie trafia do internetu)
+│   ├── server/              serwer panelu (Cloudflare Worker + baza D1): ustawienia, rejestr, kontrola strony
+│   ├── schema.js            format i walidacja ustawień, poziomy rejestracji, tryby pracy
+│   ├── client.js            połączenie czatu z panelem (ustawienia, własne odpowiedzi, rejestr)
+│   ├── site-check.js        kontrola strony kliniki
+│   ├── labels.js            czytelne nazwy tematów
+│   └── config.js            adres serwera panelu
+├── tools/                   testy, wersje, lokalny serwer panelu, kontrola strony z konsoli
 ├── docs/                    dokumentacja
-├── versions.json            wersje trzech wariantów
+├── versions.json            wersje trzech silników
 └── CHANGES.md               historia zmian
 ```
 
-Każdy wariant ma w swoim folderze: `embed.js` (do wklejenia na stronę), silnik `*-engine.js` i `version.js`.
-
 ## Szybki start
 
-Wymagany tylko [Node.js](https://nodejs.org) 20+ (do testów i treningu; sam czat działa bez Node).
+Wymagany [Node.js](https://nodejs.org) **22.13 lub nowszy** (do panelu, testów i treningu; sam czat na stronie działa bez Node). Bez dodatkowych bibliotek — nie trzeba `npm install`.
 
 ```bash
-npm test           # testy wszystkich trzech wariantów
-npm run check      # kontrola wersji, CHANGES.md i aktualności modelu
-npm run train      # trening wariantu "trained" po zmianie przykładów
-npm run serve      # lokalny podgląd: http://localhost:8080
+npm run panel       # panel sterowania i podgląd czatów na Twoim komputerze: http://localhost:5050/panel/admin/
+npm test            # testy: silniki, panel, serwer panelu, kontrola strony
+npm run check       # kontrola wersji, CHANGES.md i aktualności modelu
+npm run train       # trening silnika "trained" po zmianie przykładów
+npm run check-site  # kontrola strony kliniki z konsoli (linki, ceny, telefon)
+npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 ```
 
 ## Dokumentacja
 
+- [docs/INSTRUKCJA.md](docs/INSTRUKCJA.md) — **instrukcja obsługi krok po kroku** (dla osoby nietechnicznej), słowniczek, FAQ.
+- [docs/PANEL.md](docs/PANEL.md) — panel sterowania: uruchomienie, serwer panelu, bezpieczeństwo, rejestracja i RODO, kontrola strony.
 - [docs/WDROZENIE.md](docs/WDROZENIE.md) — jak wstawić czat na lekarzeiterapeuci.pl, konfiguracja, RODO.
-- [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera dla wariantu AI (klucz API, model Claude Haiku).
-- [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami: limity, Turnstile, rate limiting, prompt caching.
+- [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera AI (klucz API, model Claude Haiku).
+- [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami AI: limity, Turnstile, rate limiting, prompt caching.
+- [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystentkę (także: czy da się „wytrenować własny model”).
 - [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md) — informacyjnie: wariant z własnym modelem na serwerze z GPU.
-- [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystenta (także: czy da się „wytrenować własny model”).
 - [CHANGES.md](CHANGES.md) — historia zmian i zasady wersjonowania.
 
 ## Zasady, których pilnujemy
 
-1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, myśli samobójcze) wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu podaje 112 (oraz 800 70 2222 / 116 123 przy kryzysie psychicznym).
+1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, myśli samobójcze) wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu podaje 112 (oraz 800 70 2222 / 116 123 przy kryzysie psychicznym). Tego nie da się wyłączyć ani nadpisać z panelu.
 2. **Żadnych opinii medycznych.** Bez diagnoz, dawkowania, interpretacji wyników. Tylko: jaki specjalista + która zakładka + „najlepiej skonsultować się z lekarzem”.
-3. **Jedno źródło wiedzy.** Zakładki, ceny i odpowiedzi są tylko w `shared/js/knowledge.js`. Bot, model i prompt AI biorą je stamtąd.
-4. **Wersjonowanie trzech typów.** Każdy wariant ma własną wersję; `npm run check` i GitHub Actions blokują publikację, jeśli wersje, CHANGES.md lub model się rozjadą.
+3. **Jedno źródło wiedzy.** Zakładki, ceny i odpowiedzi są w `shared/js/knowledge.js`; zmiany bez programowania — w panelu sterowania.
+4. **Prywatność.** Imię pacjenta nie opuszcza przeglądarki. Rejestracja rozmów jest domyślnie wyłączona; treść pytań zapisujemy tylko za zgodą i po anonimizacji.
+5. **Panel niedostępny z zewnątrz.** Panel działa tylko lokalnie; część administracyjna serwera wymaga hasła i może być ograniczona do Twojego adresu IP.
+6. **Wersjonowanie trzech typów.** Każdy silnik ma własną wersję; `npm run check` i GitHub Actions blokują publikację, jeśli wersje, CHANGES.md lub model się rozjadą.
 
 ## Konwencje
 

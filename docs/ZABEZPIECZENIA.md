@@ -170,6 +170,10 @@ Pytanie pacjenta jest obcinane do 500 znaków (`shared/js/safety.js`). Po zmiani
 
 ---
 
+## 7. Tryb pracy oszczędzający AI
+
+W panelu sterowania (zakładka „Tryb pracy”) wybierz **„Nasz model, a AI gdy nie rozpozna”**: większość pytań obsłuży darmowy model w przeglądarce pacjenta, a AI dostanie tylko te, których model nie rozpozna. **Własne odpowiedzi** z panelu są sprawdzane przed AI, więc częste pytania obsłużone własną odpowiedzią też nic nie kosztują. Patrz [PANEL.md](PANEL.md#5-tryb-pracy).
+
 ## Lista kontrolna przed uruchomieniem
 
 - [ ] Limit wydatków ustawiony, auto-reload wyłączony

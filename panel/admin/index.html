@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel sterowania — Lekarze i Terapeuci</title>
+  <link rel="icon" href="../../shared/img/avatar.png">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- Ekran połączenia -->
+  <section id="login" class="login" hidden>
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="../../shared/img/avatar.png" alt="">
+        <div>
+          <h1>Panel sterowania</h1>
+          <p>Asystentka Ilona · Lekarze i Terapeuci</p>
+        </div>
+      </div>
+
+      <form id="login-remote" class="stack">
+        <h2>Serwer panelu</h2>
+        <label class="field">
+          <span>Adres serwera <span class="tip" tabindex="0" data-tip="Adres Workera panelu — pojawia się po poleceniu „npx wrangler deploy” w folderze panel/server (instrukcja: docs/PANEL.md).">?</span></span>
+          <input id="login-endpoint" type="url" placeholder="https://lekarze-panel.twoje-konto.workers.dev" required autocomplete="url">
+        </label>
+        <label class="field">
+          <span>Hasło <span class="tip" tabindex="0" data-tip="Hasło ustawione poleceniem „npx wrangler secret put ADMIN_PASSWORD”. Panel pamięta je tylko do zamknięcia karty.">?</span></span>
+          <input id="login-password" type="password" required autocomplete="current-password">
+        </label>
+        <p id="login-error" class="error" hidden></p>
+        <button class="btn primary" type="submit">Połącz</button>
+      </form>
+
+      <div class="divider"><span>albo</span></div>
+
+      <div class="stack">
+        <h2>Tryb lokalny (demo) <span class="tip" tabindex="0" data-tip="Do testów bez serwera. Zmiany widzą tylko czaty otwarte w tej przeglądarce z tego samego adresu (localhost).">?</span></h2>
+        <p class="muted">Ustawienia i rozmowy zapisują się tylko w tej przeglądarce i działają dla czatów otwartych z <code id="local-origin"></code> — np. strony porównania. Dobre do testów bez serwera.</p>
+        <button id="login-local" class="btn" type="button">Otwórz w trybie lokalnym</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Panel -->
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <img src="../../shared/img/avatar.png" alt="">
+        <div>
+          <strong>Panel sterowania</strong>
+          <span id="conn" class="conn"></span>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="dirty" class="dirty" hidden>Niezapisane zmiany</span>
+        <button id="discard" class="btn ghost" type="button" hidden title="Odrzuca niezapisane zmiany i wraca do ostatnio zapisanych ustawień.">Cofnij</button>
+        <button id="save" class="btn primary" type="button" disabled title="Zapisuje wszystkie zakładki naraz. Na stronie kliniki zmiany pojawią się w ciągu ok. minuty.">Zapisz zmiany</button>
+        <a class="btn ghost" href="../../index.html" target="_blank" rel="noopener" title="Otwiera stronę z czatami do przetestowania (w trybie lokalnym widać tam zapisane ustawienia).">Podgląd czatów ↗</a>
+        <button id="logout" class="btn ghost" type="button">Wyloguj</button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="mode" aria-selected="true">Tryb pracy</button>
+      <button role="tab" data-tab="logging">Rejestracja rozmów</button>
+      <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
+      <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
+      <button role="tab" data-tab="logs">Rozmowy</button>
+      <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
+    </nav>
+
+    <main>
+      <!-- Tryb pracy -->
+      <section class="tab" id="tab-mode">
+        <div class="intro">
+          <h2>Tryb pracy asystentki <span class="tip" tabindex="0" data-tip="Wybierz jedną kartę i kliknij „Zapisz zmiany”. Bez zmian zostaje bot — darmowy i bezpieczny wybór na start.">?</span></h2>
+          <p>Kto odpowiada pacjentom na stronie z uniwersalnym skryptem <code>embed.js</code>. Przy kombinacji odpowiada pierwszy silnik; gdy nie rozpozna pytania albo jest niedostępny — pytanie przejmuje następny. Stany nagłe (112) i Twoje własne odpowiedzi działają zawsze, niezależnie od trybu.</p>
+        </div>
+        <div id="mode-presets" class="cards"></div>
+        <div class="panel-box">
+          <h3>Własna kolejność <span class="tip" tabindex="0" data-tip="Ułóż do 3 silników po kolei. Następny dostaje pytanie tylko wtedy, gdy poprzedni go nie rozpozna albo jest niedostępny.">?</span></h3>
+          <div class="chain-row" id="chain-row"></div>
+          <p class="muted small" id="chain-note"></p>
+        </div>
+      </section>
+
+      <!-- Rejestracja -->
+      <section class="tab" id="tab-logging" hidden>
+        <div class="intro">
+          <h2>Rejestracja rozmów <span class="tip" tabindex="0" data-tip="Im wyższy poziom, tym więcej materiału do nauki asystentki — ale też więcej obowiązków RODO. Na start wystarczą „Statystyki”.">?</span></h2>
+          <p>Co zapisujemy z rozmów pacjentów. Imię pacjenta nie jest zapisywane nigdy, a numery (PESEL, telefony, konta) i adresy e-mail są automatycznie wycinane.</p>
+        </div>
+        <div id="log-levels" class="cards"></div>
+        <div class="panel-box grid-2">
+          <label class="field">
+            <span>Czas przechowywania (dni) <span class="tip" tabindex="0" data-tip="Po tylu dniach wpisy znikają same. Zalecane 30–90 dni — krócej znaczy bezpieczniej.">?</span></span>
+            <input id="retention" type="number" min="1" max="365" step="1">
+            <small class="muted">Starsze wpisy są usuwane automatycznie codziennie.</small>
+          </label>
+          <div id="consent-preview"></div>
+        </div>
+        <div class="notice" id="rodo-note"></div>
+      </section>
+
+      <!-- Własne odpowiedzi -->
+      <section class="tab" id="tab-rules" hidden>
+        <div class="intro">
+          <h2>Własne odpowiedzi na frazy <span class="tip" tabindex="0" data-tip="Najszybszy sposób, by poprawić asystentkę: wpisz frazę i gotową odpowiedź. Działa od razu po zapisaniu, bez trenowania.">?</span></h2>
+          <p>Gdy pytanie pacjenta zawiera wpisaną frazę, asystentka odpowiada Twoim tekstem — przed botem, modelem i AI (we wszystkich trybach). Wielkość liter i polskie znaki nie mają znaczenia; <code>*</code> na końcu frazy oznacza dowolną końcówkę (<code>sobot*</code> → sobota, sobotę). Gdy pasuje kilka reguł, wygrywa najdłuższa fraza. Stany nagłe (112) zawsze mają pierwszeństwo.</p>
+        </div>
+        <div class="tester panel-box">
+          <h3>Sprawdź odpowiedź <span class="tip" tabindex="0" data-tip="Wpisz pytanie tak, jak napisałby pacjent. Zobaczysz, co odpowie asystentka i dlaczego. Test nic nie zapisuje.">?</span></h3>
+          <form id="test-form" class="test-row">
+            <input id="test-input" type="text" placeholder="Wpisz pytanie tak jak pacjent, np. „czy pracujecie w sobotę?”" autocomplete="off">
+            <button class="btn primary" type="submit">Sprawdź</button>
+          </form>
+          <div id="test-result"></div>
+          <p class="muted small">Test używa bieżących, jeszcze niezapisanych ustawień i trybu pracy z zakładki „Tryb pracy”.</p>
+        </div>
+        <div class="split">
+          <aside class="list-col">
+            <div class="list-head">
+              <input id="rules-search" type="search" placeholder="Szukaj…">
+              <button id="rule-add" class="btn primary" type="button" title="Dodaje nową własną odpowiedź na frazę.">+ Nowa</button>
+            </div>
+            <ul id="rules-list" class="item-list"></ul>
+          </aside>
+          <div id="rule-editor" class="editor"></div>
+        </div>
+      </section>
+
+      <!-- Odpowiedzi wbudowane -->
+      <section class="tab" id="tab-builtin" hidden>
+        <div class="intro">
+          <h2>Odpowiedzi wbudowane <span class="tip" tabindex="0" data-tip="Kliknij temat, żeby rozwinąć. Wpisz swoją wersję tekstu i zapisz. „Przywróć domyślną” cofa zmianę.">?</span></h2>
+          <p>Teksty, którymi odpowiadają bot i nasz model. Wpisz własną wersję, żeby ją zmienić; puste pole = tekst domyślny. Do odpowiedzi kierujących do specjalisty asystentka zawsze dopisuje: <em id="doctor-first"></em> Odpowiedzi w stanach nagłych (112) są zablokowane. Wariant AI formułuje odpowiedzi sam — na niego działają „Własne odpowiedzi”.</p>
+        </div>
+        <div class="list-head wide">
+          <input id="builtin-search" type="search" placeholder="Szukaj tematu lub tekstu…">
+          <label class="check"><input id="builtin-only" type="checkbox"> tylko zmienione <span class="tip" tabindex="0" data-tip="Pokazuje tylko odpowiedzi, które już zmieniłeś.">?</span></label>
+        </div>
+        <div id="builtin-list"></div>
+      </section>
+
+      <!-- Rozmowy -->
+      <section class="tab" id="tab-logs" hidden>
+        <div class="intro">
+          <h2>Rozmowy <span class="tip" tabindex="0" data-tip="Przy poziomie „Statystyki” zobaczysz tylko tematy, bez treści. Treść pytań pojawia się od poziomu 2 — i tylko od pacjentów, którzy wyrazili zgodę.">?</span></h2>
+          <p>Zapisane wymiany pacjent ↔ asystentka (zakres zależy od poziomu rejestracji). Pytania „bez odpowiedzi” to najlepszy materiał do nauki: dodaj własną odpowiedź albo wyeksportuj je do treningu.</p>
+        </div>
+        <div class="list-head wide">
+          <select id="logs-days">
+            <option value="7">Ostatnie 7 dni</option>
+            <option value="30" selected>Ostatnie 30 dni</option>
+            <option value="90">Ostatnie 90 dni</option>
+            <option value="365">Ostatni rok</option>
+          </select>
+          <select id="logs-filter" title="„Bez odpowiedzi” = pytania, których asystentka nie rozpoznała. To najlepsze kandydatki na własne odpowiedzi.">
+            <option value="all">Wszystkie</option>
+            <option value="unanswered">Bez odpowiedzi</option>
+            <option value="custom">Własne odpowiedzi</option>
+            <option value="safety">Stany nagłe</option>
+            <option value="text">Tylko z treścią</option>
+          </select>
+          <input id="logs-search" type="search" placeholder="Szukaj w pytaniach…">
+          <button id="logs-refresh" class="btn ghost" type="button">Odśwież</button>
+          <span class="spacer"></span>
+          <button id="logs-csv" class="btn ghost" type="button" title="Pobiera widoczne wiersze jako plik do Excela.">Eksport CSV</button>
+          <button id="logs-train" class="btn ghost" type="button" title="Pobiera pytania pogrupowane według tematu w formacie trained/data/training.json — do nauki naszego modelu.">Eksport do treningu</button>
+          <button id="logs-delete" class="btn danger" type="button" title="Trwale usuwa wszystkie zapisane rozmowy. Wymaga dwóch kliknięć.">Usuń wszystkie</button>
+        </div>
+        <div id="logs-stats" class="stats"></div>
+        <div id="logs-topics" class="panel-box"></div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th>Data</th><th>Kto odpowiedział</th><th>Temat</th><th>Pytanie</th><th>Odpowiedź</th><th></th></tr></thead>
+            <tbody id="logs-body"></tbody>
+          </table>
+        </div>
+        <p id="logs-empty" class="muted center" hidden></p>
+      </section>
+      <!-- Kontrola strony -->
+      <section class="tab" id="tab-site" hidden>
+        <div class="intro">
+          <h2>Kontrola strony kliniki <span class="tip" tabindex="0" data-tip="Asystentka podaje linki, ceny i telefon ze strony lekarzeiterapeuci.pl. Gdy klinika coś na stronie zmieni, tu zobaczysz, które odpowiedzi trzeba poprawić.">?</span></h2>
+          <p>Sprawdza, czy linki w odpowiedziach asystentki nadal działają (błędy 404, przekierowania, brakujące sekcje typu <code>#cennik</code>), czy na stronie są te same ceny, numer infolinii i godziny, oraz które strony zmieniły treść od poprzedniego sprawdzenia.</p>
+          <p id="site-auto" class="small"></p>
+        </div>
+        <div class="row">
+          <button id="site-run" class="btn primary" type="button" title="Pobiera teraz wszystkie strony, do których prowadzą odpowiedzi. Trwa zwykle 10–40 sekund.">Sprawdź teraz</button>
+          <span id="site-when" class="muted small"></span>
+        </div>
+        <div id="site-stats" class="stats"></div>
+        <div id="site-problems"></div>
+        <div id="site-facts" class="panel-box"></div>
+        <div id="site-changes" class="panel-box"></div>
+        <details id="site-all" class="panel-box">
+          <summary>Wszystkie sprawdzone linki</summary>
+          <div class="table-wrap"><table class="table"><thead><tr><th>Stan</th><th>Adres</th><th>Używany w</th></tr></thead><tbody id="site-body"></tbody></table></div>
+        </details>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

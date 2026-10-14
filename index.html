@@ -10,7 +10,7 @@
   <header class="top">
     <div>
       <h1>Asystent pacjenta — lekarzeiterapeuci.pl</h1>
-      <p>Trzy warianty tego samego asystenta. Zadaj to samo pytanie każdemu i porównaj odpowiedzi.</p>
+      <p>Trzy warianty tego samego asystenta i tryb z panelu sterowania. Zadaj to samo pytanie każdemu i porównaj odpowiedzi.</p>
     </div>
     <nav>
       <button type="button" id="reset">Wyczyść rozmowy</button>
@@ -34,6 +34,11 @@
       <p>Klasyfikator uczony na naszych przykładach (<code>trained/data/training.json</code>). Darmowy, offline, uczy się z nowych przykładów.</p>
       <div id="trained"></div>
     </section>
+    <section class="col">
+      <h2>4. Z panelu <span class="tag" id="mode-tag">tryb pracy</span></h2>
+      <p id="mode-desc">Tryb wybrany w panelu sterowania (np. „nasz model, a AI gdy nie rozpozna”) — tak będzie działał uniwersalny <code>embed.js</code> na stronie kliniki.</p>
+      <div id="auto"></div>
+    </section>
   </main>
 
   <footer class="bottom">
@@ -46,16 +51,30 @@
     import { botEngine } from './bot/bot-engine.js';
     import { aiEngine } from './ai/ai-engine.js';
     import { trainedEngine } from './trained/trained-engine.js';
+    import { createRouterEngine, chainLabel } from './shared/js/router.js';
+    import { initPanel, getPanelConfig, panelStatus } from './panel/client.js';
+    import { PANEL_CONFIG } from './panel/config.js';
+
+    // Ustawienia z panelu (serwer panelu albo — przy lokalnym uruchomieniu — localStorage).
+    await initPanel({ endpoint: PANEL_CONFIG.endpoint });
+    const chain = getPanelConfig().engine.chain;
+    const autoEngine = createRouterEngine(chain, { bot: botEngine, ai: aiEngine, trained: trainedEngine });
+    document.getElementById('mode-tag').textContent = chainLabel(chain);
 
     const cssUrl = new URL('./shared/css/widget.css', import.meta.url).href;
-    const widgets = [botEngine, aiEngine, trainedEngine].map((engine) =>
-      mountWidget({ engine, cssUrl, container: document.getElementById(engine.name) })
-    );
+    const widgets = [
+      [botEngine, 'bot'],
+      [aiEngine, 'ai'],
+      [trainedEngine, 'trained'],
+      [autoEngine, 'auto'],
+    ].map(([engine, id]) => mountWidget({ engine, cssUrl, container: document.getElementById(id), storeKey: `lt-chat:demo-${id}` }));
 
     document.getElementById('reset').addEventListener('click', () => widgets.forEach((w) => w.reset()));
+    const st = panelStatus();
     document.getElementById('versions').textContent =
       `Wersje: bot ${botEngine.version} · ai ${aiEngine.version} · trained ${trainedEngine.version}` +
-      (aiEngine.configured ? '' : ' · AI: tryb offline (brak endpointu w ai/config.js)');
+      (aiEngine.configured ? '' : ' · AI: tryb offline (brak endpointu w ai/config.js)') +
+      ` · Panel: ${st.endpoint ? 'serwer' : st.localMode ? 'ustawienia lokalne' : 'ustawienia domyślne'}`;
   </script>
 </body>
 </html>
