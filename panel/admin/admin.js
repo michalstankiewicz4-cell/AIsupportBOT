@@ -2,8 +2,8 @@
 // Łączy się z serwerem panelu (Cloudflare Worker, hasło) albo działa w trybie lokalnym
 // (ustawienia i rozmowy w localStorage tej przeglądarki).
 // Cały tekst z ustawień i rozmów wstawiamy przez textContent — nigdy innerHTML.
-import { LOG_LEVELS, MODE_PRESETS, ENGINES, DEFAULT_CONFIG, LIMITS, sanitizeConfig, isSafeUrl } from '../schema.js';
-import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, setPanelConfig } from '../client.js';
+import { LOG_LEVELS, MODE_PRESETS, ENGINES, DEFAULT_CONFIG, LIMITS, sanitizeConfig, isSafeUrl, wrapSettings, unwrapSettings } from '../schema.js';
+import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPanelConfig } from '../client.js';
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, DOCTOR_FIRST, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { respond } from '../../shared/js/pipeline.js';
@@ -16,6 +16,8 @@ const ENDPOINT_KEY = 'lt-admin:endpoint';
 const PASSWORD_KEY = 'lt-admin:password';
 const MODE_KEY = 'lt-admin:mode';
 const SITE_CHECK_KEY = 'lt-admin:sitecheck';
+// Panel otwarty z Twojego komputera (npm run panel)? Na publicznej stronie działa tylko demo.
+const IS_LOCAL_HOST = ['localhost', '127.0.0.1'].includes(location.hostname);
 
 // Krótkie wskazówki do kart wyboru.
 const MODE_HINTS = {
@@ -74,14 +76,64 @@ function remoteApi(endpoint, password) {
   };
 }
 
-function localApi() {
-  const read = (key, fallback) => {
-    try {
-      return JSON.parse(localStorage.getItem(key)) ?? fallback;
-    } catch {
-      return fallback;
-    }
+function readStore(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// Kontrola strony bez serwera panelu: stronę kliniki pobiera lokalny serwer (npm run panel),
+// bo przeglądarka sama nie może (CORS). Ostatni wynik pamiętamy w tej przeglądarce.
+const localSiteCheck = {
+  getSiteCheck: async () => readStore(SITE_CHECK_KEY, null),
+  runSiteCheck: async (config) => {
+    const res = await fetch('/api/site-check', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config, previous: readStore(SITE_CHECK_KEY, null) }),
+    }).catch(() => null);
+    if (!res?.ok) throw new Error('Kontrola działa tylko w panelu uruchomionym na Twoim komputerze poleceniem npm run panel.');
+    const report = await res.json();
+    localStorage.setItem(SITE_CHECK_KEY, JSON.stringify(report));
+    return report;
+  },
+};
+
+// Źródło „plik”: panel/settings.json. Z lokalnym serwerem (npm run panel) — odczyt i zapis
+// na dysku; bez niego (np. publiczny podgląd) — tylko odczyt, zmiany przez „Eksport”.
+async function fileApi() {
+  const writable = IS_LOCAL_HOST && (await fetch('/api/settings').then((r) => r.ok).catch(() => false));
+  return {
+    kind: 'file',
+    label: 'plik panel/settings.json',
+    readOnly: !writable,
+    getConfig: async () => {
+      const res = await fetch(writable ? '/api/settings' : SETTINGS_FILE_URL, { cache: 'no-cache' });
+      if (res.status === 404) return sanitizeConfig(DEFAULT_CONFIG);
+      if (!res.ok) throw new Error(`Nie można odczytać pliku ustawień (${res.status}).`);
+      return unwrapSettings(await res.json());
+    },
+    putConfig: async (cfg) => {
+      if (!writable) throw new Error('Plik jest tylko do odczytu — użyj „Eksport” i podmień plik panel/settings.json na hostingu.');
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(wrapSettings(cfg)),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Błąd zapisu (${res.status}).`);
+      return unwrapSettings(data);
+    },
+    getLogs: async () => [],
+    deleteLogs: async () => {},
+    ...localSiteCheck,
   };
+}
+
+function localApi() {
+  const read = readStore;
   return {
     kind: 'local',
     label: 'tryb lokalny',
@@ -96,19 +148,7 @@ function localApi() {
       return read(LOCAL_LOGS_KEY, []).filter((l) => l.ts >= minTs).sort((a, b) => b.ts - a.ts);
     },
     deleteLogs: async () => localStorage.removeItem(LOCAL_LOGS_KEY),
-    getSiteCheck: async () => read(SITE_CHECK_KEY, null),
-    // Stronę kliniki pobiera lokalny serwer (npm run panel) — przeglądarka nie może (CORS).
-    runSiteCheck: async (config) => {
-      const res = await fetch('/api/site-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config, previous: read(SITE_CHECK_KEY, null) }),
-      });
-      if (!res.ok) throw new Error('Kontrola działa tylko w panelu uruchomionym poleceniem npm run panel.');
-      const report = await res.json();
-      localStorage.setItem(SITE_CHECK_KEY, JSON.stringify(report));
-      return report;
-    },
+    ...localSiteCheck,
   };
 }
 
@@ -120,6 +160,12 @@ function showLogin(error) {
   $('#app').hidden = true;
   $('#login').hidden = false;
   $('#local-origin').textContent = location.origin;
+  $('#public-note').hidden = IS_LOCAL_HOST;
+  $('#login-remote').hidden = !IS_LOCAL_HOST;
+  $('#file-divider').hidden = !IS_LOCAL_HOST;
+  $('#file-desc').textContent = IS_LOCAL_HOST
+    ? 'Odczyt i zapis pliku panel/settings.json na Twoim dysku (przed każdym zapisem robiona jest kopia w panel/backups/). Plik wgrywasz potem na hosting razem z czatem.'
+    : 'Podgląd opublikowanego pliku panel/settings.json — tylko odczyt. Zmiany możesz wyeksportować do pliku.';
   $('#login-endpoint').value = localStorage.getItem(ENDPOINT_KEY) || '';
   const err = $('#login-error');
   err.hidden = !error;
@@ -133,8 +179,14 @@ async function connect(api) {
   state.draft = structuredClone(cfg);
   $('#login').hidden = true;
   $('#app').hidden = false;
-  $('#conn').textContent = api.kind === 'remote' ? `Serwer: ${api.label}` : 'Tryb lokalny — tylko ta przeglądarka';
-  $('#conn').classList.toggle('local', api.kind === 'local');
+  $('#conn').textContent = {
+    remote: `Serwer (baza): ${api.label}`,
+    file: api.readOnly ? 'Plik panel/settings.json — tylko odczyt' : 'Plik: panel/settings.json',
+    local: IS_LOCAL_HOST ? 'Tryb lokalny — tylko ta przeglądarka' : 'Podgląd demo — zmiany tylko w tej przeglądarce',
+  }[api.kind];
+  $('#conn').classList.toggle('local', api.kind !== 'remote');
+  // Czat w tej przeglądarce (np. podgląd czatów) korzysta z tego samego źródła.
+  localStorage.setItem(SOURCE_KEY, JSON.stringify({ remote: 'server', file: 'file', local: 'local' }[api.kind]));
   renderAll();
   loadLogs();
   loadSiteCheck();
@@ -159,6 +211,15 @@ $('#login-local').addEventListener('click', () => {
   connect(localApi());
 });
 
+$('#login-file').addEventListener('click', async () => {
+  try {
+    await connect(await fileApi());
+    localStorage.setItem(MODE_KEY, 'file');
+  } catch (err) {
+    showLogin(err.message);
+  }
+});
+
 $('#logout').addEventListener('click', () => {
   if (isDirty() && !confirm('Masz niezapisane zmiany. Wylogować mimo to?')) return;
   sessionStorage.removeItem(PASSWORD_KEY);
@@ -177,9 +238,14 @@ function isDirty() {
 
 function changed() {
   const dirty = isDirty();
+  const readOnly = Boolean(state.api?.readOnly);
   $('#dirty').hidden = !dirty;
+  $('#dirty').textContent = readOnly ? 'Niezapisane — użyj „Eksport”' : 'Niezapisane zmiany';
   $('#discard').hidden = !dirty;
-  $('#save').disabled = !dirty;
+  $('#save').disabled = !dirty || readOnly;
+  $('#save').title = readOnly
+    ? 'Plik jest tylko do odczytu. Użyj „Eksport” i podmień plik panel/settings.json na hostingu.'
+    : 'Zapisuje wszystkie zakładki naraz.';
   $('#rules-count').textContent = state.draft.rules.length || '';
   $('#ovr-count').textContent = Object.keys(state.draft.overrides).length || '';
 }
@@ -192,7 +258,13 @@ $('#save').addEventListener('click', async () => {
     const cfg = sanitizeConfig(await state.api.putConfig(sanitizeConfig(state.draft)));
     state.saved = cfg;
     state.draft = structuredClone(cfg);
-    toast(state.api.kind === 'remote' ? 'Zapisano. Na stronie zmiany będą widoczne w ciągu ok. minuty.' : 'Zapisano lokalnie.');
+    toast(
+      {
+        remote: 'Zapisano. Na stronie zmiany będą widoczne w ciągu ok. minuty.',
+        file: 'Zapisano do panel/settings.json (poprzednia wersja w panel/backups/). Wgraj plik na hosting, żeby zmiany trafiły na stronę.',
+        local: 'Zapisano lokalnie.',
+      }[state.api.kind],
+    );
     renderAll();
   } catch (err) {
     toast(`Nie zapisano: ${err.message}`, true);
@@ -210,6 +282,37 @@ $('#discard').addEventListener('click', () => {
 
 window.addEventListener('beforeunload', (e) => {
   if (state.api && isDirty()) e.preventDefault();
+});
+
+// =============================================================================
+// Eksport i import ustawień
+// =============================================================================
+
+$('#export').addEventListener('click', () => {
+  const data = wrapSettings(state.draft);
+  download(`ustawienia-asystentki-${dateStamp()}.json`, JSON.stringify(data, null, 2) + '\n', 'application/json');
+  toast(isDirty() ? 'Wyeksportowano bieżące ustawienia (razem z niezapisanymi zmianami).' : 'Wyeksportowano ustawienia.');
+});
+
+$('#import').addEventListener('click', () => $('#import-file').click());
+
+$('#import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  try {
+    if (file.size > 1_000_000) throw new Error('Plik jest za duży (maks. 1 MB).');
+    const cfg = unwrapSettings(JSON.parse(await file.text()));
+    state.draft = structuredClone(cfg);
+    state.selectedRule = null;
+    renderAll();
+    toast(
+      `Wczytano „${file.name}”: tryb ${chainLabel(cfg.engine.chain)}, własne odpowiedzi: ${cfg.rules.length}, zmienione wbudowane: ${Object.keys(cfg.overrides).length}. ` +
+        (state.api.readOnly ? 'Sprawdź i użyj „Eksport”.' : 'Sprawdź i kliknij „Zapisz zmiany”.'),
+    );
+  } catch (err) {
+    toast(`Nie wczytano pliku: ${err instanceof SyntaxError ? 'to nie jest poprawny plik JSON.' : err.message}`, true);
+  }
 });
 
 // =============================================================================
@@ -337,6 +440,14 @@ function renderLogging() {
 
   const note = $('#rodo-note');
   note.textContent = '';
+  if (state.api?.kind === 'file') {
+    note.classList.add('warn');
+    note.append(
+      el('strong', '', 'Źródło „plik”: rozmowy nie są zapisywane. '),
+      el('span', '', 'Rejestr wymaga serwera panelu (bazy), który odbiera wpisy od czatów pacjentów. Ustawienie poziomu zostanie zapisane w pliku i zadziała po przejściu na serwer panelu.'),
+    );
+    return;
+  }
   if (lg.level === 0) {
     note.append(el('p', '', 'Rejestracja wyłączona — nic nie jest zapisywane ani wysyłane.'));
   } else if (lg.level === 1) {
@@ -720,7 +831,9 @@ function renderLogs() {
   const empty = $('#logs-empty');
   empty.hidden = rows.length > 0;
   empty.textContent =
-    state.draft.logging.level === 0 && !all.length
+    state.api?.kind === 'file'
+      ? 'Przy źródle „plik” rozmowy nie są zapisywane — rejestr wymaga serwera panelu (bazy).'
+      : state.draft.logging.level === 0 && !all.length
       ? 'Rejestracja jest wyłączona — włącz ją w zakładce „Rejestracja rozmów”.'
       : 'Brak rozmów spełniających kryteria.';
   for (const l of rows.slice(0, 500)) {
@@ -1123,7 +1236,8 @@ function toast(message, isError = false) {
   const password = sessionStorage.getItem(PASSWORD_KEY);
   try {
     if (mode === 'local') return await connect(localApi());
-    if (mode === 'remote' && endpoint && password) return await connect(remoteApi(endpoint, password));
+    if (mode === 'file') return await connect(await fileApi());
+    if (IS_LOCAL_HOST && mode === 'remote' && endpoint && password) return await connect(remoteApi(endpoint, password));
   } catch (err) {
     return showLogin(err.message);
   }

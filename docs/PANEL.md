@@ -23,13 +23,29 @@ Twój komputer                         Cloudflare (internet)                   S
 └──────────────────────┘             └─────────────────────────────┘
 ```
 
-- **Panel administratora** (`panel/admin/`) działa wyłącznie na Twoim komputerze. Nie jest publikowany na GitHub Pages (workflow usuwa go przed publikacją).
+- **Panel administratora** (`panel/admin/`) z pełnymi możliwościami działa wyłącznie na Twoim komputerze (`npm run panel`). Na publicznej stronie jest dostępny tylko jako **podgląd demo** — bez logowania do serwera i bez zapisu pliku; zmiany zostają w przeglądarce oglądającego.
 - **Serwer panelu** (`panel/server/`) przechowuje ustawienia i rejestr rozmów w bazie Cloudflare D1. Publicznie udostępnia tylko to, czego potrzebuje czat pacjenta: odczyt ustawień (`GET /config`) i zapis rozmowy (`POST /log`).
 - **Czat** przy starcie pobiera ustawienia z serwera panelu. Gdy serwer panelu nie jest skonfigurowany lub nie odpowiada — działa na ustawieniach domyślnych (bot, rejestracja wyłączona).
 
-### Tryb lokalny (bez serwera)
+### Źródła ustawień: serwer (baza), plik, tryb lokalny
 
-Na start nie potrzebujesz żadnego serwera: w panelu wybierz **„Tryb lokalny”**. Ustawienia i rozmowy zapisują się w przeglądarce i działają dla czatów otwartych z `http://localhost:5050` (strona porównania, podgląd pływający). To idealne do testów i do pokazania klientowi. Na stronie kliniki tryb lokalny nie ma wpływu.
+Przy logowaniu do panelu wybierasz, gdzie są ustawienia:
+
+| Źródło | Gdzie są ustawienia | Rejestr rozmów | Kiedy zmiana działa na stronie | Dla kogo |
+|---|---|---|---|---|
+| **Serwer panelu (baza)** | Cloudflare D1 | tak | po ok. minucie, automatycznie | produkcja z rejestracją rozmów |
+| **Plik ustawień** | `panel/settings.json` obok skryptów czatu | nie | po wgraniu pliku na hosting | prosty hosting bez serwera i bazy |
+| **Tryb lokalny (demo)** | pamięć przeglądarki | tak (w tej przeglądarce) | od razu, tylko w tej przeglądarce | testy, pokaz klientowi |
+
+Czat bierze ustawienia z pierwszego dostępnego źródła: serwer panelu (gdy podano `data-panel` lub adres w `panel/config.js`) → tryb lokalny (jeśli wybrano go w panelu w tej samej przeglądarce) → plik `panel/settings.json` → ustawienia domyślne.
+
+**Plik ustawień** — przy `npm run panel` panel zapisuje zmiany prosto do `panel/settings.json` na Twoim dysku; przed każdym zapisem poprzednia wersja trafia do `panel/backups/` (30 ostatnich kopii). Żeby zmiany trafiły na stronę kliniki, wgraj ten jeden plik na hosting (np. przez FTP) w miejsce starego. Na publicznym podglądzie plik jest tylko do odczytu.
+
+### Eksport i import ustawień
+
+- **Eksport** (górny pasek) — pobiera plik z bieżącymi ustawieniami, także niezapisanymi. Ma dokładnie ten sam format co `panel/settings.json`, więc można go **wgrać na hosting jako `panel/settings.json`** albo zaimportować później.
+- **Import** — wczytuje plik z eksportu (albo `panel/settings.json`). Ustawienia są sprawdzane (błędne pola i niebezpieczne linki odrzucane) i trafiają do edycji — nic się nie zmienia, dopóki nie klikniesz **„Zapisz zmiany”**.
+- Zastosowania: kopia zapasowa, przeniesienie ustawień między źródłami (np. z trybu lokalnego na serwer albo do pliku), ręczna podmiana pliku, przekazanie ustawień innej osobie.
 
 ---
 
@@ -95,7 +111,8 @@ W panelu: **Serwer panelu** → adres Workera + hasło → **Połącz**. Hasło 
 
 | Zabezpieczenie | Co daje |
 |---|---|
-| Panel tylko lokalnie (`127.0.0.1`), nie na GitHub Pages | Nikt w internecie nie zobaczy panelu |
+| Pełny panel tylko lokalnie (`127.0.0.1`); publicznie wyłącznie podgląd demo | Nikt z internetu nie zaloguje się do serwera ani nie zapisze ustawień |
+| Zapis pliku ustawień tylko z lokalnego panelu (sprawdzany Host i Origin) | Żadna inna strona otwarta w przeglądarce nie zmieni `panel/settings.json` |
 | Hasło (`ADMIN_PASSWORD`), porównywane w stałym czasie | Bez hasła nie da się odczytać ani zmienić ustawień czy rozmów |
 | Blokada po 10 błędnych hasłach (15 min) | Chroni przed zgadywaniem hasła |
 | `ADMIN_ORIGINS` (domyślnie tylko `localhost:5050`) | Przeglądarka pozwoli wywołać część administracyjną tylko z lokalnego panelu |

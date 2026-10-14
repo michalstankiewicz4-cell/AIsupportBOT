@@ -40,10 +40,11 @@ jobs:
         run: node tools/check-versions.js
       - name: Tests
         run: node --no-warnings tools/test.js
-      # Panel administratora NIE jest publikowany — działa tylko lokalnie (npm run panel).
-      # Kod serwerów (Workery) też nie jest potrzebny na stronie.
+      # Kod serwerów (Workery) i narzędzia nie są potrzebne na stronie.
+      # Panel administratora jest publikowany tylko jako PODGLĄD (tryb demo): na publicznym
+      # adresie nie da się zalogować do serwera ani zapisać pliku — to działa wyłącznie lokalnie (npm run panel).
       - name: Remove private parts from the public site
-        run: rm -rf panel/admin panel/server ai/server tools
+        run: rm -rf panel/server panel/backups ai/server tools
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

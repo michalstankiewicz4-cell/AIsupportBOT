@@ -14,6 +14,10 @@ Jednorazowo: w repozytorium **Settings → Pages → Source: GitHub Actions**.
 
 Sprawdź dokładny adres w zakładce Actions (krok „Deploy”) — wielkość liter w nazwie repozytorium ma znaczenie w adresie.
 
+### Inny hosting niż GitHub
+
+Czat to zwykłe pliki — można je wgrać na dowolny hosting (np. ten sam, na którym jest strona kliniki). Wgraj cały folder projektu **bez**: `panel/server`, `panel/backups`, `ai/server`, `tools`, `.git`, `.github`. W skryptach na stronie zamień adres `https://michalstankiewicz4-cell.github.io/AIsupportBOT/` na swój. Przy źródle ustawień „plik” po każdej zmianie w panelu wgrywasz ponownie tylko `panel/settings.json`.
+
 ## 2. Wstawienie czatu na stronę kliniki
 
 Osoba, która ma dostęp do kodu strony lekarzeiterapeuci.pl, wkleja **jedną linijkę** przed `</body>` (na wszystkich podstronach — zwykle w szablonie stopki).
@@ -28,7 +32,7 @@ Tryb pracy (bot / nasz model / AI / kombinacja), własne odpowiedzi i rejestracj
         data-endpoint="https://lekarze-ai-assistant.TWOJE-KONTO.workers.dev" defer></script>
 ```
 
-- `data-panel` — serwer panelu ([PANEL.md](PANEL.md)). Bez niego: bot regułowy z ustawieniami domyślnymi.
+- `data-panel` — serwer panelu ([PANEL.md](PANEL.md)). Bez niego czat czyta ustawienia z pliku `panel/settings.json` (źródło „plik”), a gdy go nie ma — bot regułowy z ustawieniami domyślnymi.
 - `data-endpoint` — serwer AI ([AI-SERWER.md](AI-SERWER.md)); potrzebny tylko, gdy tryb pracy używa AI.
 
 ### Alternatywnie: stały silnik

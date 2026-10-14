@@ -37,12 +37,13 @@ Instrukcja dla osoby, która opiekuje się asystentką na co dzień — bez prog
    ```
 
 2. Otwórz w przeglądarce **http://localhost:5050/panel/admin/**
-3. Wybierz:
-   - **Tryb lokalny** — do testów; zmiany widać tylko w czatach na `http://localhost:5050` w tej przeglądarce,
-   - **Serwer panelu** — adres i hasło od administratora; zmiany trafiają na stronę kliniki (po ok. minucie).
+3. Wybierz, gdzie są ustawienia:
+   - **Serwer panelu** — adres i hasło od administratora; zmiany trafiają na stronę kliniki po ok. minucie, działa rejestr rozmów,
+   - **Plik ustawień** — zmiany zapisują się w pliku `panel/settings.json`; na stronę trafiają po wgraniu tego pliku na hosting (rozmowy nie są wtedy zapisywane),
+   - **Tryb lokalny** — do testów; zmiany widać tylko w czatach na `http://localhost:5050` w tej przeglądarce.
 4. Po pracy: **Wyloguj**, a w terminalu `Ctrl+C`.
 
-Panel działa tylko na Twoim komputerze — nikt z internetu go nie zobaczy.
+Pełny panel działa tylko na Twoim komputerze. Na stronie z czatami (przycisk **„Panel administratora”**) jest jego **podgląd demo** — można go przeklikać, ale zmiany zostają tylko w przeglądarce oglądającego.
 
 > **Wskazówki:** przy większości pól jest ikonka **?** — najedź na nią myszą (albo stuknij na telefonie), żeby zobaczyć krótkie wyjaśnienie.
 
@@ -112,6 +113,20 @@ Na stałe (dla wszystkich silników, także AI) ceny zmienia programista w `shar
 2. Poziom **2** lub **3** — dopiero po zgodzie klienta i jego prawnika (RODO).
 3. Ustaw **czas przechowywania** (zalecane 30–90 dni) → **Zapisz zmiany**.
 
+### Kopia zapasowa / przeniesienie ustawień (Eksport i Import)
+
+1. **Eksport** (górny pasek) — pobiera plik `ustawienia-asystentki-RRRR-MM-DD.json`. Zachowaj go jako kopię.
+2. Żeby przywrócić lub przenieść: **Import** → wybierz plik → sprawdź ustawienia w zakładkach → **Zapisz zmiany**.
+3. Wyeksportowany plik możesz też wgrać na hosting jako `panel/settings.json` — czat od razu zacznie go używać (przy źródle „plik”).
+
+### Zmiana w źródle „plik” — jak wysłać na stronę
+
+1. Zaloguj się: **Plik ustawień** → wprowadź zmiany → **Zapisz zmiany** (poprzednia wersja trafia do `panel/backups/`).
+2. Wgraj plik `panel/settings.json` na hosting w miejsce starego (np. przez FTP / menedżer plików hostingu).
+3. Odśwież stronę kliniki i sprawdź w czacie.
+
+Pomyłka? W `panel/backups/` są poprzednie wersje — zaimportuj wybraną i zapisz.
+
 ### Przygotowanie przykładów do nauki modelu
 
 1. **Rozmowy** → **Eksport do treningu** (wymaga poziomu 2 lub 3).
@@ -178,6 +193,12 @@ GitHub → Settings → Notifications → Actions → włącz powiadomienia. Git
 **Zapomniałem hasła do panelu.**
 Ustaw nowe: `npx wrangler secret put ADMIN_PASSWORD` w folderze `panel/server`.
 
+**Baza czy plik — co wybrać?**
+Plik jest prostszy (bez serwera i bazy, wystarczy hosting), ale zmiany trzeba wgrywać ręcznie i rozmowy nie są zapisywane. Baza (serwer panelu) zmienia stronę automatycznie i zapisuje rozmowy. Ustawienia między nimi przeniesiesz przez Eksport → Import.
+
+**Czy panel jest w internecie?**
+Tylko jako podgląd demo — bez dostępu do serwera i pliku. Prawdziwe zmiany robisz wyłącznie z panelu uruchomionego na swoim komputerze.
+
 **Jak przetestować coś, nie zmieniając strony kliniki?**
 Zaloguj się w **trybie lokalnym** i testuj na http://localhost:5050 (porównanie czatów, kolumna „4. Z panelu”).
 
@@ -189,7 +210,9 @@ Zaloguj się w **trybie lokalnym** i testuj na http://localhost:5050 (porównani
 - [ ] Ktoś z kliniki sprawdził odpowiedzi (Odpowiedzi wbudowane) — czy kierują do właściwych zakładek
 - [ ] Kontrola strony: 0 błędów, wszystkie fakty ✓
 - [ ] Ustalony poziom rejestracji; przy 2/3 — zgoda prawnika i zapis w polityce prywatności
-- [ ] Serwer panelu wdrożony, mocne hasło, (zalecane) `ADMIN_IPS` lub Cloudflare Access
+- [ ] Wybrane źródło ustawień: serwer panelu (baza) albo plik `panel/settings.json`
+- [ ] Serwer panelu wdrożony, mocne hasło, (zalecane) `ADMIN_IPS` lub Cloudflare Access — albo plik ustawień wgrany na hosting
+- [ ] Eksport ustawień zachowany jako kopia zapasowa
 - [ ] Jeśli AI: serwer AI, limit wydatków, Turnstile ([ZABEZPIECZENIA.md](ZABEZPIECZENIA.md))
 - [ ] Włączone powiadomienia e-mail z GitHub Actions
 - [ ] Na stronie kliniki wklejony uniwersalny `embed.js` z `data-panel` ([WDROZENIE.md](WDROZENIE.md))

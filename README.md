@@ -16,7 +16,7 @@ Możliwy jest też **wariant 4 — własny model na serwerze z GPU** (dane pacje
 
 ## Panel sterowania
 
-Działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`) — nie jest publikowany w internecie. Zakładki:
+Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`); na publicznej stronie jest wyłącznie **podgląd demo**. Ustawienia mogą być w **bazie** (serwer panelu, z rejestrem rozmów) albo w **pliku** `panel/settings.json` (bez serwera — wgrywasz plik na hosting). **Eksport / Import** ustawień do pliku JSON — kopia zapasowa i ręczna podmiana. Zakładki:
 
 - **Tryb pracy** — bot / nasz model / AI albo ich kolejność (domyślnie: bot).
 - **Rejestracja rozmów** — 4 poziomy: wyłączona, statystyki, treść pytań za zgodą, pełne rozmowy za zgodą.
@@ -31,6 +31,7 @@ Instrukcja krok po kroku: **[docs/INSTRUKCJA.md](docs/INSTRUKCJA.md)**, szczegó
 
 - Porównanie silników obok siebie (+ tryb z panelu): https://michalstankiewicz4-cell.github.io/AIsupportBOT/
 - Czat tak, jak na stronie kliniki: https://michalstankiewicz4-cell.github.io/AIsupportBOT/demo/floating.html?variant=auto
+- Panel administratora (podgląd demo): https://michalstankiewicz4-cell.github.io/AIsupportBOT/panel/admin/
 
 ## Struktura
 
@@ -61,7 +62,8 @@ AIsupportBOT/
 │   ├── train.js             trening (npm run train)
 │   └── model.json           wynik treningu (generowany)
 ├── panel/                   PANEL STEROWANIA
-│   ├── admin/               ★ panel administratora (tylko lokalnie, nie trafia do internetu)
+│   ├── admin/               ★ panel administratora (pełny lokalnie; publicznie tylko podgląd demo)
+│   ├── settings.json        ★ plik ustawień (źródło „plik”) — ten sam format co eksport z panelu
 │   ├── server/              serwer panelu (Cloudflare Worker + baza D1): ustawienia, rejestr, kontrola strony
 │   ├── schema.js            format i walidacja ustawień, poziomy rejestracji, tryby pracy
 │   ├── client.js            połączenie czatu z panelem (ustawienia, własne odpowiedzi, rejestr)
@@ -104,7 +106,7 @@ npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 2. **Żadnych opinii medycznych.** Bez diagnoz, dawkowania, interpretacji wyników. Tylko: jaki specjalista + która zakładka + „najlepiej skonsultować się z lekarzem”.
 3. **Jedno źródło wiedzy.** Zakładki, ceny i odpowiedzi są w `shared/js/knowledge.js`; zmiany bez programowania — w panelu sterowania.
 4. **Prywatność.** Imię pacjenta nie opuszcza przeglądarki. Rejestracja rozmów jest domyślnie wyłączona; treść pytań zapisujemy tylko za zgodą i po anonimizacji.
-5. **Panel niedostępny z zewnątrz.** Panel działa tylko lokalnie; część administracyjna serwera wymaga hasła i może być ograniczona do Twojego adresu IP.
+5. **Panel niedostępny z zewnątrz.** Pełny panel działa tylko lokalnie (publicznie wyłącznie podgląd demo); część administracyjna serwera wymaga hasła i może być ograniczona do Twojego adresu IP; plik ustawień zapisuje tylko lokalny panel.
 6. **Wersjonowanie trzech typów.** Każdy silnik ma własną wersję; `npm run check` i GitHub Actions blokują publikację, jeśli wersje, CHANGES.md lub model się rozjadą.
 
 ## Konwencje

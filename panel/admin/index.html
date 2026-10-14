@@ -20,6 +20,10 @@
         </div>
       </div>
 
+      <div id="public-note" class="notice warn" hidden>
+        <strong>Podgląd demonstracyjny.</strong> Na publicznej stronie panel działa tylko w trybie demo — zmiany zostają w Twojej przeglądarce i widać je w czatach na tej stronie. Prawdziwy panel (serwer, zapis do pliku) uruchamiasz na swoim komputerze: <code>npm run panel</code>.
+      </div>
+
       <form id="login-remote" class="stack">
         <h2>Serwer panelu</h2>
         <label class="field">
@@ -33,6 +37,14 @@
         <p id="login-error" class="error" hidden></p>
         <button class="btn primary" type="submit">Połącz</button>
       </form>
+
+      <div class="divider" id="file-divider"><span>albo</span></div>
+
+      <div class="stack" id="login-file-box">
+        <h2>Plik ustawień <span class="tip" tabindex="0" data-tip="Ustawienia w pliku panel/settings.json obok skryptów czatu. Bez serwera i bazy: po zmianie wgrywasz ten jeden plik na hosting. Rozmowy nie są wtedy zapisywane.">?</span></h2>
+        <p class="muted" id="file-desc">Ustawienia zapisywane w pliku <code>panel/settings.json</code>.</p>
+        <button id="login-file" class="btn" type="button">Otwórz plik ustawień</button>
+      </div>
 
       <div class="divider"><span>albo</span></div>
 
@@ -56,6 +68,9 @@
       </div>
       <div class="top-actions">
         <span id="dirty" class="dirty" hidden>Niezapisane zmiany</span>
+        <button id="export" class="btn ghost" type="button" title="Pobiera plik z bieżącymi ustawieniami (także niezapisanymi). Możesz go zaimportować później albo wgrać na hosting jako panel/settings.json.">Eksport</button>
+        <button id="import" class="btn ghost" type="button" title="Wczytuje ustawienia z pliku (z eksportu albo panel/settings.json). Przed zapisem możesz je sprawdzić — nic nie zmienia się, dopóki nie klikniesz „Zapisz zmiany”.">Import</button>
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
         <button id="discard" class="btn ghost" type="button" hidden title="Odrzuca niezapisane zmiany i wraca do ostatnio zapisanych ustawień.">Cofnij</button>
         <button id="save" class="btn primary" type="button" disabled title="Zapisuje wszystkie zakładki naraz. Na stronie kliniki zmiany pojawią się w ciągu ok. minuty.">Zapisz zmiany</button>
         <a class="btn ghost" href="../../index.html" target="_blank" rel="noopener" title="Otwiera stronę z czatami do przetestowania (w trybie lokalnym widać tam zapisane ustawienia).">Podgląd czatów ↗</a>

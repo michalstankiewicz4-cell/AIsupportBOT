@@ -3,14 +3,19 @@
 // Nasłuchuje WYŁĄCZNIE na 127.0.0.1, więc nikt z sieci (ani z internetu) nie ma do niego dostępu.
 // Bez zależności — tylko wbudowane moduły Node.
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, writeFile, rename, mkdir, readdir, unlink, copyFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkSite } from '../panel/site-check.js';
+import { wrapSettings, unwrapSettings, DEFAULT_CONFIG } from '../panel/schema.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const HOST = '127.0.0.1';
 const PORT = Number(process.argv[2] || process.env.PORT || 5050);
+// Ścieżki można zmienić zmiennymi środowiskowymi (używane w testach).
+const SETTINGS_FILE = process.env.LT_SETTINGS_FILE || join(ROOT, 'panel', 'settings.json');
+const BACKUP_DIR = process.env.LT_BACKUP_DIR || join(ROOT, 'panel', 'backups');
+const BACKUPS_KEEP = 30;
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -27,30 +32,79 @@ const TYPES = {
 // Przeglądarka nie może sama pobrać strony kliniki (blokada CORS), więc robi to ten serwer.
 // Przyjmujemy tylko zapytania z samego panelu (Host i Origin = localhost), żeby żadna
 // inna strona otwarta w przeglądarce nie mogła tego wywołać.
-async function handleSiteCheck(req, res) {
+// Zapytanie z samego panelu? Host musi być lokalny (ochrona przed „DNS rebinding”),
+// a przy zapisie także Origin (żadna inna strona otwarta w przeglądarce nie może zapisać).
+function isLocalRequest(req, requireOrigin) {
   const local = [`localhost:${PORT}`, `127.0.0.1:${PORT}`];
-  const origin = req.headers.origin || '';
-  if (!local.includes(req.headers.host) || !local.some((h) => origin === `http://${h}`)) return send(res, 403, 'Forbidden');
+  if (!local.includes(req.headers.host)) return false;
+  if (!requireOrigin) return true;
+  return local.some((h) => (req.headers.origin || '') === `http://${h}`);
+}
+
+async function readJsonBody(req, max = 1_000_000) {
   let body = '';
   for await (const chunk of req) {
     body += chunk;
-    if (body.length > 1_000_000) return send(res, 413, 'Too large');
+    if (body.length > max) throw Object.assign(new Error('too large'), { status: 413 });
   }
-  let input = {};
   try {
-    input = JSON.parse(body || '{}');
+    return JSON.parse(body || '{}');
   } catch {
-    return send(res, 400, 'Bad JSON');
+    throw Object.assign(new Error('bad json'), { status: 400 });
   }
-  const report = await checkSite({ config: input.config, previous: input.previous });
-  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
-  res.end(JSON.stringify(report));
+}
+
+function sendJson(res, status, data) {
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+  res.end(JSON.stringify(data));
+}
+
+async function handleSiteCheck(req, res) {
+  if (!isLocalRequest(req, true)) return send(res, 403, 'Forbidden');
+  const input = await readJsonBody(req);
+  sendJson(res, 200, await checkSite({ config: input.config, previous: input.previous }));
+}
+
+// Źródło „plik”: panel czyta i zapisuje panel/settings.json na dysku.
+// Przed każdym zapisem poprzednia wersja trafia do panel/backups/ (ostatnie 30 kopii).
+async function handleSettings(req, res) {
+  if (req.method === 'GET') {
+    if (!isLocalRequest(req, false)) return send(res, 403, 'Forbidden');
+    try {
+      return sendJson(res, 200, JSON.parse(await readFile(SETTINGS_FILE, 'utf8')));
+    } catch {
+      return sendJson(res, 200, wrapSettings(DEFAULT_CONFIG)); // brak pliku = ustawienia domyślne
+    }
+  }
+  if (req.method === 'PUT') {
+    if (!isLocalRequest(req, true)) return send(res, 403, 'Forbidden');
+    let config;
+    try {
+      config = unwrapSettings(await readJsonBody(req));
+    } catch (err) {
+      return sendJson(res, err.status || 400, { error: err.message });
+    }
+    config.updatedAt = new Date().toISOString();
+    const data = wrapSettings(config);
+    await mkdir(BACKUP_DIR, { recursive: true });
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    await copyFile(SETTINGS_FILE, join(BACKUP_DIR, `settings-${stamp}.json`)).catch(() => {});
+    const old = (await readdir(BACKUP_DIR)).filter((f) => f.startsWith('settings-')).sort();
+    await Promise.all(old.slice(0, Math.max(0, old.length - BACKUPS_KEEP)).map((f) => unlink(join(BACKUP_DIR, f))));
+    // Zapis „atomowy”: najpierw plik tymczasowy, potem podmiana — plik nigdy nie zostanie uszkodzony w połowie.
+    const tmp = `${SETTINGS_FILE}.tmp`;
+    await writeFile(tmp, JSON.stringify(data, null, 2) + '\n');
+    await rename(tmp, SETTINGS_FILE);
+    return sendJson(res, 200, data);
+  }
+  return send(res, 405, 'Method not allowed');
 }
 
 const server = createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${HOST}`);
     if (url.pathname === '/api/site-check' && req.method === 'POST') return await handleSiteCheck(req, res);
+    if (url.pathname === '/api/settings') return await handleSettings(req, res);
     let path = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
     // Ochrona przed wyjściem poza katalog projektu i przed plikami ukrytymi (.git itp.).
     if (path.split(/[/\\]/).some((part) => part.startsWith('.'))) return send(res, 404, 'Not found');
@@ -67,7 +121,8 @@ const server = createServer(async (req, res) => {
     const body = await readFile(file);
     res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(body);
-  } catch {
+  } catch (err) {
+    if (err?.status) return send(res, err.status, err.message);
     send(res, 404, 'Not found');
   }
 });
@@ -82,6 +137,7 @@ server.listen(PORT, HOST, () => {
   console.log(`  Panel sterowania:   http://localhost:${PORT}/panel/admin/`);
   console.log(`  Porównanie czatów:  http://localhost:${PORT}/`);
   console.log(`  Czat na stronie:    http://localhost:${PORT}/demo/floating.html?variant=auto`);
+  console.log(`  Plik ustawień:      ${SETTINGS_FILE}`);
   console.log('');
   console.log('  Serwer działa tylko na tym komputerze (127.0.0.1). Zatrzymanie: Ctrl+C');
 });

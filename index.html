@@ -13,6 +13,7 @@
       <p>Trzy warianty tego samego asystenta i tryb z panelu sterowania. Zadaj to samo pytanie każdemu i porównaj odpowiedzi.</p>
     </div>
     <nav>
+      <a class="nav-admin" href="panel/admin/" target="_blank" rel="noopener" title="Podgląd panelu sterowania. Na publicznej stronie działa jako demo — zmiany zostają tylko w Twojej przeglądarce i są widoczne w czatach na tej stronie.">Panel administratora ↗</a>
       <button type="button" id="reset">Wyczyść rozmowy</button>
       <a href="demo/floating.html?variant=bot">Podgląd na stronie (pływający)</a>
     </nav>
@@ -74,7 +75,7 @@
     document.getElementById('versions').textContent =
       `Wersje: bot ${botEngine.version} · ai ${aiEngine.version} · trained ${trainedEngine.version}` +
       (aiEngine.configured ? '' : ' · AI: tryb offline (brak endpointu w ai/config.js)') +
-      ` · Panel: ${st.endpoint ? 'serwer' : st.localMode ? 'ustawienia lokalne' : 'ustawienia domyślne'}`;
+      ` · Ustawienia: ${{ server: 'serwer panelu', local: 'tryb lokalny (ta przeglądarka)', file: 'plik panel/settings.json', default: 'domyślne' }[st.source]}`;
   </script>
 </body>
 </html>

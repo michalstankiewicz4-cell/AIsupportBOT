@@ -3,21 +3,27 @@
 // - Stosuje własne odpowiedzi na frazy i nadpisania odpowiedzi wbudowanych.
 // - Wysyła wpisy do rejestru rozmów (POST /log) zgodnie z poziomem rejestracji.
 //
-// Tryb lokalny (demo): gdy nie podano adresu serwera, ustawienia i rejestr są
-// czytane z localStorage tej przeglądarki — to tam zapisuje je panel uruchomiony
-// lokalnie (npm run panel). Na stronie kliniki localStorage jest pusty, więc
-// bez serwera panelu widżet działa po prostu z ustawieniami domyślnymi.
-import { DEFAULT_CONFIG, sanitizeConfig, publicConfig, filterLogEntry } from './schema.js';
+// Skąd czat bierze ustawienia (pierwsze dostępne wygrywa):
+//   1. serwer panelu (baza) — gdy podano adres (data-panel albo panel/config.js),
+//   2. tryb lokalny (demo) — gdy w tej przeglądarce wybrano w panelu „Tryb lokalny”
+//      (ustawienia i rozmowy w localStorage; działa tylko w tej przeglądarce),
+//   3. plik panel/settings.json — leży obok skryptów czatu na hostingu,
+//   4. ustawienia domyślne (bot, rejestracja wyłączona).
+import { DEFAULT_CONFIG, sanitizeConfig, publicConfig, filterLogEntry, unwrapSettings } from './schema.js';
 import { normalize, containsAny } from '../shared/js/text.js';
 import { setAnswerOverrides } from '../shared/js/knowledge.js';
 
 export const LOCAL_CONFIG_KEY = 'lt-panel:config';
 export const LOCAL_LOGS_KEY = 'lt-panel:logs';
+// Które źródło wybrano ostatnio w panelu w tej przeglądarce: 'local' (demo), 'file' albo 'server'.
+export const SOURCE_KEY = 'lt-panel:source';
+export const SETTINGS_FILE_URL = new URL('./settings.json', import.meta.url).href;
 const LOCAL_LOGS_MAX = 1000;
 
 let config = sanitizeConfig(DEFAULT_CONFIG);
 let endpoint = '';
 let localMode = false;
+let source = 'default';
 
 // Ustawia konfigurację (używane przy starcie, przez panel do testów i w testach Node).
 export function setPanelConfig(cfg) {
@@ -31,7 +37,7 @@ export function getPanelConfig() {
 }
 
 export function panelStatus() {
-  return { endpoint, localMode };
+  return { endpoint, localMode, source };
 }
 
 /**
@@ -41,24 +47,55 @@ export function panelStatus() {
 export async function initPanel(opts = {}) {
   endpoint = String(opts.endpoint || '').replace(/\/+$/, '');
   localMode = false;
+  source = 'default';
+  setPanelConfig(DEFAULT_CONFIG); // każde wczytanie zaczyna od ustawień domyślnych
+  const timeoutMs = opts.timeoutMs || 4000;
+
+  // 1. Serwer panelu (baza).
   if (endpoint) {
     try {
-      const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs || 4000);
-      const res = await fetch(`${endpoint}/config`, { signal: ctrl.signal });
-      clearTimeout(timer);
-      if (res.ok) setPanelConfig(await res.json());
+      const res = await fetchWithTimeout(`${endpoint}/config`, {}, timeoutMs);
+      if (res.ok) {
+        setPanelConfig(await res.json());
+        source = 'server';
+      }
     } catch (err) {
-      console.warn('[LTChat] panel: nie udało się pobrać ustawień, używam domyślnych.', err);
+      console.warn('[LTChat] panel: nie udało się pobrać ustawień z serwera, używam domyślnych.', err);
     }
     return config;
   }
+
+  // 2. Tryb lokalny (demo) wybrany w panelu w tej przeglądarce.
   const local = readLocal(LOCAL_CONFIG_KEY);
-  if (local) {
+  const chosen = readLocal(SOURCE_KEY);
+  if (local && (chosen === 'local' || chosen === null)) {
     localMode = true;
+    source = 'local';
     setPanelConfig(local);
+    return config;
+  }
+
+  // 3. Plik panel/settings.json obok skryptów czatu.
+  try {
+    const res = await fetchWithTimeout(opts.settingsUrl || SETTINGS_FILE_URL, { cache: 'no-cache' }, timeoutMs);
+    if (res.ok) {
+      setPanelConfig(unwrapSettings(await res.json()));
+      source = 'file';
+    }
+  } catch {
+    /* brak pliku albo błędny plik — zostają ustawienia domyślne */
   }
   return config;
+}
+
+async function fetchWithTimeout(url, init, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // --- Własne odpowiedzi na frazy -------------------------------------------------

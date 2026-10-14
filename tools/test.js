@@ -10,7 +10,12 @@ import { createAiEngine } from '../ai/ai-engine.js';
 import { buildSystemPrompt } from '../ai/server/prompt.js';
 import { INTENTS, PAGES, SITE_FACTS } from '../shared/js/knowledge.js';
 import { setPanelConfig, matchRule } from '../panel/client.js';
-import { sanitizeConfig, filterLogEntry, DEFAULT_CONFIG } from '../panel/schema.js';
+import { sanitizeConfig, filterLogEntry, DEFAULT_CONFIG, wrapSettings, unwrapSettings } from '../panel/schema.js';
+import { initPanel, getPanelConfig, panelStatus } from '../panel/client.js';
+import { spawn } from 'node:child_process';
+import { mkdtempSync, writeFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { anonymize } from '../shared/js/privacy.js';
 import { createRouterEngine } from '../shared/js/router.js';
 import { checkSite, collectLinks } from '../panel/site-check.js';
@@ -237,7 +242,62 @@ expect('kontrola: wynik „wymaga uwagi”', second.ok === false);
 const down = await checkSite({ fetchImpl: async () => { throw new TypeError('fetch failed'); } });
 expect('kontrola: brak połączenia = jeden czytelny komunikat', down.summary.unreachable === true && down.ok === false, down.summary);
 
-if (failed === panelOk) console.log('panel, serwer panelu, kontrola strony: OK');
+// Plik ustawień: eksport / import / źródło „plik”.
+const exported = wrapSettings({ engine: { chain: ['trained', 'ai'] }, rules: [{ phrases: ['parking'], text: 'Online.' }] });
+expect('plik: eksport → import daje te same ustawienia', JSON.stringify(unwrapSettings(JSON.parse(JSON.stringify(exported)))) === JSON.stringify(exported.config));
+expect('plik: import „gołych” ustawień', unwrapSettings({ engine: { chain: ['ai'] } }).engine.chain.join() === 'ai');
+let importErr = '';
+try {
+  unwrapSettings({ cokolwiek: 1 });
+} catch (err) {
+  importErr = err.message;
+}
+expect('plik: odrzuca plik, który nie jest ustawieniami', importErr.includes('nie zawiera ustawień'));
+const repoFile = JSON.parse(readFileSync(new URL('../panel/settings.json', import.meta.url), 'utf8'));
+expect('plik: panel/settings.json jest poprawny', unwrapSettings(repoFile).engine.chain.length > 0);
+
+// Czat czyta ustawienia z pliku, gdy nie ma serwera panelu.
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url) => (String(url).endsWith('settings.json') ? new Response(JSON.stringify(exported)) : new Response('', { status: 404 }));
+await initPanel({});
+expect('plik: czat używa ustawień z pliku', panelStatus().source === 'file' && getPanelConfig().engine.chain.join() === 'trained,ai', panelStatus());
+globalThis.fetch = async () => new Response('', { status: 404 });
+await initPanel({});
+expect('plik: brak pliku = ustawienia domyślne', panelStatus().source === 'default' && getPanelConfig().engine.chain.join() === 'bot');
+globalThis.fetch = realFetch;
+setPanelConfig(DEFAULT_CONFIG);
+
+// Lokalny serwer panelu: zapis pliku ustawień z kopią zapasową i ochrona przed innymi stronami.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'lt-panel-'));
+  const settingsFile = join(dir, 'settings.json');
+  writeFileSync(settingsFile, JSON.stringify(wrapSettings(DEFAULT_CONFIG)));
+  const port = 5100 + Math.floor(Math.random() * 800);
+  const child = spawn(process.execPath, [new URL('./serve-local.js', import.meta.url).pathname, String(port)], {
+    env: { ...process.env, LT_SETTINGS_FILE: settingsFile, LT_BACKUP_DIR: join(dir, 'backups') },
+    stdio: 'ignore',
+  });
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    for (let i = 0; i < 40; i++) {
+      if (await realFetch(`${base}/`).then(() => true, () => false)) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const put = (origin, body) =>
+      realFetch(`${base}/api/settings`, { method: 'PUT', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    expect('lokalny serwer: obca strona nie zapisze pliku', (await put('https://zla.pl', exported)).status === 403);
+    const ok = await put(`http://127.0.0.1:${port}`, exported);
+    expect('lokalny serwer: zapis pliku ustawień', ok.status === 200);
+    const saved = JSON.parse(readFileSync(settingsFile, 'utf8'));
+    expect('lokalny serwer: plik ma nowe ustawienia', unwrapSettings(saved).rules[0]?.text === 'Online.', saved);
+    expect('lokalny serwer: kopia zapasowa poprzedniej wersji', readdirSync(join(dir, 'backups')).length === 1);
+    expect('lokalny serwer: błędny plik odrzucony', (await put(`http://127.0.0.1:${port}`, { x: 1 })).status === 400);
+  } finally {
+    child.kill();
+  }
+}
+
+if (failed === panelOk) console.log('panel, serwer panelu, kontrola strony, plik ustawień: OK');
 
 if (failed) {
   console.log(`\nBŁĘDY: ${failed}`);

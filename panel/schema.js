@@ -143,6 +143,31 @@ export function sanitizeConfig(input) {
   };
 }
 
+// --- Plik ustawień (eksport / import / źródło „plik”) ---------------------------
+// Ten sam format ma plik z eksportu w panelu i plik panel/settings.json, który czyta
+// czat — wyeksportowany plik można więc po prostu podmienić ręcznie.
+export const SETTINGS_FORMAT = 'lt-asystent-ustawienia';
+
+export function wrapSettings(config) {
+  return {
+    _info: 'Ustawienia asystentki Ilony (panel sterowania). Ten plik można zaimportować w panelu albo wgrać jako panel/settings.json.',
+    format: SETTINGS_FORMAT,
+    formatVersion: 1,
+    exportedAt: new Date().toISOString(),
+    config: sanitizeConfig(config),
+  };
+}
+
+// Przyjmuje plik w formacie eksportu albo „gołe” ustawienia. Rzuca błąd, gdy to nie są ustawienia.
+export function unwrapSettings(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('To nie jest plik ustawień (oczekiwano obiektu JSON).');
+  const cfg = data.format === SETTINGS_FORMAT || data.config ? data.config : data;
+  if (!cfg || typeof cfg !== 'object') throw new Error('W pliku brakuje ustawień.');
+  const known = ['engine', 'logging', 'rules', 'overrides'];
+  if (!known.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
+  return sanitizeConfig(cfg);
+}
+
 // Część ustawień udostępniana publicznie widżetowi (bez wyłączonych reguł).
 export function publicConfig(config) {
   const c = sanitizeConfig(config);

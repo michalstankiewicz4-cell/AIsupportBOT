@@ -21,7 +21,7 @@
 //   ALLOWED_ORIGINS  strony, z których widżet może wysyłać wpisy do rejestru
 //   ADMIN_ORIGINS    skąd może działać panel (domyślnie tylko localhost:5050)
 //   ADMIN_IPS        opcjonalnie: lista IP, z których wolno wejść do /admin
-import { sanitizeConfig, publicConfig, filterLogEntry, DEFAULT_CONFIG } from '../schema.js';
+import { sanitizeConfig, publicConfig, filterLogEntry, unwrapSettings, DEFAULT_CONFIG } from '../schema.js';
 import { checkSite } from '../site-check.js';
 
 const LOG_RATE_LIMIT = 60; // wpisów na minutę z jednego IP
@@ -106,7 +106,13 @@ async function handleAdmin(request, env, url, path, ip) {
   if (path === '/admin/config' && request.method === 'PUT') {
     const body = await readBody(request, MAX_CONFIG_BODY);
     if (body === null) return json({ error: 'bad_request' }, 400, cors);
-    const cfg = sanitizeConfig({ ...body, updatedAt: new Date().toISOString() });
+    let cfg;
+    try {
+      cfg = unwrapSettings(body); // przyjmuje też plik z eksportu panelu
+    } catch (err) {
+      return json({ error: err.message }, 400, cors);
+    }
+    cfg.updatedAt = new Date().toISOString();
     await writeConfig(env.DB, cfg);
     await purgeOld(env.DB); // krótszy czas przechowywania działa od razu
     return json(cfg, 200, cors);

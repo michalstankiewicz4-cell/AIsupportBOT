@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.4.0
+- Źródło ustawień „plik” (panel/settings.json, zapis z lokalnego panelu z kopiami w panel/backups/), eksport i import ustawień do pliku JSON, panel na publicznej stronie jako podgląd demo + link „Panel administratora” na stronie z czatami
+
+### ai 1.5.0
+- Źródło ustawień „plik” (panel/settings.json, zapis z lokalnego panelu z kopiami w panel/backups/), eksport i import ustawień do pliku JSON, panel na publicznej stronie jako podgląd demo + link „Panel administratora” na stronie z czatami
+
+### trained 1.4.0
+- Źródło ustawień „plik” (panel/settings.json, zapis z lokalnego panelu z kopiami w panel/backups/), eksport i import ustawień do pliku JSON, panel na publicznej stronie jako podgląd demo + link „Panel administratora” na stronie z czatami
+
 ### bot 1.3.0
 - Panel sterowania: tryb pracy (bot / nasz model / AI / kombinacje), rejestracja rozmów (4 poziomy, zgoda, anonimizacja), własne odpowiedzi na frazy, edycja odpowiedzi wbudowanych, kontrola strony kliniki — szczegóły w sekcji „Panel sterowania” poniżej
 
