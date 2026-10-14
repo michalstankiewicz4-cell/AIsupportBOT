@@ -32,7 +32,7 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 - Własne odpowiedzi na frazy (z `*` jako dowolna końcówka) — działają przed każdym silnikiem, po kontroli stanów nagłych; tester odpowiedzi w panelu.
 - Edycja tekstów i linków odpowiedzi wbudowanych (bez stanów nagłych).
 - Zakładka „Rozmowy”: statystyki, najczęstsze tematy, pytania bez odpowiedzi, eksport CSV i eksport do treningu.
-- Kontrola strony kliniki (`panel/site-check.js`): linki z odpowiedzi (404, przekierowania, brakujące sekcje), fakty ze strony (`SITE_FACTS`: ceny, telefon, godziny), zmiany treści. Uruchamiana z panelu, codziennie przez serwer panelu i przez GitHub Actions (`site-check.yml`, e-mail przy problemie) oraz `npm run check-site`.
+- Kontrola strony kliniki (`panel/site-check.js`): linki z odpowiedzi (404, przekierowania, brakujące sekcje), fakty ze strony (`SITE_FACTS`: ceny, telefon, godziny), zmiany treści. Uruchamiana z panelu, codziennie przez serwer panelu i przez GitHub Actions (`site-check.yml`, e-mail przy problemie) oraz `npm run check-site`. W GitHub Actions wynik widać jako adnotacje i tabelę w zakładce Summary.
 - Wskazówki „?” przy polach panelu. Linki w czacie tylko `https://`, `tel:`, `mailto:`.
 - Dokumentacja: nowe `docs/INSTRUKCJA.md` (instrukcja obsługi, słowniczek, FAQ, lista kontrolna) i `docs/PANEL.md`; uzupełnione README, WDROZENIE, TRENOWANIE, ZABEZPIECZENIA, WARIANT-4.
 - Wymagany Node.js 22.13+ (testy serwera panelu na wbudowanym SQLite).
