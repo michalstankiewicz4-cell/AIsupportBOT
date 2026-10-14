@@ -100,6 +100,7 @@ npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 - [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera AI (klucz API, model Claude Haiku).
 - [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami AI: limity, Turnstile, rate limiting, prompt caching.
 - [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystentkę (także: czy da się „wytrenować własny model”).
+- [docs/POMYSLY.md](docs/POMYSLY.md) — pomysły na rozwój (bot, AI, panel) do zrobienia.
 - [docs/SOON.md](docs/SOON.md) — spis wszystkich przysłonięć „SOON” (przełącznik „Tylko bot”): gdzie są i jak je odsłonić.
 - [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md) — informacyjnie: wariant z własnym modelem na serwerze z GPU.
 - [CHANGES.md](CHANGES.md) — historia zmian i zasady wersjonowania.
