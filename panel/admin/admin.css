@@ -174,6 +174,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 24px 24px 64px; }
 .choice.checked { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
 .choice input { margin-top: 3px; accent-color: var(--accent); width: 17px; height: 17px; flex: none; }
 .choice p { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+.choice-foot { margin-top: 8px; gap: 6px; }
+.choice-foot .chain { margin-top: 0; }
+.status { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.status.done { background: var(--brand-soft); color: var(--brand); }
+.status.todo { background: var(--warn-soft); color: var(--warn); }
+.status-legend { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
 .chain { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: 650; color: var(--brand); background: var(--brand-soft); padding: 2px 8px; border-radius: 99px; }
 .chain-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 

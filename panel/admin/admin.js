@@ -344,6 +344,21 @@ function renderAll() {
 // 1. Tryb pracy
 // =============================================================================
 
+// Stan wdrożenia silników: bot i nasz model działają od razu; AI wymaga serwera AI i klucza API.
+function engineStatus(name) {
+  if (name !== 'ai') return { done: true };
+  if (AI_CONFIG.endpoint) return { done: true };
+  return {
+    done: false,
+    todo: 'uruchomić serwer AI (Cloudflare Worker + klucz API Anthropic) i wpisać jego adres w ai/config.js albo w atrybucie data-endpoint na stronie — instrukcja: docs/AI-SERWER.md. Do tego czasu zamiast AI odpowiada bot.',
+  };
+}
+
+function chainStatus(chain) {
+  const missing = chain.map(engineStatus).filter((s) => !s.done);
+  return missing.length ? { done: false, hint: `Do zrobienia: ${missing[0].todo}` } : { done: true, hint: 'Gotowe — działa od razu, bez dodatkowej konfiguracji.' };
+}
+
 function renderMode() {
   const chain = state.draft.engine.chain;
   const key = chain.join('>');
@@ -358,6 +373,7 @@ function renderMode() {
       badge: chainLabel(p.chain),
       recommended: p.chain.join('>') === 'trained>ai',
       hint: MODE_HINTS[p.chain.join('>')],
+      status: chainStatus(p.chain),
       onPick: () => {
         state.draft.engine.chain = [...p.chain];
         renderMode();
@@ -390,10 +406,9 @@ function renderMode() {
     row.append(wrap);
   }
 
-  const notes = [`Aktualnie: ${chainLabel(chain)}.`];
-  if (chain.includes('ai') && !AI_CONFIG.endpoint) {
-    notes.push('Uwaga: AI wymaga serwera AI (adres w ai/config.js albo atrybut data-endpoint na stronie). Bez niego zamiast AI odpowie bot.');
-  }
+  const cs = chainStatus(chain);
+  const notes = [`Aktualnie: ${chainLabel(chain)} — ${cs.done ? '✓ zrobione' : '⏳ do zrobienia'}.`];
+  if (!cs.done) notes.push(cs.hint);
   $('#chain-note').textContent = notes.join(' ');
 }
 
@@ -1105,7 +1120,7 @@ function statTile(label, value, kind = '', hint = '') {
   return t;
 }
 
-function choiceCard({ name, checked, title, text, badge, recommended, hint, onPick }) {
+function choiceCard({ name, checked, title, text, badge, recommended, hint, status, onPick }) {
   const card = el('label', `choice${checked ? ' checked' : ''}`);
   const input = el('input');
   input.type = 'radio';
@@ -1118,7 +1133,16 @@ function choiceCard({ name, checked, title, text, badge, recommended, hint, onPi
   if (recommended) head.append(pill('zalecane', 'ok'));
   if (hint) head.append(tip(hint));
   body.append(head, el('p', '', text));
-  if (badge) body.append(el('span', 'chain', badge));
+  if (badge || status) {
+    const foot = el('div', 'row choice-foot');
+    if (badge) foot.append(el('span', 'chain', badge));
+    if (status) {
+      const st = el('span', `status ${status.done ? 'done' : 'todo'}`, status.done ? '✓ zrobione' : '⏳ do zrobienia');
+      st.title = status.hint;
+      foot.append(st, tip(status.hint));
+    }
+    body.append(foot);
+  }
   card.append(input, body);
   return card;
 }

@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.4.1
+- Panel: znaczki „✓ zrobione” / „⏳ do zrobienia” przy trybach pracy (AI wymaga serwera AI) z podpowiedzią, czego brakuje
+
+### ai 1.5.1
+- Panel: znaczki „✓ zrobione” / „⏳ do zrobienia” przy trybach pracy (AI wymaga serwera AI) z podpowiedzią, czego brakuje
+
+### trained 1.4.1
+- Panel: znaczki „✓ zrobione” / „⏳ do zrobienia” przy trybach pracy (AI wymaga serwera AI) z podpowiedzią, czego brakuje
+
 ### bot 1.4.0
 - Źródło ustawień „plik” (panel/settings.json, zapis z lokalnego panelu z kopiami w panel/backups/), eksport i import ustawień do pliku JSON, panel na publicznej stronie jako podgląd demo + link „Panel administratora” na stronie z czatami
 
