@@ -85,13 +85,13 @@
       [autoEngine, 'auto'],
     ].map(([engine, id]) => mountWidget({ engine, cssUrl, container: document.getElementById(id), storeKey: `lt-chat:demo-${id}` }));
 
-    // Przełącznik „Tylko bot” (wspólny z panelem): kolumny AI i naszego modelu — oraz kolumna 4,
-    // jeśli tryb z panelu używa czegoś poza botem — są przysłonięte panelem „SOON”.
+    // Przełącznik „Tylko bot” (wspólny z panelem): kolumny 2–4 (AI, nasz model, tryb z panelu)
+    // są przysłonięte panelem „SOON” — bota porównujemy w kolumnie 1.
     const cols = Object.fromEntries(['ai', 'trained', 'auto'].map((id) => [id, document.getElementById(id).closest('.col')]));
     const applyBotOnly = (on) => {
       setSoon(cols.ai, on);
       setSoon(cols.trained, on);
-      setSoon(cols.auto, on && chain.join('>') !== 'bot', 'Wkrótce — tryb z panelu używa AI albo naszego modelu');
+      setSoon(cols.auto, on, 'Wkrótce — tryb pracy z panelu (kombinacje silników)');
     };
     document.getElementById('bot-only-slot').append(createBotOnlyToggle(applyBotOnly));
     applyBotOnly(getBotOnly());

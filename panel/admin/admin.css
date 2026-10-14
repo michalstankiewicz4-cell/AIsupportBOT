@@ -387,12 +387,13 @@ li.empty { padding: 10px 2px; }
   padding: 10px;
   text-align: center;
   border-radius: inherit;
-  background: rgba(243, 244, 247, 0.6);
+  background: rgba(46, 39, 135, 0.38);
   backdrop-filter: blur(1px);
   -webkit-backdrop-filter: blur(1px);
   cursor: not-allowed;
 }
 .soon-badge {
+  border: 2px solid rgba(255, 255, 255, 0.85);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -404,7 +405,8 @@ li.empty { padding: 10px 2px; }
 }
 .soon-text { font-size: 12.5px; font-weight: 600; color: #3b4152; max-width: 280px; line-height: 1.35; background: rgba(255, 255, 255, 0.92); padding: 6px 12px; border-radius: 10px; box-shadow: 0 2px 8px rgba(23, 37, 42, 0.08); }
 .soon-cover.compact { flex-direction: row; gap: 0; padding: 0; }
-.soon-cover.compact .soon-badge { font-size: 10.5px; padding: 3px 9px; box-shadow: none; }
+.soon-cover.compact .soon-badge {
+  border: 2px solid rgba(255, 255, 255, 0.85); font-size: 10.5px; padding: 3px 9px; box-shadow: none; }
 .soon-cover.compact .soon-text { display: none; }
 .soon-slot { display: inline-flex; border-radius: 10px; }
 .top-actions .bot-only { padding: 6px 12px 6px 8px; border-radius: 99px; background: #fff; border: 1px solid #e1e4ea; margin-right: 4px; }

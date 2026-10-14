@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.6.1
+- Panele SOON: półprzezroczysty niebieski kolor; na stronie głównej przysłonięta także kolumna 4
+
+### ai 1.7.1
+- Panele SOON: półprzezroczysty niebieski kolor; na stronie głównej przysłonięta także kolumna 4
+
+### trained 1.6.1
+- Panele SOON: półprzezroczysty niebieski kolor; na stronie głównej przysłonięta także kolumna 4
+
 ### bot 1.6.0
 - Przełącznik „Tylko bot” (domyślnie włączony) w panelu i na stronie głównej: opcje AI, naszego modelu i kombinacji przysłonięte półprzezroczystym panelem SOON
 
