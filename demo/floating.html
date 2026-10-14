@@ -19,6 +19,7 @@
   <div class="page">
     <p class="switch">Wariant:
       <a href="?variant=bot" data-v="bot">bot</a>
+      <!-- SOON: F1–F3 — warianty przysłaniane w skrypcie niżej (applyBotOnly) -->
       <span class="soon-slot"><a href="?variant=ai" data-v="ai">ai</a></span>
       <span class="soon-slot"><a href="?variant=trained" data-v="trained">trained</a></span>
       <span class="soon-slot"><a href="?variant=auto" data-v="auto">z panelu</a></span>
@@ -51,7 +52,7 @@
     // Ładujemy wybrany wariant dokładnie tak, jak zrobi to strona produkcyjna.
     let requested = new URLSearchParams(location.search).get('variant');
     if (!['bot', 'ai', 'trained', 'auto'].includes(requested)) requested = 'bot';
-    const v = getBotOnly() ? 'bot' : requested;
+    const v = getBotOnly() ? 'bot' : requested; // SOON: F4 — przy „Tylko bot” zawsze ładujemy bota
     document.querySelector(`.switch [data-v="${v}"]`)?.classList.add('active');
     const s = document.createElement('script');
     s.src = v === 'auto' ? '../embed.js' : '../' + v + '/embed.js';

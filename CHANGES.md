@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.6.4
+- Dokumentacja: docs/SOON.md — spis wszystkich przysłonięć SOON; znaczniki „SOON:” w kodzie
+
+### ai 1.7.4
+- Dokumentacja: docs/SOON.md — spis wszystkich przysłonięć SOON; znaczniki „SOON:” w kodzie
+
+### trained 1.6.4
+- Dokumentacja: docs/SOON.md — spis wszystkich przysłonięć SOON; znaczniki „SOON:” w kodzie
+
 ### bot 1.6.3
 - Podgląd pływający: warianty ai, trained i „z panelu” przysłonięte SOON przy „Tylko bot” (podgląd pokazuje bota); mały znaczek SOON w rogu przycisków
 

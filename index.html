@@ -89,8 +89,9 @@
     // są przysłonięte panelem „SOON” — bota porównujemy w kolumnie 1.
     const cols = Object.fromEntries(['ai', 'trained', 'auto'].map((id) => [id, document.getElementById(id).closest('.col')]));
     const applyBotOnly = (on) => {
-      setSoon(cols.ai, on);
-      setSoon(cols.trained, on);
+      setSoon(cols.ai, on); // SOON: S1 — kolumna 2. AI
+      setSoon(cols.trained, on); // SOON: S2 — kolumna 3. Trained
+      // SOON: S3 — kolumna 4. Z panelu
       setSoon(cols.auto, on, 'Wkrótce — tryb pracy z panelu (kombinacje silników)');
     };
     document.getElementById('bot-only-slot').append(createBotOnlyToggle(applyBotOnly));

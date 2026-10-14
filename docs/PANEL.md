@@ -164,6 +164,8 @@ Decyzja na start: **pracujemy na bocie regułowym**. Przełącznik **„Tylko bo
 
 Elementy nie są usunięte ani wyszarzone — widać je pod spodem, ale nie da się w nie kliknąć. Po wyłączeniu przełącznika wszystko wraca. Ustawienie jest zapamiętane **w tej przeglądarce** (`localStorage`, klucz `lt-ui:bot-only`) i dotyczy tylko wyglądu: nie zmienia zapisanych ustawień ani tego, co widzi pacjent. Jeśli zapisany tryb pracy używa czegoś przysłoniętego, panel pokazuje ostrzeżenie nad kartami.
 
+Pełny spis przysłoniętych miejsc (z plikami i znacznikami `SOON:` w kodzie): [SOON.md](SOON.md).
+
 Tryb dotyczy uniwersalnego `embed.js`. Skrypty `bot/embed.js`, `ai/embed.js`, `trained/embed.js` zawsze używają swojego silnika (ale też stosują własne odpowiedzi i rejestrację z panelu).
 
 ---

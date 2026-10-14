@@ -353,14 +353,17 @@ function applyBotOnly() {
   document.body.classList.toggle('bot-only-on', botOnly);
   // Karty trybów inne niż sam bot.
   const cards = $('#mode-presets').children;
+  // SOON: P1 — karty trybów inne niż „Tylko bot regułowy”
   MODE_PRESETS.forEach((p, i) => setSoon(cards[i], botOnly && p.chain.join('>') !== 'bot'));
-  setSoon($('#chain-box'), botOnly);
+  setSoon($('#chain-box'), botOnly); // SOON: P2 — „Własna kolejność”
   // Nauka dotyczy wyłącznie naszego modelu; eksport do treningu też.
+  // SOON: P3 — treść zakładki „Nauka”
   setSoon($('#tab-learn'), botOnly, 'Wkrótce — nauka dotyczy naszego modelu (trained); na start pracujemy na bocie regułowym');
-  setSoon($('#logs-train-slot'), botOnly);
+  setSoon($('#logs-train-slot'), botOnly); // SOON: P5 — „Eksport do treningu” (Rozmowy)
   $('#logs-train-slot .soon-cover')?.classList.add('compact');
-  $('[data-tab="learn"]').classList.toggle('soon-tab', botOnly);
+  $('[data-tab="learn"]').classList.toggle('soon-tab', botOnly); // SOON: P4 — przycisk zakładki „Nauka” (klikalny)
   // Ostrzeżenie: zapisany tryb używa czegoś, co jest przysłonięte.
+  // SOON: P6 — ostrzeżenie, gdy zapisany tryb jest przysłonięty
   const note = $('#bot-only-note');
   const chain = state.draft?.engine?.chain || ['bot'];
   const hiddenMode = botOnly && chain.join('>') !== 'bot';
