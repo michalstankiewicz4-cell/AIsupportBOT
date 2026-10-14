@@ -414,3 +414,8 @@ li.empty { padding: 10px 2px; }
 #tab-learn.soon-host { min-height: 420px; border-radius: 14px; }
 #tab-learn > .soon-cover { justify-content: flex-start; padding-top: 120px; }
 .choice.soon-host { overflow: hidden; }
+/* Zakładka „Nauka” przy „Tylko bot”: w kolorze paneli SOON, ale nadal klikalna (pokazuje przysłoniętą treść). */
+[role="tab"].soon-tab { background: rgba(46, 39, 135, 0.38); color: #fff; border-radius: 10px 10px 0 0; }
+[role="tab"].soon-tab:hover { background: rgba(46, 39, 135, 0.5); color: #fff; }
+[role="tab"].soon-tab[aria-selected="true"] { background: rgba(46, 39, 135, 0.55); color: #fff; }
+[role="tab"].soon-tab::after { border: 1.5px solid rgba(255, 255, 255, 0.85); }

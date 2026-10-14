@@ -158,7 +158,7 @@ Kolejność obsługi każdego pytania (niezależnie od trybu):
 
 Decyzja na start: **pracujemy na bocie regułowym**. Przełącznik **„Tylko bot”** w górnym pasku panelu (i na stronie z czatami) jest **domyślnie włączony** i przysłania półprzezroczystym niebieskim panelem z napisem **SOON** wszystko, co nie dotyczy bota:
 
-- w panelu: karty trybów z AI / naszym modelem / kombinacjami, „Własna kolejność”, zakładkę **Nauka** (z dopiskiem SOON na zakładce) i przycisk „Eksport do treningu” w Rozmowach,
+- w panelu: karty trybów z AI / naszym modelem / kombinacjami, „Własna kolejność”, zakładkę **Nauka** (sama zakładka jest w kolorze paneli SOON, ale nadal klikalna — pokazuje przysłoniętą treść) i przycisk „Eksport do treningu” w Rozmowach,
 - na stronie z czatami: kolumny **2. AI**, **3. Trained** i **4. Z panelu** (bota widać w kolumnie 1).
 
 Elementy nie są usunięte ani wyszarzone — widać je pod spodem, ale nie da się w nie kliknąć. Po wyłączeniu przełącznika wszystko wraca. Ustawienie jest zapamiętane **w tej przeglądarce** (`localStorage`, klucz `lt-ui:bot-only`) i dotyczy tylko wyglądu: nie zmienia zapisanych ustawień ani tego, co widzi pacjent. Jeśli zapisany tryb pracy używa czegoś przysłoniętego, panel pokazuje ostrzeżenie nad kartami.
