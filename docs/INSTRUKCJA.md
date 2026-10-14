@@ -56,6 +56,7 @@ Zakładki panelu, od najczęściej używanych:
 | Zakładka | Do czego |
 |---|---|
 | **Rozmowy** | Zobacz, o co pytają pacjenci i na co asystentka nie umiała odpowiedzieć |
+| **Nauka** | Naucz nasz model nowych sformułowań — przypisz pytania do tematów |
 | **Własne odpowiedzi** | Dodaj odpowiedź na pytanie, które się powtarza |
 | **Kontrola strony** | Sprawdź, czy linki i ceny w odpowiedziach są aktualne |
 | **Odpowiedzi wbudowane** | Popraw tekst gotowej odpowiedzi |
@@ -68,7 +69,7 @@ Zakładki panelu, od najczęściej używanych:
 
 - **co tydzień:** Rozmowy → filtr „Bez odpowiedzi” → dla powtarzających się pytań dodaj własne odpowiedzi,
 - **po e-mailu z GitHuba „Kontrola strony kliniki — failed”:** Kontrola strony → popraw wskazane linki lub ceny,
-- **co miesiąc:** Rozmowy → „Eksport do treningu” → przekaż plik do dopisania w przykładach modelu.
+- **co tydzień / miesiąc:** Nauka → „Wczytaj z rozmów” → przypisz pytania do tematów → „Zapisz i naucz model”.
 
 ---
 
@@ -127,11 +128,16 @@ Na stałe (dla wszystkich silników, także AI) ceny zmienia programista w `shar
 
 Pomyłka? W `panel/backups/` są poprzednie wersje — zaimportuj wybraną i zapisz.
 
-### Przygotowanie przykładów do nauki modelu
+### Nauka modelu (zakładka „Nauka”)
 
-1. **Rozmowy** → **Eksport do treningu** (wymaga poziomu 2 lub 3).
-2. Otwórz plik — pytania są pogrupowane według tematu; `_do_przypisania` to pytania nierozpoznane: przenieś je do właściwych tematów.
-3. Dopisz je do `trained/data/training.json`, potem `npm run train` i `npm run bump -- trained minor "Nowe przykłady z rozmów"` ([TRENOWANIE.md](TRENOWANIE.md)).
+1. **Nauka** → **Wczytaj z rozmów** (pytania, których model nie rozpoznał; wymaga rejestracji na poziomie 2 lub 3) albo wklej własne pytania i kliknij **Dodaj do listy**.
+2. Przy każdym pytaniu sprawdź podpowiedź modelu i wybierz właściwy temat → **✓ Dodaj** (pytanie bez sensu → **✕ Pomiń**).
+3. W **Teście na żywo** wpisz podobne pytanie i porównaj „Zapisany model” z „Po Twoich zmianach”.
+4. **Sprawdź trafność** (opcjonalnie) — im wyższa, tym lepiej.
+5. **Zapisz i naucz model** — dane, model i wersja zapiszą się same (z kopią zapasową).
+6. Wgraj `trained/model.json` na hosting (albo `git push`).
+
+Zasada: temat wybieraj tak, jak skierowałby pacjenta człowiek z rejestracji. Gdy nie wiesz — pomiń pytanie.
 
 ---
 

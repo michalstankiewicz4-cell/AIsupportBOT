@@ -8,6 +8,8 @@ import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkSite } from '../panel/site-check.js';
 import { wrapSettings, unwrapSettings, DEFAULT_CONFIG } from '../panel/schema.js';
+import { cleanDataset, buildModel, evaluate, describeChanges, countExamples } from '../trained/trainer.js';
+import { bumpVariants, readVariantVersion } from './versioning.js';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const HOST = '127.0.0.1';
@@ -16,6 +18,9 @@ const PORT = Number(process.argv[2] || process.env.PORT || 5050);
 const SETTINGS_FILE = process.env.LT_SETTINGS_FILE || join(ROOT, 'panel', 'settings.json');
 const BACKUP_DIR = process.env.LT_BACKUP_DIR || join(ROOT, 'panel', 'backups');
 const BACKUPS_KEEP = 30;
+const TRAINING_FILE = process.env.LT_TRAINING_FILE || join(ROOT, 'trained', 'data', 'training.json');
+const MODEL_FILE = process.env.LT_MODEL_FILE || join(ROOT, 'trained', 'model.json');
+const SKIP_BUMP = process.env.LT_SKIP_BUMP === '1'; // tylko testy: bez zmiany wersji i CHANGES.md
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -65,6 +70,50 @@ async function handleSiteCheck(req, res) {
   sendJson(res, 200, await checkSite({ config: input.config, previous: input.previous }));
 }
 
+// Kopia zapasowa pliku przed nadpisaniem (ostatnie BACKUPS_KEEP kopii danego rodzaju).
+async function backup(file, prefix) {
+  await mkdir(BACKUP_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  await copyFile(file, join(BACKUP_DIR, `${prefix}-${stamp}.json`)).catch(() => {});
+  const old = (await readdir(BACKUP_DIR)).filter((f) => f.startsWith(`${prefix}-`)).sort();
+  await Promise.all(old.slice(0, Math.max(0, old.length - BACKUPS_KEEP)).map((f) => unlink(join(BACKUP_DIR, f))));
+}
+
+// Zapis „atomowy”: najpierw plik tymczasowy, potem podmiana — plik nigdy nie zostanie uszkodzony w połowie.
+async function writeAtomic(file, text) {
+  const tmp = `${file}.tmp`;
+  await writeFile(tmp, text);
+  await rename(tmp, file);
+}
+
+// Zakładka „Nauka”: odczyt danych treningowych oraz zapis + trening modelu.
+// Po zapisie: kopia poprzednich danych w panel/backups/, nowa wersja „trained” (patch)
+// z wpisem w CHANGES.md i nowy trained/model.json — wersjonowanie pilnuje się samo.
+async function handleTraining(req, res) {
+  if (req.method === 'GET') {
+    if (!isLocalRequest(req, false)) return send(res, 403, 'Forbidden');
+    const raw = JSON.parse(await readFile(TRAINING_FILE, 'utf8'));
+    return sendJson(res, 200, { dataset: cleanDataset(raw).dataset, version: readVariantVersion('trained') });
+  }
+  if (req.method === 'PUT') {
+    if (!isLocalRequest(req, true)) return send(res, 403, 'Forbidden');
+    const body = await readJsonBody(req, 3_000_000);
+    const { dataset, unknown } = cleanDataset(body.dataset);
+    if (unknown.length) return sendJson(res, 400, { error: `Nieznane tematy: ${unknown.join(', ')}` });
+    if (countExamples(dataset) === 0) return sendJson(res, 400, { error: 'Brak przykładów — model nie może się uczyć z pustych danych.' });
+    const before = cleanDataset(JSON.parse(await readFile(TRAINING_FILE, 'utf8'))).dataset;
+    const change = describeChanges(before, dataset);
+    await backup(TRAINING_FILE, 'training');
+    await writeAtomic(TRAINING_FILE, JSON.stringify(dataset, null, 2) + '\n');
+    if (!SKIP_BUMP) bumpVariants(['trained'], 'patch', `Nauka w panelu: ${change.text}.`);
+    const version = SKIP_BUMP ? 'test' : readVariantVersion('trained');
+    await writeAtomic(MODEL_FILE, JSON.stringify(buildModel(dataset, version)));
+    const ev = evaluate(dataset);
+    return sendJson(res, 200, { version, accuracy: ev.accuracy, correct: ev.correct, total: ev.total, examples: countExamples(dataset), added: change.added, removed: change.removed });
+  }
+  return send(res, 405, 'Method not allowed');
+}
+
 // Źródło „plik”: panel czyta i zapisuje panel/settings.json na dysku.
 // Przed każdym zapisem poprzednia wersja trafia do panel/backups/ (ostatnie 30 kopii).
 async function handleSettings(req, res) {
@@ -105,6 +154,7 @@ const server = createServer(async (req, res) => {
     const url = new URL(req.url, `http://${HOST}`);
     if (url.pathname === '/api/site-check' && req.method === 'POST') return await handleSiteCheck(req, res);
     if (url.pathname === '/api/settings') return await handleSettings(req, res);
+    if (url.pathname === '/api/training') return await handleTraining(req, res);
     let path = normalize(decodeURIComponent(url.pathname)).replace(/^([/\\])+/, '');
     // Ochrona przed wyjściem poza katalog projektu i przed plikami ukrytymi (.git itp.).
     if (path.split(/[/\\]/).some((part) => part.startsWith('.'))) return send(res, 404, 'Not found');

@@ -199,18 +199,33 @@ Zmiana tekstu (i opcjonalnie linków) odpowiedzi bota i naszego modelu. Puste po
 
 AI formułuje odpowiedzi samodzielnie na podstawie `knowledge.js` — nadpisania jej nie zmieniają; na AI działają „Własne odpowiedzi” (sprawdzane przed AI, więc dodatkowo oszczędzają koszty).
 
-## 9. Rozmowy
+## 9. Nauka naszego modelu
+
+Zakładka **„Nauka”** zastępuje ręczną edycję `trained/data/training.json` i polecenie `npm run train`.
+
+- **Pytania do nauczenia** — „Wczytaj z rozmów” pobiera pytania, których model nie rozpoznał (oraz te, na które musiało odpowiedzieć AI — przy trybie „nasz model → AI” to najlepszy materiał). Można też wkleić własne pytania (jedno w wierszu). Przy każdym model podpowiada 3 najbardziej prawdopodobne tematy; temat jest zaznaczony z góry tylko przy pewności ≥ 50% — inaczej wybierasz ręcznie, żeby model nie uczył się własnych pomyłek. ✓ Dodaj / ✕ Pomiń albo „Dodaj wszystkie”.
+- **Test na żywo** — porównanie: jak pytanie rozumie zapisany model, a jak model po Twoich zmianach (model uczy się w przeglądarce w ułamku sekundy).
+- **Przykłady według tematu** — przegląd, dodawanie i usuwanie przykładów; nowe są podświetlone.
+- **Sprawdź trafność** — metoda „zostaw jeden” (jak w `npm run train`) + lista pomyłek modelu.
+- **Zapisz i naucz model** (tylko w panelu uruchomionym lokalnie — `npm run panel`):
+  1. poprzednia wersja danych trafia do `panel/backups/training-….json`,
+  2. zapisywany jest `trained/data/training.json` (sprawdzony: znane tematy, bez duplikatów, w limitach),
+  3. wersja `trained` podnosi się automatycznie (patch) z wpisem w `CHANGES.md` (np. „Nauka w panelu: dodano 12 przykł. (skora +5, l4 +7)”),
+  4. model jest uczony od nowa → `trained/model.json`.
+  Potem wgraj `trained/model.json` na hosting (albo `git push`). Na publicznym podglądzie zapis jest wyłączony — „Pobierz pliki” daje `training.json` i `model.json` do ręcznej podmiany.
+
+## 10. Rozmowy
 
 - Kafelki: liczba rozmów, pytań, pytań bez odpowiedzi, stanów nagłych, zgód.
 - „Najczęstsze tematy” — o co pacjenci pytają najczęściej.
 - Filtr **„Bez odpowiedzi”** — pytania, których asystentka nie rozpoznała. Przycisk **„+ Odpowiedź”** tworzy z pytania nową własną odpowiedź.
 - **Eksport CSV** — do Excela.
-- **Eksport do treningu** — pytania pogrupowane według tematu w formacie `trained/data/training.json`. Pytania nierozpoznane trafiają do `_do_przypisania` — przenieś je ręcznie do właściwego tematu, potem `npm run train` (patrz [TRENOWANIE.md](TRENOWANIE.md)).
+- **Eksport do treningu** — pytania pogrupowane według tematu w formacie `trained/data/training.json`. Pytania nierozpoznane trafiają do `_do_przypisania` — przenieś je ręcznie do właściwego tematu, potem `npm run train` (albo przypisz je w zakładce „Nauka” — punkt 9).
 - **Usuń wszystkie** — trwale, wymaga dwóch kliknięć.
 
 ---
 
-## 10. Kontrola strony kliniki
+## 11. Kontrola strony kliniki
 
 Asystentka podaje linki, ceny, telefon i godziny ze strony lekarzeiterapeuci.pl. Gdy klinika coś zmieni, kontrola to wyłapie.
 
@@ -237,7 +252,7 @@ Asystentka podaje linki, ceny, telefon i godziny ze strony lekarzeiterapeuci.pl.
 
 ---
 
-## 11. Najczęstsze problemy
+## 12. Najczęstsze problemy
 
 | Objaw | Przyczyna / rozwiązanie |
 |---|---|

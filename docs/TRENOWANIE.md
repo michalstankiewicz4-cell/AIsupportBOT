@@ -16,6 +16,12 @@
 
 Zanim zaczniesz trenować model, sprawdź, czy nie wystarczy **własna odpowiedź** w panelu sterowania (zakładka „Własne odpowiedzi”): fraza → gotowa odpowiedź, działa od razu, we wszystkich trybach, bez trenowania. Idealne dla pytań, które się powtarzają (np. „parking”, „godziny w sobotę”). Patrz [INSTRUKCJA.md](INSTRUKCJA.md#3-typowe-zadania-krok-po-kroku).
 
+## Najwygodniej: zakładka „Nauka” w panelu
+
+Panel sterowania (`npm run panel`) → **Nauka**: wczytujesz pytania, których model nie rozpoznał, przypisujesz je do tematów (model podpowiada), sprawdzasz na żywo „przed / po” i klikasz **„Zapisz i naucz model”** — panel sam zapisze `training.json` (z kopią), nauczy model, podbije wersję `trained` i dopisze wpis do `CHANGES.md`. Bez terminala i bez ręcznej edycji plików. Szczegóły: [PANEL.md](PANEL.md#9-nauka-naszego-modelu).
+
+Poniżej opis ręcznej metody (edycja pliku + `npm run train`) — działa tak samo, przydaje się przy większych zmianach.
+
 ## Skąd brać przykłady: rejestr rozmów
 
 Przy rejestracji na poziomie 2 lub 3 (treść pytań za zgodą pacjenta) panel → „Rozmowy” → **Eksport do treningu** zwraca plik w formacie `training.json`: pytania pogrupowane według tematu, a te, których asystentka nie rozpoznała — w `_do_przypisania`. Przenieś je do właściwych tematów, dopisz do `trained/data/training.json` i uruchom trening (niżej). To najlepszy materiał do nauki — prawdziwe sformułowania pacjentów.

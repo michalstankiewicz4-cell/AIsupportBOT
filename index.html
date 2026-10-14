@@ -21,28 +21,29 @@
 
   <main class="grid">
     <section class="col">
-      <h2>1. Bot <span class="tag">regułowy</span></h2>
+      <h2>1. Bot <span class="tag">regułowy</span> <span class="status" data-status="bot"></span></h2>
       <p>Dopasowuje słowa kluczowe. Darmowy, przewidywalny, działa offline. Rozumie tylko słowa, które mu wpisaliśmy.</p>
       <div id="bot"></div>
     </section>
     <section class="col">
-      <h2>2. AI <span class="tag">model językowy</span></h2>
+      <h2>2. AI <span class="tag">model językowy</span> <span class="status" data-status="ai"></span></h2>
       <p>Claude przez nasz serwer-pośrednik. Najlepiej rozumie swobodne pytania. Płatny za wiadomość. Bez skonfigurowanego serwera odpowiada bot.</p>
       <div id="ai"></div>
     </section>
     <section class="col">
-      <h2>3. Trained <span class="tag">nasz wyuczony model</span></h2>
+      <h2>3. Trained <span class="tag">nasz wyuczony model</span> <span class="status" data-status="trained"></span></h2>
       <p>Klasyfikator uczony na naszych przykładach (<code>trained/data/training.json</code>). Darmowy, offline, uczy się z nowych przykładów.</p>
       <div id="trained"></div>
     </section>
     <section class="col">
-      <h2>4. Z panelu <span class="tag" id="mode-tag">tryb pracy</span></h2>
+      <h2>4. Z panelu <span class="tag" id="mode-tag">tryb pracy</span> <span class="status" data-status="auto"></span></h2>
       <p id="mode-desc">Tryb wybrany w panelu sterowania (np. „nasz model, a AI gdy nie rozpozna”) — tak będzie działał uniwersalny <code>embed.js</code> na stronie kliniki.</p>
       <div id="auto"></div>
     </section>
   </main>
 
   <footer class="bottom">
+    <p class="legend"><span class="status done">✓ zrobione</span> działa od razu · <span class="status todo">⏳ do zrobienia</span> wymaga jeszcze konfiguracji (najedź na znaczek, żeby zobaczyć czego).</p>
     <p>Przykładowe pytania: „mam wysypkę na rękach”, „potrzebuję L4”, „ile kosztuje psychiatra”, „jaką dawkę ibuprofenu?”, „jaka jutro pogoda”, „boli mnie w klatce piersiowej”.</p>
     <p id="versions"></p>
   </footer>
@@ -61,6 +62,18 @@
     const chain = getPanelConfig().engine.chain;
     const autoEngine = createRouterEngine(chain, { bot: botEngine, ai: aiEngine, trained: trainedEngine });
     document.getElementById('mode-tag').textContent = chainLabel(chain);
+
+    // Znaczki „zrobione / do zrobienia”: bot i nasz model działają od razu,
+    // AI wymaga serwera AI (adres w ai/config.js). Kolumna 4 — według trybu z panelu.
+    const ready = (engine) => engine !== 'ai' || aiEngine.configured;
+    const AI_TODO = 'Do zrobienia: uruchomić serwer AI (Cloudflare Worker + klucz API) i wpisać jego adres w ai/config.js — instrukcja w docs/AI-SERWER.md. Do tego czasu zamiast AI odpowiada bot.';
+    const statusOf = { bot: ['bot'], ai: ['ai'], trained: ['trained'], auto: chain };
+    for (const node of document.querySelectorAll('[data-status]')) {
+      const done = statusOf[node.dataset.status].every(ready);
+      node.textContent = done ? '✓ zrobione' : '⏳ do zrobienia';
+      node.classList.add(done ? 'done' : 'todo');
+      node.title = done ? 'Gotowe — działa od razu.' : AI_TODO;
+    }
 
     const cssUrl = new URL('./shared/css/widget.css', import.meta.url).href;
     const widgets = [

@@ -8,7 +8,7 @@ Repozytorium ma gotowy workflow `.github/workflows/static.yml`. Po pushu na gał
 2. Przed publikacją usuwany jest kod serwerów i narzędzia (`panel/server`, `panel/backups`, `ai/server`, `tools`). Panel administratora jest publikowany **tylko jako podgląd demo** — bez logowania do serwera i bez zapisu pliku (to działa wyłącznie lokalnie, `npm run panel`).
 3. Pliki trafiają na GitHub Pages pod adres w stylu `https://michalstankiewicz4-cell.github.io/AIsupportBOT/`.
 
-Osobny workflow `site-check.yml` codziennie sprawdza stronę kliniki (linki, ceny, telefon) i przy problemie wysyła e-mail — patrz [PANEL.md](PANEL.md#10-kontrola-strony-kliniki).
+Osobny workflow `site-check.yml` codziennie sprawdza stronę kliniki (linki, ceny, telefon) i przy problemie wysyła e-mail — patrz [PANEL.md](PANEL.md#11-kontrola-strony-kliniki).
 
 Jednorazowo: w repozytorium **Settings → Pages → Source: GitHub Actions**.
 

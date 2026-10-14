@@ -297,7 +297,64 @@ setPanelConfig(DEFAULT_CONFIG);
   }
 }
 
-if (failed === panelOk) console.log('panel, serwer panelu, kontrola strony, plik ustawień: OK');
+// Nauka modelu (zakładka „Nauka”).
+{
+  const { cleanDataset, buildModel, topIntent, evaluate, describeChanges } = await import('../trained/trainer.js');
+  const raw = JSON.parse(readFileSync(new URL('../trained/data/training.json', import.meta.url), 'utf8'));
+  const { dataset, unknown } = cleanDataset({ ...raw, nieistniejacy: ['x'], skora: [...raw.skora, '  MAM TRĄDZIK ', 'mam trądzik'] });
+  expect('nauka: nieznane tematy wykryte', unknown.join() === 'nieistniejacy');
+  expect('nauka: duplikaty usunięte (wielkość liter, polskie znaki, spacje)', dataset.skora.length === raw.skora.length, dataset.skora.slice(-3));
+  const word = 'zgrzybiałość';
+  const before = topIntent(buildModel(dataset, 't'), `mam ${word}`);
+  const more = { ...dataset, skora: [...dataset.skora, `${word} na stopach`, `${word} paznokci`, `leczenie ${word}`] };
+  const after = topIntent(buildModel(more, 't'), `mam ${word}`);
+  expect('nauka: model uczy się nowego słowa', before.id !== 'skora' && after.id === 'skora', { before: before.id, after: after.id });
+  expect('nauka: opis zmian do CHANGES', describeChanges(dataset, more).text.startsWith('dodano 3 przykł. (skora +3)'), describeChanges(dataset, more).text);
+  const ev = evaluate(dataset);
+  expect('nauka: trafność jak w npm run train', ev.total === countExamplesQuick(raw) && ev.accuracy > 0.75, ev.accuracy);
+}
+function countExamplesQuick(d) {
+  return Object.entries(d).filter(([k]) => !k.startsWith('_')).reduce((n, [, v]) => n + v.length, 0);
+}
+
+// Lokalny serwer: zapis danych treningowych + trening modelu.
+{
+  const dir = mkdtempSync(join(tmpdir(), 'lt-train-'));
+  const trainingFile = join(dir, 'training.json');
+  const modelFile = join(dir, 'model.json');
+  const original = JSON.parse(readFileSync(new URL('../trained/data/training.json', import.meta.url), 'utf8'));
+  writeFileSync(trainingFile, JSON.stringify(original));
+  const port = 5100 + Math.floor(Math.random() * 800);
+  const child = spawn(process.execPath, [new URL('./serve-local.js', import.meta.url).pathname, String(port)], {
+    env: { ...process.env, LT_TRAINING_FILE: trainingFile, LT_MODEL_FILE: modelFile, LT_BACKUP_DIR: join(dir, 'backups'), LT_SKIP_BUMP: '1' },
+    stdio: 'ignore',
+  });
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    for (let i = 0; i < 40; i++) {
+      if (await realFetch(`${base}/`).then(() => true, () => false)) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    const got = await (await realFetch(`${base}/api/training`)).json();
+    expect('nauka/serwer: odczyt danych', got.dataset.skora.length === original.skora.length);
+    const next = { ...got.dataset, alergia: [...got.dataset.alergia, 'łzawią mi oczy na wiosnę'] };
+    const put = (origin, body) =>
+      realFetch(`${base}/api/training`, { method: 'PUT', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    expect('nauka/serwer: obca strona nie zapisze', (await put('https://zla.pl', { dataset: next })).status === 403);
+    expect('nauka/serwer: nieznany temat odrzucony', (await put(base, { dataset: { ...next, zly_temat: ['x'] } })).status === 400);
+    const ok = await put(base, { dataset: next });
+    const res = await ok.json();
+    expect('nauka/serwer: zapis i trening', ok.status === 200 && res.added === 1 && res.accuracy > 0.75, res);
+    expect('nauka/serwer: plik danych zaktualizowany', JSON.parse(readFileSync(trainingFile, 'utf8')).alergia.includes('łzawią mi oczy na wiosnę'));
+    const model = JSON.parse(readFileSync(modelFile, 'utf8'));
+    expect('nauka/serwer: nowy model zapisany', model.type === 'multinomial-naive-bayes' && model.vocabulary.length > 500);
+    expect('nauka/serwer: kopia poprzednich danych', readdirSync(join(dir, 'backups')).some((f) => f.startsWith('training-')));
+  } finally {
+    child.kill();
+  }
+}
+
+if (failed === panelOk) console.log('panel, serwer panelu, kontrola strony, plik ustawień, nauka: OK');
 
 if (failed) {
   console.log(`\nBŁĘDY: ${failed}`);

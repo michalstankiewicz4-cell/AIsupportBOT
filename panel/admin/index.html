@@ -83,6 +83,7 @@
       <button role="tab" data-tab="logging">Rejestracja rozmów</button>
       <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
       <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
+      <button role="tab" data-tab="learn">Nauka <span class="count warn" id="learn-count"></span></button>
       <button role="tab" data-tab="logs">Rozmowy</button>
       <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
     </nav>
@@ -198,6 +199,70 @@
         </div>
         <p id="logs-empty" class="muted center" hidden></p>
       </section>
+      <!-- Nauka -->
+      <section class="tab" id="tab-learn" hidden>
+        <div class="intro">
+          <h2>Nauka naszego modelu <span class="tip" tabindex="0" data-tip="Uczysz model, pokazując mu przykładowe pytania i właściwy temat. Im więcej prawdziwych sformułowań pacjentów, tym lepiej rozumie. Model działa w trybach z „nasz model”.">?</span></h2>
+          <p>Przypisz pytania, których model nie rozpoznał, do właściwego tematu — model sam podpowiada najbardziej prawdopodobny. Potem kliknij <strong>„Zapisz i naucz model”</strong>: dane trafią do <code>trained/data/training.json</code> (z kopią zapasową), model zostanie nauczony od nowa, a wersja <code>trained</code> i <code>CHANGES.md</code> zaktualizują się same.</p>
+        </div>
+
+        <div class="learn-bar panel-box">
+          <div class="learn-stats" id="learn-stats"></div>
+          <div class="row">
+            <span id="learn-dirty" class="dirty" hidden>Niezapisane zmiany w nauce</span>
+            <button id="learn-eval" class="btn ghost" type="button" title="Liczy trafność metodą „zostaw jeden”: każdy przykład po kolei ukrywamy i sprawdzamy, czy model go odgadnie. Trwa kilka sekund.">Sprawdź trafność</button>
+            <button id="learn-discard" class="btn ghost" type="button" hidden>Cofnij</button>
+            <button id="learn-download" class="btn ghost" type="button" title="Pobiera training.json i model.json z bieżącymi (także niezapisanymi) zmianami — do ręcznej podmiany plików.">Pobierz pliki</button>
+            <button id="learn-save" class="btn primary" type="button" disabled>Zapisz i naucz model</button>
+          </div>
+          <p id="learn-note" class="muted small"></p>
+        </div>
+
+        <div class="learn-grid">
+          <div class="panel-box">
+            <h3>Pytania do nauczenia <span class="tip" tabindex="0" data-tip="Pytania, których model nie rozpoznał (z zakładki „Rozmowy”, także te, na które musiało odpowiedzieć AI) albo wklejone przez Ciebie. Wybierz temat i kliknij ✓ — pytanie trafi do przykładów.">?</span></h3>
+            <div class="row">
+              <button id="learn-from-logs" class="btn ghost small" type="button">Wczytaj z rozmów</button>
+              <button id="learn-accept-all" class="btn ghost small" type="button" title="Dodaje wszystkie pytania z listy do tematów, które są aktualnie wybrane przy każdym z nich.">Dodaj wszystkie</button>
+              <button id="learn-clear" class="btn ghost small" type="button">Wyczyść listę</button>
+            </div>
+            <label class="field">
+              <span>Wklej pytania — jedno w wierszu <span class="tip" tabindex="0" data-tip="Np. pytania z infolinii, maili albo wymyślone tak, jak pisałby pacjent: z błędami, potocznie, krótko i długo.">?</span></span>
+              <textarea id="learn-paste" rows="3" placeholder="np.&#10;swedzi mnie glowa od tygodnia&#10;czy wystawicie zwolnienie na dziecko"></textarea>
+            </label>
+            <button id="learn-paste-add" class="btn" type="button">Dodaj do listy</button>
+            <ul id="learn-inbox" class="inbox"></ul>
+          </div>
+
+          <div class="panel-box">
+            <h3>Test na żywo <span class="tip" tabindex="0" data-tip="Porównuje, jak pytanie rozumie zapisany model, a jak model po Twoich niezapisanych zmianach.">?</span></h3>
+            <form id="learn-test-form" class="test-row">
+              <input id="learn-test" type="text" placeholder="Wpisz pytanie…" autocomplete="off">
+              <button class="btn primary" type="submit">Sprawdź</button>
+            </form>
+            <div id="learn-test-result"></div>
+          </div>
+        </div>
+
+        <div class="panel-box">
+          <h3>Przykłady według tematu <span class="tip" tabindex="0" data-tip="Wszystkie przykłady, z których uczy się model. Usuń błędne (✕) i dopisz nowe. Słowa kluczowe bota z danego tematu model zna automatycznie.">?</span></h3>
+          <div class="row">
+            <select id="learn-intent"></select>
+            <input id="learn-filter" type="search" placeholder="Szukaj w przykładach…">
+          </div>
+          <form id="learn-add-form" class="test-row">
+            <input id="learn-add" type="text" maxlength="200" placeholder="Nowy przykład dla wybranego tematu…" autocomplete="off">
+            <button class="btn" type="submit">Dodaj przykład</button>
+          </form>
+          <ul id="learn-examples" class="examples"></ul>
+        </div>
+
+        <div class="panel-box" id="learn-errors-box" hidden>
+          <h3>Pomyłki modelu <span class="tip" tabindex="0" data-tip="Przykłady, których model nie odgadł przy sprawdzaniu trafności. Dopisz więcej podobnych przykładów do właściwego tematu albo sprawdź, czy przykład jest w dobrym temacie.">?</span></h3>
+          <ul id="learn-errors" class="examples"></ul>
+        </div>
+      </section>
+
       <!-- Kontrola strony -->
       <section class="tab" id="tab-site" hidden>
         <div class="intro">

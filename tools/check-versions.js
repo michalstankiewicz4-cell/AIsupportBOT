@@ -6,6 +6,7 @@
 //     (ktoś zmienił training.json / knowledge.js bez "npm run train").
 import { VARIANTS, SEMVER, read, readVariantVersion, readVersionsJson } from './versioning.js';
 import { datasetHash, withKeywords } from '../trained/naive-bayes.js';
+import { cleanDataset } from '../trained/trainer.js';
 import { INTENTS } from '../shared/js/knowledge.js';
 
 const errors = [];
@@ -24,7 +25,7 @@ const trainedVersion = readVariantVersion('trained');
 if (model.version !== trainedVersion) {
   errors.push(`trained/model.json ma wersję ${model.version}, a trained = ${trainedVersion} → uruchom: npm run train`);
 }
-const data = JSON.parse(read('trained', 'data', 'training.json'));
+const { dataset: data } = cleanDataset(JSON.parse(read('trained', 'data', 'training.json')));
 if (model.datasetHash !== datasetHash(withKeywords(data, INTENTS))) {
   errors.push('trained/model.json jest nieaktualny względem training.json / knowledge.js → uruchom: npm run train');
 }

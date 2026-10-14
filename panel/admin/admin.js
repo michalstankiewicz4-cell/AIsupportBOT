@@ -10,6 +10,8 @@ import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
 import { AI_CONFIG } from '../../ai/config.js';
+import { cleanDataset, buildModel, topIntent, evaluate, countExamples, describeChanges } from '../../trained/trainer.js';
+import { normalize } from '../../shared/js/text.js';
 
 const $ = (sel) => document.querySelector(sel);
 const ENDPOINT_KEY = 'lt-admin:endpoint';
@@ -42,6 +44,7 @@ const state = {
   draft: sanitizeConfig(DEFAULT_CONFIG),
   logs: [],
   siteReport: null,
+  learn: { saved: null, draft: null, version: '', writable: false, savedModel: null, draftModel: null, inbox: [], eval: null, error: '' },
   selectedRule: null,
   tab: 'mode',
 };
@@ -190,6 +193,7 @@ async function connect(api) {
   renderAll();
   loadLogs();
   loadSiteCheck();
+  loadTraining();
 }
 
 $('#login-remote').addEventListener('submit', async (e) => {
@@ -281,7 +285,7 @@ $('#discard').addEventListener('click', () => {
 });
 
 window.addEventListener('beforeunload', (e) => {
-  if (state.api && isDirty()) e.preventDefault();
+  if (state.api && (isDirty() || learnDirty())) e.preventDefault();
 });
 
 // =============================================================================
@@ -329,6 +333,7 @@ function selectTab(name) {
   document.querySelectorAll('.tab').forEach((s) => (s.hidden = s.id !== `tab-${name}`));
   if (name === 'logs') loadLogs();
   if (name === 'site') renderSite();
+  if (name === 'learn') renderLearn();
 }
 
 function renderAll() {
@@ -943,7 +948,383 @@ $('#logs-delete').addEventListener('click', async () => {
 });
 
 // =============================================================================
-// 6. Kontrola strony
+// 6. Nauka naszego modelu
+// =============================================================================
+
+const TRAINING_URL = new URL('../../trained/data/training.json', import.meta.url).href;
+// Temat zaznaczamy z góry tylko, gdy model jest wystarczająco pewny — inaczej wybierasz ręcznie,
+// żeby „Dodaj wszystkie” nie nauczyło modelu jego własnych pomyłek.
+const SUGGEST_MIN = 0.5;
+const intentName = (id) => INTENT_LABELS[id] || id;
+
+async function loadTraining() {
+  const L = state.learn;
+  L.error = '';
+  try {
+    // Z lokalnym serwerem (npm run panel) — odczyt i zapis; bez niego — tylko odczyt opublikowanego pliku.
+    const local = IS_LOCAL_HOST ? await fetch('/api/training').then((r) => (r.ok ? r.json() : null)).catch(() => null) : null;
+    if (local) {
+      L.saved = local.dataset;
+      L.version = local.version;
+      L.writable = true;
+    } else {
+      const res = await fetch(TRAINING_URL, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('Dane treningowe nie są dostępne pod tym adresem.');
+      L.saved = cleanDataset(await res.json()).dataset;
+      L.writable = false;
+    }
+    L.draft = structuredClone(L.saved);
+    L.savedModel = buildModel(L.saved, 'zapisany');
+    L.draftModel = L.savedModel;
+    L.eval = null;
+  } catch (err) {
+    L.error = err.message;
+  }
+  renderLearn();
+}
+
+function learnDirty() {
+  const L = state.learn;
+  return Boolean(L.draft && JSON.stringify(L.draft) !== JSON.stringify(L.saved));
+}
+
+// Po każdej zmianie: model „po zmianach” uczony od nowa w przeglądarce (trwa ułamek sekundy).
+let rebuildTimer;
+function learnChanged() {
+  clearTimeout(rebuildTimer);
+  rebuildTimer = setTimeout(() => {
+    const L = state.learn;
+    L.draftModel = learnDirty() ? buildModel(L.draft, 'roboczy') : L.savedModel;
+    L.inbox.forEach((item) => (item.suggest = suggestFor(item.text)));
+    renderLearn();
+  }, 120);
+  renderLearnBar();
+}
+
+function suggestFor(text) {
+  const t = topIntent(state.learn.draftModel, text);
+  return t.knownFeatures === 0 ? { id: '', p: 0, ranked: [] } : { id: t.id, p: t.p, ranked: t.ranked.slice(0, 3) };
+}
+
+function alreadyKnown(text) {
+  const key = normalize(text);
+  return Object.entries(state.learn.draft).some(([k, list]) => !k.startsWith('_') && list.some((x) => normalize(x) === key));
+}
+
+function addToInbox(texts, from) {
+  const L = state.learn;
+  let added = 0;
+  for (const raw of texts) {
+    const text = String(raw).replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text || alreadyKnown(text) || L.inbox.some((i) => normalize(i.text) === normalize(text))) continue;
+    const suggest = suggestFor(text);
+    L.inbox.push({ text, from, suggest, chosen: suggest.p >= SUGGEST_MIN ? suggest.id : '' });
+    added++;
+  }
+  return added;
+}
+
+function addExample(intent, text) {
+  const L = state.learn;
+  const clean = String(text).replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!clean || !intent) return false;
+  if ((L.draft[intent] || []).some((x) => normalize(x) === normalize(clean))) return false;
+  L.draft[intent] = [...(L.draft[intent] || []), clean];
+  return true;
+}
+
+function renderLearnBar() {
+  const L = state.learn;
+  const dirty = learnDirty();
+  $('#learn-dirty').hidden = !dirty;
+  $('#learn-discard').hidden = !dirty;
+  $('#learn-save').disabled = !dirty || !L.writable;
+  $('#learn-save').title = L.writable
+    ? 'Zapisuje przykłady (z kopią w panel/backups/), uczy model od nowa i podbija wersję „trained” z wpisem w CHANGES.md.'
+    : 'Zapis działa tylko w panelu uruchomionym na Twoim komputerze (npm run panel). Tutaj użyj „Pobierz pliki”.';
+  $('#learn-count').textContent = L.inbox.length ? String(L.inbox.length) : '';
+}
+
+function renderLearn() {
+  const L = state.learn;
+  renderLearnBar();
+  const stats = $('#learn-stats');
+  stats.textContent = '';
+  if (L.error || !L.draft) {
+    stats.append(el('p', 'error', L.error || 'Wczytywanie danych treningowych…'));
+    return;
+  }
+  const ids = INTENTS.map((i) => i.id);
+  const covered = ids.filter((id) => (L.draft[id] || []).length).length;
+  const change = describeChanges(L.saved, L.draft);
+  stats.append(
+    statTile('Przykłady', countExamples(L.draft), '', 'Łączna liczba przykładowych pytań, z których uczy się model.'),
+    statTile('Tematy z przykładami', `${covered} / ${ids.length}`, covered < ids.length ? 'warn' : '', 'Tematy bez przykładów model rozpoznaje tylko po słowach kluczowych bota.'),
+    statTile(
+      'Trafność',
+      L.eval ? `${(L.eval.accuracy * 100).toFixed(1)}%` : '—',
+      '',
+      'Odsetek przykładów, które model odgaduje, gdy ich wcześniej „nie widział”. Kliknij „Sprawdź trafność”, żeby policzyć dla bieżących danych.',
+    ),
+    statTile('Wersja modelu', L.version || '—', '', 'Wersja „trained” — po „Zapisz i naucz model” podnosi się automatycznie.'),
+  );
+  $('#learn-note').textContent = [
+    learnDirty() ? `Niezapisane: ${change.text}.` : '',
+    L.writable ? '' : 'Tylko podgląd — zapis i trening działają w panelu uruchomionym na Twoim komputerze (npm run panel). Zmiany możesz pobrać jako pliki.',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  renderInbox();
+  renderExamples();
+  renderLearnErrors();
+}
+
+function intentSelect(selected, withEmpty = true) {
+  const sel = el('select');
+  if (withEmpty) sel.append(option('', '— wybierz temat —'));
+  const sorted = [...INTENTS].sort((a, b) => intentName(a.id).localeCompare(intentName(b.id), 'pl'));
+  for (const i of sorted) sel.append(option(i.id, `${intentName(i.id)} (${(state.learn.draft[i.id] || []).length})`));
+  sel.value = selected || '';
+  return sel;
+}
+
+function renderInbox() {
+  const L = state.learn;
+  const list = $('#learn-inbox');
+  list.textContent = '';
+  if (!L.inbox.length) {
+    list.append(el('li', 'empty muted small', 'Lista jest pusta. Kliknij „Wczytaj z rozmów” albo wklej pytania powyżej.'));
+    return;
+  }
+  L.inbox.forEach((item, idx) => {
+    const li = el('li', 'inbox-item');
+    const q = el('div', 'inbox-q');
+    q.append(el('strong', '', `„${item.text}”`));
+    if (item.from) q.append(el('span', 'muted small', item.from));
+    const sug = el('div', 'muted small');
+    sug.textContent = item.suggest.id
+      ? `Podpowiedź modelu: ${item.suggest.ranked.map((r) => `${intentName(r.id)} ${Math.round(r.p * 100)}%`).join(' · ')}` +
+        (item.suggest.p < SUGGEST_MIN ? ' — model nie jest pewny, wybierz temat ręcznie.' : '')
+      : 'Model nie zna żadnego słowa z tego pytania — wybierz temat ręcznie.';
+    const row = el('div', 'row');
+    const sel = intentSelect(item.chosen);
+    sel.addEventListener('change', () => (item.chosen = sel.value));
+    const ok = el('button', 'btn primary small', '✓ Dodaj');
+    ok.type = 'button';
+    ok.title = 'Dodaje pytanie jako przykład wybranego tematu.';
+    ok.addEventListener('click', () => {
+      if (!item.chosen) return toast('Najpierw wybierz temat.', true);
+      addExample(item.chosen, item.text);
+      L.inbox.splice(idx, 1);
+      learnChanged();
+      renderLearn();
+    });
+    const skip = el('button', 'btn ghost small', '✕ Pomiń');
+    skip.type = 'button';
+    skip.title = 'Usuwa pytanie z listy bez dodawania (np. pytanie bez sensu).';
+    skip.addEventListener('click', () => {
+      L.inbox.splice(idx, 1);
+      renderLearn();
+    });
+    row.append(sel, ok, skip);
+    li.append(q, sug, row);
+    list.append(li);
+  });
+}
+
+function renderExamples() {
+  const L = state.learn;
+  const sel = $('#learn-intent');
+  const current = sel.value || INTENTS[0].id;
+  const fresh = intentSelect(current, false);
+  sel.textContent = '';
+  sel.append(...fresh.childNodes);
+  sel.value = current;
+  const q = normalize($('#learn-filter').value);
+  const list = $('#learn-examples');
+  list.textContent = '';
+  const examples = (L.draft[current] || []).map((text, i) => ({ text, i })).filter((x) => !q || normalize(x.text).includes(q));
+  if (!examples.length) list.append(el('li', 'empty muted small', q ? 'Brak przykładów pasujących do wyszukiwania.' : 'Ten temat nie ma jeszcze przykładów.'));
+  const savedSet = new Set((L.saved[current] || []).map(normalize));
+  for (const { text, i } of examples.reverse()) {
+    const li = el('li', savedSet.has(normalize(text)) ? '' : 'new');
+    li.append(el('span', '', text));
+    if (!savedSet.has(normalize(text))) li.append(pill('nowy', 'ok'));
+    const del = el('button', 'icon-btn', '✕');
+    del.type = 'button';
+    del.title = 'Usuń ten przykład';
+    del.addEventListener('click', () => {
+      L.draft[current] = L.draft[current].filter((_, j) => j !== i);
+      learnChanged();
+      renderExamples();
+    });
+    li.append(del);
+    list.append(li);
+  }
+}
+
+function renderLearnErrors() {
+  const L = state.learn;
+  const box = $('#learn-errors-box');
+  const list = $('#learn-errors');
+  list.textContent = '';
+  box.hidden = !L.eval?.errors.length;
+  if (!L.eval) return;
+  for (const e of L.eval.errors.slice(0, 40)) {
+    const li = el('li');
+    li.append(el('span', '', `„${e.text}”`), el('span', 'muted small', ` — temat: ${intentName(e.expected)}, model wybrał: ${intentName(e.got)}`));
+    list.append(li);
+  }
+}
+
+$('#learn-intent').addEventListener('change', renderExamples);
+$('#learn-filter').addEventListener('input', renderExamples);
+
+$('#learn-add-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const input = $('#learn-add');
+  if (!addExample($('#learn-intent').value, input.value)) return toast('Ten przykład już jest albo pole jest puste.', true);
+  input.value = '';
+  learnChanged();
+  renderExamples();
+});
+
+$('#learn-paste-add').addEventListener('click', () => {
+  const lines = $('#learn-paste').value.split('\n');
+  const n = addToInbox(lines, 'wklejone');
+  $('#learn-paste').value = '';
+  toast(n ? `Dodano do listy: ${n}. Sprawdź podpowiedzi i zatwierdź.` : 'Nic nowego — te pytania już są w przykładach albo na liście.');
+  renderLearn();
+});
+
+$('#learn-from-logs').addEventListener('click', async () => {
+  if (!state.logs.length) await loadLogs();
+  // Pytania, z którymi model sobie nie poradził: nierozpoznane, błędy i te, na które musiało odpowiedzieć AI.
+  const candidates = state.logs.filter((l) => l.question && (isUnanswered(l.intent) || l.intent === 'ai')).map((l) => l.question);
+  const n = addToInbox(candidates, 'z rozmów');
+  toast(
+    n
+      ? `Wczytano z rozmów: ${n} pytań do nauczenia.`
+      : state.logs.some((l) => l.question)
+        ? 'Brak nowych pytań do nauczenia — wszystkie nierozpoznane pytania są już w przykładach.'
+        : 'W rozmowach nie ma treści pytań (wymaga rejestracji na poziomie 2 lub 3 i zgody pacjentów).',
+  );
+  renderLearn();
+});
+
+$('#learn-accept-all').addEventListener('click', () => {
+  const L = state.learn;
+  const ready = L.inbox.filter((i) => i.chosen);
+  ready.forEach((i) => addExample(i.chosen, i.text));
+  L.inbox = L.inbox.filter((i) => !i.chosen);
+  toast(ready.length ? `Dodano ${ready.length} przykładów.${L.inbox.length ? ` Bez tematu zostało: ${L.inbox.length}.` : ''}` : 'Żadne pytanie nie ma wybranego tematu.');
+  learnChanged();
+  renderLearn();
+});
+
+$('#learn-clear').addEventListener('click', () => {
+  state.learn.inbox = [];
+  renderLearn();
+});
+
+$('#learn-test-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = $('#learn-test').value.trim();
+  const box = $('#learn-test-result');
+  box.textContent = '';
+  if (!q || !state.learn.savedModel) return;
+  const before = topIntent(state.learn.savedModel, q);
+  const after = topIntent(state.learn.draftModel, q);
+  const col = (title, r) => {
+    const c = el('div', 'compare-col');
+    c.append(el('span', 'label', title));
+    if (r.knownFeatures === 0) {
+      c.append(el('p', 'muted small', 'Nie zna żadnego słowa → „nie na temat”'));
+      return c;
+    }
+    for (const x of r.ranked.slice(0, 3)) {
+      const row = el('div', 'bar-row compact');
+      const bar = el('div', 'bar');
+      const fill = el('span');
+      fill.style.width = `${Math.round(x.p * 100)}%`;
+      bar.append(fill);
+      row.append(el('span', 'bar-label', intentName(x.id)), bar, el('span', 'bar-n', `${Math.round(x.p * 100)}%`));
+      c.append(row);
+    }
+    return c;
+  };
+  const wrap = el('div', 'compare');
+  wrap.append(col('Zapisany model', before), col(learnDirty() ? 'Po Twoich zmianach' : 'Po zmianach (brak zmian)', after));
+  box.append(wrap);
+  if (before.id !== after.id) box.append(el('p', 'small hint', `Zmiana: ${intentName(before.id)} → ${intentName(after.id)}`));
+  const add = el('button', 'btn ghost small', '+ Dodaj to pytanie do listy do nauczenia');
+  add.type = 'button';
+  add.addEventListener('click', () => {
+    addToInbox([q], 'z testu') ? toast('Dodano do listy „Pytania do nauczenia”.') : toast('To pytanie już jest w przykładach albo na liście.');
+    renderLearn();
+  });
+  box.append(add);
+});
+
+$('#learn-eval').addEventListener('click', () => {
+  const btn = $('#learn-eval');
+  btn.disabled = true;
+  btn.textContent = 'Liczę…';
+  // setTimeout — żeby przycisk zdążył pokazać „Liczę…” przed kilkusekundowym liczeniem.
+  setTimeout(() => {
+    state.learn.eval = evaluate(state.learn.draft);
+    btn.disabled = false;
+    btn.textContent = 'Sprawdź trafność';
+    renderLearn();
+  }, 30);
+});
+
+$('#learn-discard').addEventListener('click', () => {
+  const L = state.learn;
+  L.draft = structuredClone(L.saved);
+  L.draftModel = L.savedModel;
+  L.eval = null;
+  renderLearn();
+});
+
+$('#learn-download').addEventListener('click', () => {
+  const L = state.learn;
+  if (!L.draft) return;
+  download('training.json', JSON.stringify(L.draft, null, 2) + '\n', 'application/json');
+  setTimeout(() => download('model.json', JSON.stringify(buildModel(L.draft, L.version || 'z-panelu')), 'application/json'), 300);
+  toast('Pobrano training.json i model.json. Podmień je w trained/data/ i trained/ (wersję podbij: npm run bump -- trained patch "…").');
+});
+
+$('#learn-save').addEventListener('click', async () => {
+  const L = state.learn;
+  const btn = $('#learn-save');
+  btn.disabled = true;
+  btn.textContent = 'Uczę model…';
+  try {
+    const res = await fetch('/api/training', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dataset: L.draft }) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Błąd zapisu (${res.status}).`);
+    const prev = L.eval?.accuracy;
+    L.saved = structuredClone(L.draft);
+    L.version = data.version;
+    L.savedModel = buildModel(L.saved, data.version);
+    L.draftModel = L.savedModel;
+    L.eval = { accuracy: data.accuracy, correct: data.correct, total: data.total, errors: evaluate(L.saved).errors };
+    toast(
+      `Model nauczony: trafność ${(data.accuracy * 100).toFixed(1)}%${prev != null ? ` (było ${(prev * 100).toFixed(1)}%)` : ''}, wersja trained ${data.version}. ` +
+        'Wgraj trained/model.json na hosting (albo git push), żeby czat na stronie używał nowego modelu.',
+    );
+  } catch (err) {
+    toast(`Nie zapisano: ${err.message}`, true);
+  } finally {
+    btn.textContent = 'Zapisz i naucz model';
+    renderLearn();
+  }
+});
+
+// =============================================================================
+// 7. Kontrola strony
 // =============================================================================
 
 async function loadSiteCheck() {

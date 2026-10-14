@@ -22,6 +22,7 @@ Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http
 - **Rejestracja rozmów** — 4 poziomy: wyłączona, statystyki, treść pytań za zgodą, pełne rozmowy za zgodą.
 - **Własne odpowiedzi** — fraza → Twoja odpowiedź; z testerem „co odpowie asystentka”.
 - **Odpowiedzi wbudowane** — zmiana tekstów i linków gotowych odpowiedzi bez programowania.
+- **Nauka** — przypisywanie nierozpoznanych pytań do tematów (model podpowiada), test „przed / po”, trafność, „Zapisz i naucz model” z automatyczną wersją.
 - **Rozmowy** — statystyki, pytania bez odpowiedzi, eksport CSV i eksport do treningu.
 - **Kontrola strony** — czy linki z odpowiedzi działają, czy ceny/telefon/godziny są aktualne, co się zmieniło na stronie (także automatycznie codziennie, z e-mailem przy problemie).
 
@@ -59,6 +60,7 @@ AIsupportBOT/
 ├── trained/                 silnik 3: nasz wyuczony model
 │   ├── data/training.json   ★ PRZYKŁADY DO NAUKI
 │   ├── naive-bayes.js       algorytm
+│   ├── trainer.js           wspólne funkcje nauki (skrypt, panel, lokalny serwer)
 │   ├── train.js             trening (npm run train)
 │   └── model.json           wynik treningu (generowany)
 ├── panel/                   PANEL STEROWANIA

@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.5.0
+- Panel: zakładka „Nauka” (pytania do nauczenia z podpowiedzią tematu, test przed/po, trafność, „Zapisz i naucz model” z automatyczną wersją i kopią danych); znaczki „zrobione / do zrobienia” przy kolumnach 1–4 na stronie głównej
+
+### ai 1.6.0
+- Panel: zakładka „Nauka” (pytania do nauczenia z podpowiedzią tematu, test przed/po, trafność, „Zapisz i naucz model” z automatyczną wersją i kopią danych); znaczki „zrobione / do zrobienia” przy kolumnach 1–4 na stronie głównej
+
+### trained 1.5.0
+- Panel: zakładka „Nauka” (pytania do nauczenia z podpowiedzią tematu, test przed/po, trafność, „Zapisz i naucz model” z automatyczną wersją i kopią danych); znaczki „zrobione / do zrobienia” przy kolumnach 1–4 na stronie głównej
+
 ### bot 1.4.1
 - Panel: znaczki „✓ zrobione” / „⏳ do zrobienia” przy trybach pracy (AI wymaga serwera AI) z podpowiedzią, czego brakuje
 
