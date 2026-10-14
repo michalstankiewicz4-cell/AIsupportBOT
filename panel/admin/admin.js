@@ -12,6 +12,7 @@ import { chainLabel } from '../../shared/js/router.js';
 import { AI_CONFIG } from '../../ai/config.js';
 import { cleanDataset, buildModel, topIntent, evaluate, countExamples, describeChanges } from '../../trained/trainer.js';
 import { normalize } from '../../shared/js/text.js';
+import { getBotOnly, setSoon, createBotOnlyToggle } from '../ui-prefs.js';
 
 const $ = (sel) => document.querySelector(sel);
 const ENDPOINT_KEY = 'lt-admin:endpoint';
@@ -336,6 +337,39 @@ function selectTab(name) {
   if (name === 'learn') renderLearn();
 }
 
+// =============================================================================
+// Przełącznik „Tylko bot” — na start pracujemy na bocie regułowym, więc wszystko,
+// co dotyczy AI, naszego modelu i kombinacji, jest przysłonięte panelem „SOON”.
+// Ustawienie jest zapamiętane w tej przeglądarce i nie zmienia zapisanej konfiguracji.
+// =============================================================================
+
+let botOnly = getBotOnly();
+$('#bot-only-slot').append(createBotOnlyToggle((on) => {
+  botOnly = on;
+  applyBotOnly();
+}));
+
+function applyBotOnly() {
+  document.body.classList.toggle('bot-only-on', botOnly);
+  // Karty trybów inne niż sam bot.
+  const cards = $('#mode-presets').children;
+  MODE_PRESETS.forEach((p, i) => setSoon(cards[i], botOnly && p.chain.join('>') !== 'bot'));
+  setSoon($('#chain-box'), botOnly);
+  // Nauka dotyczy wyłącznie naszego modelu; eksport do treningu też.
+  setSoon($('#tab-learn'), botOnly, 'Wkrótce — nauka dotyczy naszego modelu (trained); na start pracujemy na bocie regułowym');
+  setSoon($('#logs-train-slot'), botOnly);
+  $('#logs-train-slot .soon-cover')?.classList.add('compact');
+  $('[data-tab="learn"]').classList.toggle('soon-tab', botOnly);
+  // Ostrzeżenie: zapisany tryb używa czegoś, co jest przysłonięte.
+  const note = $('#bot-only-note');
+  const chain = state.draft?.engine?.chain || ['bot'];
+  const hiddenMode = botOnly && chain.join('>') !== 'bot';
+  note.hidden = !hiddenMode;
+  if (hiddenMode) {
+    note.textContent = `Uwaga: wybrany tryb „${chainLabel(chain)}” jest przysłonięty przełącznikiem „Tylko bot”. Wybierz kartę „Bot” albo wyłącz przełącznik, żeby go zmienić.`;
+  }
+}
+
 function renderAll() {
   renderMode();
   renderLogging();
@@ -415,6 +449,7 @@ function renderMode() {
   const notes = [`Aktualnie: ${chainLabel(chain)} — ${cs.done ? '✓ zrobione' : '⏳ do zrobienia'}.`];
   if (!cs.done) notes.push(cs.hint);
   $('#chain-note').textContent = notes.join(' ');
+  applyBotOnly();
 }
 
 // =============================================================================

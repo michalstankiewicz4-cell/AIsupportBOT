@@ -45,6 +45,8 @@ Instrukcja dla osoby, która opiekuje się asystentką na co dzień — bez prog
 
 Pełny panel działa tylko na Twoim komputerze. Na stronie z czatami (przycisk **„Panel administratora”**) jest jego **podgląd demo** — można go przeklikać, ale zmiany zostają tylko w przeglądarce oglądającego.
 
+> **Tylko bot:** na start pracujemy na bocie regułowym, więc przełącznik **„Tylko bot”** (u góry, domyślnie włączony) przysłania napisem **SOON** opcje AI, naszego modelu i kombinacji. Żeby je zobaczyć — wyłącz przełącznik. Nic się przy tym nie zapisuje i pacjent tego nie widzi.
+
 > **Wskazówki:** przy większości pól jest ikonka **?** — najedź na nią myszą (albo stuknij na telefonie), żeby zobaczyć krótkie wyjaśnienie.
 
 ---
@@ -172,6 +174,7 @@ Własne odpowiedzi też powinny tego przestrzegać: pisz „do jakiego specjalis
 | **Serwer panelu** | Program w Cloudflare, który przechowuje ustawienia i rozmowy |
 | **Tryb lokalny** | Praca w panelu bez serwera — tylko na Twoim komputerze |
 | **Kontrola strony** | Sprawdzenie, czy linki, ceny i telefon w odpowiedziach zgadzają się ze stroną kliniki |
+| **Tylko bot / SOON** | Przełącznik w panelu: przysłania opcje, których jeszcze nie używamy (AI, nasz model, kombinacje) |
 | **Wersja** | Numer typu 1.2.0 przy każdym silniku; każda zmiana jest opisana w `CHANGES.md` |
 
 ---

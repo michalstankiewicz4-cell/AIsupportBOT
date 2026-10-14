@@ -13,6 +13,7 @@
       <p>Trzy warianty tego samego asystenta i tryb z panelu sterowania. Zadaj to samo pytanie każdemu i porównaj odpowiedzi.</p>
     </div>
     <nav>
+      <span id="bot-only-slot"></span>
       <a class="nav-admin" href="panel/admin/" target="_blank" rel="noopener" title="Podgląd panelu sterowania. Na publicznej stronie działa jako demo — zmiany zostają tylko w Twojej przeglądarce i są widoczne w czatach na tej stronie.">Panel administratora ↗</a>
       <button type="button" id="reset">Wyczyść rozmowy</button>
       <a href="demo/floating.html?variant=bot">Podgląd na stronie (pływający)</a>
@@ -56,6 +57,7 @@
     import { createRouterEngine, chainLabel } from './shared/js/router.js';
     import { initPanel, getPanelConfig, panelStatus } from './panel/client.js';
     import { PANEL_CONFIG } from './panel/config.js';
+    import { getBotOnly, setSoon, createBotOnlyToggle } from './panel/ui-prefs.js';
 
     // Ustawienia z panelu (serwer panelu albo — przy lokalnym uruchomieniu — localStorage).
     await initPanel({ endpoint: PANEL_CONFIG.endpoint });
@@ -82,6 +84,17 @@
       [trainedEngine, 'trained'],
       [autoEngine, 'auto'],
     ].map(([engine, id]) => mountWidget({ engine, cssUrl, container: document.getElementById(id), storeKey: `lt-chat:demo-${id}` }));
+
+    // Przełącznik „Tylko bot” (wspólny z panelem): kolumny AI i naszego modelu — oraz kolumna 4,
+    // jeśli tryb z panelu używa czegoś poza botem — są przysłonięte panelem „SOON”.
+    const cols = Object.fromEntries(['ai', 'trained', 'auto'].map((id) => [id, document.getElementById(id).closest('.col')]));
+    const applyBotOnly = (on) => {
+      setSoon(cols.ai, on);
+      setSoon(cols.trained, on);
+      setSoon(cols.auto, on && chain.join('>') !== 'bot', 'Wkrótce — tryb z panelu używa AI albo naszego modelu');
+    };
+    document.getElementById('bot-only-slot').append(createBotOnlyToggle(applyBotOnly));
+    applyBotOnly(getBotOnly());
 
     document.getElementById('reset').addEventListener('click', () => widgets.forEach((w) => w.reset()));
     const st = panelStatus();

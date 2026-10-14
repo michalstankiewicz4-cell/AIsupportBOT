@@ -67,6 +67,7 @@
         </div>
       </div>
       <div class="top-actions">
+        <span id="bot-only-slot"></span>
         <span id="dirty" class="dirty" hidden>Niezapisane zmiany</span>
         <button id="export" class="btn ghost" type="button" title="Pobiera plik z bieżącymi ustawieniami (także niezapisanymi). Możesz go zaimportować później albo wgrać na hosting jako panel/settings.json.">Eksport</button>
         <button id="import" class="btn ghost" type="button" title="Wczytuje ustawienia z pliku (z eksportu albo panel/settings.json). Przed zapisem możesz je sprawdzić — nic nie zmienia się, dopóki nie klikniesz „Zapisz zmiany”.">Import</button>
@@ -96,8 +97,9 @@
           <p>Kto odpowiada pacjentom na stronie z uniwersalnym skryptem <code>embed.js</code>. Przy kombinacji odpowiada pierwszy silnik; gdy nie rozpozna pytania albo jest niedostępny — pytanie przejmuje następny. Stany nagłe (112) i Twoje własne odpowiedzi działają zawsze, niezależnie od trybu.</p>
         </div>
         <p class="status-legend"><span class="status done">✓ zrobione</span> działa od razu <span class="status todo">⏳ do zrobienia</span> wymaga jeszcze konfiguracji (najedź na „?” przy karcie, żeby zobaczyć, czego brakuje)</p>
+        <p id="bot-only-note" class="notice warn" hidden></p>
         <div id="mode-presets" class="cards"></div>
-        <div class="panel-box">
+        <div class="panel-box" id="chain-box">
           <h3>Własna kolejność <span class="tip" tabindex="0" data-tip="Ułóż do 3 silników po kolei. Następny dostaje pytanie tylko wtedy, gdy poprzedni go nie rozpozna albo jest niedostępny.">?</span></h3>
           <div class="chain-row" id="chain-row"></div>
           <p class="muted small" id="chain-note"></p>
@@ -186,7 +188,7 @@
           <button id="logs-refresh" class="btn ghost" type="button">Odśwież</button>
           <span class="spacer"></span>
           <button id="logs-csv" class="btn ghost" type="button" title="Pobiera widoczne wiersze jako plik do Excela.">Eksport CSV</button>
-          <button id="logs-train" class="btn ghost" type="button" title="Pobiera pytania pogrupowane według tematu w formacie trained/data/training.json — do nauki naszego modelu.">Eksport do treningu</button>
+          <span class="soon-slot" id="logs-train-slot"><button id="logs-train" class="btn ghost" type="button" title="Pobiera pytania pogrupowane według tematu w formacie trained/data/training.json — do nauki naszego modelu.">Eksport do treningu</button></span>
           <button id="logs-delete" class="btn danger" type="button" title="Trwale usuwa wszystkie zapisane rozmowy. Wymaga dwóch kliknięć.">Usuń wszystkie</button>
         </div>
         <div id="logs-stats" class="stats"></div>

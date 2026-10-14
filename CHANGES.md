@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.6.0
+- Przełącznik „Tylko bot” (domyślnie włączony) w panelu i na stronie głównej: opcje AI, naszego modelu i kombinacji przysłonięte półprzezroczystym panelem SOON
+
+### ai 1.7.0
+- Przełącznik „Tylko bot” (domyślnie włączony) w panelu i na stronie głównej: opcje AI, naszego modelu i kombinacji przysłonięte półprzezroczystym panelem SOON
+
+### trained 1.6.0
+- Przełącznik „Tylko bot” (domyślnie włączony) w panelu i na stronie głównej: opcje AI, naszego modelu i kombinacji przysłonięte półprzezroczystym panelem SOON
+
 ### bot 1.5.0
 - Panel: zakładka „Nauka” (pytania do nauczenia z podpowiedzią tematu, test przed/po, trafność, „Zapisz i naucz model” z automatyczną wersją i kopią danych); znaczki „zrobione / do zrobienia” przy kolumnach 1–4 na stronie głównej
 

@@ -16,7 +16,7 @@ Możliwy jest też **wariant 4 — własny model na serwerze z GPU** (dane pacje
 
 ## Panel sterowania
 
-Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`); na publicznej stronie jest wyłącznie **podgląd demo**. Ustawienia mogą być w **bazie** (serwer panelu, z rejestrem rozmów) albo w **pliku** `panel/settings.json` (bez serwera — wgrywasz plik na hosting). **Eksport / Import** ustawień do pliku JSON — kopia zapasowa i ręczna podmiana. Zakładki:
+Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`); na publicznej stronie jest wyłącznie **podgląd demo**. Ustawienia mogą być w **bazie** (serwer panelu, z rejestrem rozmów) albo w **pliku** `panel/settings.json` (bez serwera — wgrywasz plik na hosting). **Eksport / Import** ustawień do pliku JSON — kopia zapasowa i ręczna podmiana. Na start pracujemy na **bocie** — przełącznik **„Tylko bot”** (domyślnie włączony) przysłania napisem *SOON* opcje AI, naszego modelu i kombinacji. Zakładki:
 
 - **Tryb pracy** — bot / nasz model / AI albo ich kolejność (domyślnie: bot).
 - **Rejestracja rozmów** — 4 poziomy: wyłączona, statystyki, treść pytań za zgodą, pełne rozmowy za zgodą.
@@ -71,6 +71,7 @@ AIsupportBOT/
 │   ├── client.js            połączenie czatu z panelem (ustawienia, własne odpowiedzi, rejestr)
 │   ├── site-check.js        kontrola strony kliniki
 │   ├── labels.js            czytelne nazwy tematów
+│   ├── ui-prefs.js          przełącznik „Tylko bot” i panele SOON
 │   └── config.js            adres serwera panelu
 ├── tools/                   testy, wersje, lokalny serwer panelu, kontrola strony z konsoli
 ├── docs/                    dokumentacja

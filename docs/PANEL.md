@@ -154,6 +154,15 @@ Kolejność obsługi każdego pytania (niezależnie od trybu):
 2. **Własne odpowiedzi** z panelu.
 3. **Silnik / łańcuch silników** z trybu pracy.
 
+### Przełącznik „Tylko bot” (na start)
+
+Decyzja na start: **pracujemy na bocie regułowym**. Przełącznik **„Tylko bot”** w górnym pasku panelu (i na stronie z czatami) jest **domyślnie włączony** i przysłania lekko przezroczystym panelem z napisem **SOON** wszystko, co nie dotyczy bota:
+
+- w panelu: karty trybów z AI / naszym modelem / kombinacjami, „Własna kolejność”, zakładkę **Nauka** (z dopiskiem SOON na zakładce) i przycisk „Eksport do treningu” w Rozmowach,
+- na stronie z czatami: kolumny **2. AI** i **3. Trained** oraz kolumnę **4**, jeśli tryb z panelu używa czegoś poza botem.
+
+Elementy nie są usunięte ani wyszarzone — widać je pod spodem, ale nie da się w nie kliknąć. Po wyłączeniu przełącznika wszystko wraca. Ustawienie jest zapamiętane **w tej przeglądarce** (`localStorage`, klucz `lt-ui:bot-only`) i dotyczy tylko wyglądu: nie zmienia zapisanych ustawień ani tego, co widzi pacjent. Jeśli zapisany tryb pracy używa czegoś przysłoniętego, panel pokazuje ostrzeżenie nad kartami.
+
 Tryb dotyczy uniwersalnego `embed.js`. Skrypty `bot/embed.js`, `ai/embed.js`, `trained/embed.js` zawsze używają swojego silnika (ale też stosują własne odpowiedzi i rejestrację z panelu).
 
 ---
