@@ -1,34 +1,40 @@
 // Wariant 1: "-bot" — klasyczny asystent regułowy.
-// Bez AI i bez sieci. Dopasowuje ręcznie wpisane słowa kluczowe z shared/js/knowledge.js.
-// Przewidywalny i darmowy, ale rozumie tylko słowa, które wpisaliśmy.
-import { normalize, containsAny } from '../shared/js/text.js';
-import { INTENTS, replyFor, replyForOpinionWithTopic } from '../shared/js/knowledge.js';
+// Bez AI i bez sieci. Dopasowuje słowa kluczowe z shared/js/knowledge.js (z tolerancją literówek)
+// i wybiera przypadek ze specyfikacji czatu według STAŁEJ KOLEJNOŚCI (CASE_ORDER):
+// pierwszy pasujący przypadek wygrywa, a w obrębie przypadku — temat z najwyższym wynikiem.
+// A i B (stany nagłe) sprawdza wcześniej shared/js/safety.js.
+import { normalize, matchesPhrase } from '../shared/js/text.js';
+import { INTENTS, INTENT_BY_ID, CASE_ORDER, replyFor } from '../shared/js/knowledge.js';
 import { VERSION } from './version.js';
 
-// Minimalny wynik, by uznać dopasowanie (jedno słowo kluczowe, nawet ogólne).
-const MIN_SCORE = 3;
-
-// Punktujemy każdą intencję: każde dopasowane słowo dodaje swoją długość (dłuższe słowo =
+// Punktujemy każdy temat: każde dopasowane słowo dodaje swoją długość (dłuższe słowo =
 // bardziej konkretne dopasowanie; krótkie skróty jak "l4" czy "tsh" liczą się jako 4),
-// pomnożoną przez opcjonalną wagę intencji.
+// pomnożoną przez opcjonalną wagę tematu.
 export function scoreIntents(message) {
-  const t = normalize(message);
+  const words = normalize(message).split(' ').filter(Boolean);
   const scores = [];
   for (const intent of INTENTS) {
     let score = 0;
     for (const kw of intent.keywords) {
-      if (containsAny(t, [kw])) score += Math.max(4, kw.replace('*', '').length);
+      if (matchesPhrase(words, kw)) score += Math.max(4, kw.replace(/[*=]/g, '').length);
     }
     score *= intent.weight ?? 1;
-    if (score > 0) scores.push({ id: intent.id, score, routing: !!intent.routing });
+    if (score > 0) scores.push({ id: intent.id, case: intent.case, score, routing: !!intent.routing });
   }
   return scores.sort((a, b) => b.score - a.score);
 }
 
+// Wybór przypadku: pierwszy z CASE_ORDER, który ma dopasowany temat.
+// Zwraca { id, topic, scores } — topic = najlepszy temat medyczny (do I i J).
 export function classify(message) {
   const scores = scoreIntents(message);
-  if (!scores.length || scores[0].score < MIN_SCORE) return { id: null, scores };
-  return { id: scores[0].id, scores };
+  // Ogólny słownik zdrowia (zdrowie) nie jest „tematem” — nie ma własnej usługi.
+  const topic = scores.find((s) => s.routing && s.case !== 'J' && s.id !== 'zdrowie')?.id || null;
+  for (const c of CASE_ORDER) {
+    const best = scores.find((s) => s.case === c);
+    if (best) return { id: best.id, case: c, topic, scores };
+  }
+  return { id: null, case: 'L', topic, scores };
 }
 
 export const botEngine = {
@@ -37,15 +43,9 @@ export const botEngine = {
   version: VERSION,
 
   async ask(message) {
-    const { id, scores } = classify(message);
-    if (!id) return replyFor(null);
-
-    // Prośba o opinię + temat -> odmawiamy opinii, ale wskazujemy zakładkę.
-    const hasOpinion = scores.some((s) => s.id === 'opinia');
-    const topic = scores.find((s) => s.routing);
-    if (hasOpinion && topic) return replyForOpinionWithTopic(topic.id);
-
-    return replyFor(id);
+    const { id, topic } = classify(message);
+    if (!id) return { ...replyFor(null), confidence: 0 };
+    return replyFor(id, { topic: INTENT_BY_ID[topic] ? topic : null });
   },
 };
 

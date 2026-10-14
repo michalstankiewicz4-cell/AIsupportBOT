@@ -45,7 +45,7 @@
 
   <footer class="bottom">
     <p class="legend"><span class="status done">✓ zrobione</span> działa od razu · <span class="status todo">⏳ do zrobienia</span> wymaga jeszcze konfiguracji (najedź na znaczek, żeby zobaczyć czego).</p>
-    <p>Przykładowe pytania: „mam wysypkę na rękach”, „potrzebuję L4”, „ile kosztuje psychiatra”, „jaką dawkę ibuprofenu?”, „jaka jutro pogoda”, „boli mnie w klatce piersiowej”.</p>
+    <p>Przykładowe pytania: „boli mnie kręgosłup”, „potrzebuję recepty”, „potrzebuję L4”, „ile kosztuje psychiatra”.</p>
     <p id="versions"></p>
   </footer>
 
@@ -83,7 +83,7 @@
       [aiEngine, 'ai'],
       [trainedEngine, 'trained'],
       [autoEngine, 'auto'],
-    ].map(([engine, id]) => mountWidget({ engine, cssUrl, container: document.getElementById(id), storeKey: `lt-chat:demo-${id}` }));
+    ].map(([engine, id]) => mountWidget({ engine, cssUrl, container: document.getElementById(id), storeKey: `lt-chat:demo-${id}`, showTech: true }));
 
     // Przełącznik „Tylko bot” (wspólny z panelem): kolumny 2–4 (AI, nasz model, tryb z panelu)
     // są przysłonięte panelem „SOON” — bota porównujemy w kolumnie 1.

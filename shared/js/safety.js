@@ -1,37 +1,65 @@
-// Warstwa bezpieczeństwa — działa PRZED każdym silnikiem (bot, ai, trained).
-// Wykrywanie stanów nagłych celowo opiera się na regułach i nigdy nie jest oddawane
-// modelowi: przeoczony stan nagły to najgorszy możliwy błąd tego asystenta.
-import { normalize, containsAny } from './text.js';
-import { EMERGENCY_REPLY, CRISIS_REPLY } from './knowledge.js';
+// Warstwa bezpieczeństwa — przypadki A i B ze specyfikacji. Działa PRZED każdym silnikiem
+// (bot, ai, trained) i przed własnymi odpowiedziami z panelu, na KAŻDEJ wiadomości.
+// Wykrywanie celowo opiera się na regułach i nigdy nie jest oddawane modelowi:
+// przeoczony stan nagły to najgorszy możliwy błąd. Lepiej uruchomić alarm za często niż za rzadko.
+// Wystarczy jedno trafienie frazy — bez analizy kontekstu. Frazy są dopasowywane z tolerancją
+// literówek (shared/js/text.js). Listy do zatwierdzenia przez lekarza (specyfikacja, sekcja 11).
+import { normalize, matchesAny } from './text.js';
+import { alarmReply } from './knowledge.js';
 
-// Sygnały myśli samobójczych / samookaleczenia -> telefony kryzysowe + 112.
-const CRISIS = [
-  'zabic sie', 'zabije sie', 'odebrac sobie zycie', 'odebrac zycie', 'samoboj*',
-  'nie chce zyc', 'nie chce juz zyc', 'nie chce dluzej zyc', 'skonczyc ze soba', 'skoncze ze soba',
-  'skrzywdzic sie', 'skrzywdze sie', 'okalecz*', 'samookalecz*', 'tne sie', 'ciac sie',
-  'powiesic sie', 'skoczyc z mostu', 'nie ma sensu zyc', 'lepiej gdyby mnie nie bylo',
+// B — kryzys psychiczny / myśli samobójcze (także o kimś bliskim).
+export const CRISIS = [
+  'zabic sie', 'sie zabic', 'zabije sie', 'sie zabije', 'zabil bym sie', 'zabilabym sie', 'zabilbym sie',
+  'odebrac sobie zycie', 'odebrac zycie', 'samoboj*',
+  'nie chce zyc', 'nie chce juz zyc', 'nie chce dluzej zyc', 'chce umrzec', 'chcialbym umrzec', 'chcialabym umrzec', 'wolal* umrzec',
+  'nie mam po co zyc', 'nie ma po co zyc', 'po co zyc', 'mam dosc zycia', 'nie ma sensu zyc', 'zycie nie ma sensu', 'lepiej gdyby mnie nie bylo',
+  'skonczyc ze soba', 'skoncze ze soba', 'skonczyc z tym wszystkim',
+  'skrzywdzic sie', 'sie skrzywdzic', 'skrzywdze sie', 'okalecz*', 'samookalecz*', 'tne sie', 'sie tne', 'ciac sie', 'pocielam sie', 'pocialem sie',
+  'powiesic sie', 'skoczyc z mostu', 'rzucic sie pod',
 ];
 
-// Ostre stany nagłe -> 112 / SOR.
-const EMERGENCY = [
-  'bol w klatce', 'boli w klatce', 'boli mnie w klatce', 'bol klatki', 'bola mnie klatka', 'ucisk w klatce', 'zawal*',
-  'dusze sie', 'dusi mnie', 'nie moge oddychac', 'brak tchu', 'nie moge zlapac oddechu', 'dusznosc*',
-  'udar*', 'opadniety kacik', 'opadl kacik', 'belkocze', 'belkotliw*', 'niedowlad*', 'nie czuje reki', 'nie czuje nogi',
-  'stracil przytomnosc', 'stracila przytomnosc', 'utrata przytomnosci', 'nieprzytomn*', 'zemdlal*',
+// A — zagrożenie życia, objawy fizyczne.
+export const EMERGENCY = [
+  // ból w klatce piersiowej
+  'bol w klatce', 'bolu w klatce', 'boli w klatce', 'boli mnie w klatce', 'bola mnie w klatce', 'w klatce piersiowej boli', 'klatka piersiowa boli', 'klatke piersiowa boli', 'bol klatki', 'bola mnie klatka', 'boli mnie klatka', 'ucisk w klatce', 'kluje w klatce', 'piecze w klatce', 'zawal*',
+  // duszność
+  'dusze sie', 'dusi mnie', 'nie moge oddychac', 'nie mam czym oddychac', 'brak tchu', 'brakuje mi tchu', 'nie moge zlapac oddechu', 'dusznosc*', 'dusznosci',
+  // udar
+  'udar*', 'opadniety kacik', 'opadl kacik', 'opada kacik', 'kacik ust', 'belkocze', 'belkotliw*', 'niedowlad*', 'nie czuje reki', 'nie czuje nogi', 'zaburzenia mowy', 'nie moge mowic',
+  // utrata przytomności, drgawki
+  'stracil przytomnosc', 'stracila przytomnosc', 'stracilem przytomnosc', 'stracilam przytomnosc', 'utrata przytomnosci', 'nieprzytomn*', 'zemdlal*', 'omdlen*', 'mdleje',
   'drgawk*', 'atak padaczki',
-  'silne krwawienie', 'krwotok*', 'wymiotuje krwia', 'kaszle krwia',
-  'przedawkow*', 'zatrucie grzyb*', 'zatrucie lek*', 'zatrucie czad*', 'czadem', 'polknal', 'polknela',
-  'obrzek gardla', 'puchnie gardlo', 'puchnie jezyk', 'wstrzas anafilakt*', 'anafilaks*',
-  'najgorszy bol glowy', 'nagly silny bol glowy',
+  // krwawienie
+  'silne krwawienie', 'mocno krwawi', 'krwotok*', 'wymiotuje krwia', 'kaszle krwia',
+  // zatrucie / przedawkowanie
+  'przedawkow*', 'zatrucie', 'zatrul*', 'zatruci*', 'czadem', '=polknal*', '=polknel*', 'za duzo tabletek', 'za duzo lekow', 'za duzo leku', 'za duzo pigulek',
+  // ciężka reakcja alergiczna
+  'obrzek gardla', 'obrzek jezyka', 'puchnie gardlo', 'puchnie jezyk', 'spuchl jezyk', 'spuchlo gardlo', 'wstrzas anafilakt*', 'anafilaks*',
+  // nagły, „najgorszy w życiu” ból głowy
+  'najgorszy bol glowy', 'nagly silny bol glowy', 'nagly bol glowy', 'najgorszy w zyciu bol',
+  // wypadek
   'potracil*', 'potracony', 'potracona',
 ];
 
-// Zwraca gotową odpowiedź, jeśli wiadomość wymaga pilnej reakcji,
-// w przeciwnym razie null.
-export function checkSafety(message) {
+// Wariant B „o osobie bliskiej” — wiadomość mówi o kimś innym (specyfikacja, karta B).
+const CLOSE_PERSON = [
+  'syn', 'syna', 'synowi', 'corka', 'corki', 'corce', 'maz', 'meza', 'mezowi', 'zona', 'zony', 'zonie', 'partner*', 'chlopak', 'dziewczyna',
+  'przyjaciel*', 'kolega', 'kolegi', 'kolezank*', 'brat', 'brata', 'siostr*', 'mama', 'mamy', 'mamie', 'tata', 'taty', 'tacie', 'ojciec', 'ojca', 'matka', 'matki',
+  'dziecko', 'dziecka', 'dzieci', 'babcia', 'dziadek', 'znajom*', 'sasiad*', 'mowi ze', 'mowi', 'twierdzi', 'grozi ze', 'pisze ze',
+];
+
+/**
+ * Zwraca gotową odpowiedź (karta alarmowa + komunikat 2), jeśli wiadomość wymaga pilnej reakcji,
+ * w przeciwnym razie null. B ma pierwszeństwo przed A.
+ * @param {string} message
+ * @param {object} [opts] { supportLine } — linia z telefonem wsparcia w B (decyzja właściciela, panel)
+ */
+export function checkSafety(message, opts = {}) {
   const t = normalize(message);
-  if (containsAny(t, CRISIS)) return { ...CRISIS_REPLY, intent: 'crisis' };
-  if (containsAny(t, EMERGENCY)) return { ...EMERGENCY_REPLY, intent: 'emergency' };
+  if (matchesAny(t, CRISIS)) {
+    return alarmReply('B', { closePerson: matchesAny(t, CLOSE_PERSON, { fuzzy: false }), supportLine: Boolean(opts.supportLine) });
+  }
+  if (matchesAny(t, EMERGENCY)) return alarmReply('A');
   return null;
 }
 

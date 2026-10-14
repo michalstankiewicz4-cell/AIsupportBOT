@@ -121,7 +121,7 @@ async function handleAdmin(request, env, url, path, ip) {
     const days = clampInt(url.searchParams.get('days'), 1, 365, 30);
     const from = Date.now() - days * 86400000;
     const { results } = await env.DB
-      .prepare('SELECT id, ts, session, variant, version, intent, source, degraded, consent, question, answer FROM logs WHERE ts >= ? ORDER BY ts DESC LIMIT ?')
+      .prepare('SELECT id, ts, session, variant, version, intent, case_id AS "case", button, source, degraded, consent, question, answer FROM logs WHERE ts >= ? ORDER BY ts DESC LIMIT ?')
       .bind(from, LOGS_MAX_ROWS)
       .all();
     return json({ logs: results.map((r) => ({ ...r, consent: Boolean(r.consent) })), days, max: LOGS_MAX_ROWS }, 200, cors);
@@ -177,6 +177,12 @@ async function ensureSchema(db) {
     )
     .run();
   await db.prepare('CREATE INDEX IF NOT EXISTS logs_ts ON logs(ts)').run();
+  // Kolumny dodane później (specyfikacja czatu, pkt 8.13): przypadek A–M i kliknięty przycisk.
+  for (const col of ['case_id TEXT', 'button TEXT']) {
+    try {
+      await db.prepare(`ALTER TABLE logs ADD COLUMN ${col}`).run();
+    } catch { /* kolumna już istnieje */ }
+  }
   schemaReady = true;
 }
 
@@ -223,8 +229,8 @@ async function writeConfig(db, cfg) {
 
 async function insertLog(db, e) {
   await db
-    .prepare('INSERT INTO logs (ts, session, variant, version, intent, source, degraded, consent, question, answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(Date.now(), e.session, e.variant, e.version, e.intent, e.source, e.degraded, e.consent ? 1 : 0, e.question, e.answer)
+    .prepare('INSERT INTO logs (ts, session, variant, version, intent, case_id, button, source, degraded, consent, question, answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .bind(Date.now(), e.session, e.variant, e.version, e.intent, e.case || '', e.button || '', e.source, e.degraded, e.consent ? 1 : 0, e.question, e.answer)
     .run();
 }
 

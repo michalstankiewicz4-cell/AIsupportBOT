@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.7.0
+- Specyfikacja czatu „Ilona” v1.0: przypadki A–M ze stałą kolejnością, dwa komunikaty przy A/B, tryb kryzysowy, domyślnie konsultacja lekarska, tolerancja literówek, teksty w shared/js/texts.js, kolorowe kafelki zakupu z ceną w każdej odpowiedzi, dopisek 112/999, „Napisz do nas”, rejestr przypadków i kliknięć, 37 testów akceptacyjnych
+
+### ai 1.8.0
+- Specyfikacja czatu „Ilona” v1.0: przypadki A–M ze stałą kolejnością, dwa komunikaty przy A/B, tryb kryzysowy, domyślnie konsultacja lekarska, tolerancja literówek, teksty w shared/js/texts.js, kolorowe kafelki zakupu z ceną w każdej odpowiedzi, dopisek 112/999, „Napisz do nas”, rejestr przypadków i kliknięć, 37 testów akceptacyjnych
+
+### trained 1.7.0
+- Specyfikacja czatu „Ilona” v1.0: przypadki A–M ze stałą kolejnością, dwa komunikaty przy A/B, tryb kryzysowy, domyślnie konsultacja lekarska, tolerancja literówek, teksty w shared/js/texts.js, kolorowe kafelki zakupu z ceną w każdej odpowiedzi, dopisek 112/999, „Napisz do nas”, rejestr przypadków i kliknięć, 37 testów akceptacyjnych
+
 ### bot 1.6.4
 - Dokumentacja: docs/SOON.md — spis wszystkich przysłonięć SOON; znaczniki „SOON:” w kodzie
 

@@ -1,6 +1,6 @@
 # AIsupportBOT — asystent pacjenta dla lekarzeiterapeuci.pl
 
-Czat na stronę, w którym wirtualna konsultantka **Ilona** **kieruje pacjenta do właściwego specjalisty i właściwej zakładki** serwisu, odpowiada na pytania organizacyjne (ceny, kontakt, jak umówić wizytę) i **nigdy nie udziela porad medycznych** — zawsze wskazuje, że najlepszą drogą jest konsultacja z lekarzem. Na pytania nie na temat (polityka, pogoda, żarty) odpowiada stałą regułką z numerem infolinii.
+Czat na stronę, w którym wirtualna konsultantka **Ilona** **kieruje pacjenta do właściwego specjalisty i właściwej zakładki** serwisu, odpowiada na pytania organizacyjne (ceny, kontakt, jak umówić wizytę) i **nigdy nie udziela porad medycznych** — zawsze wskazuje, że najlepszą drogą jest konsultacja z lekarzem. Na pytania nie na temat (polityka, pogoda, żarty) prosi o opisanie problemu zdrowotnego i pokazuje przyciski. Każda odpowiedź od razu pokazuje **kolorowe kafelki usług z ceną** — czat ma prowadzić do zakupu konsultacji. Działanie opisuje specyfikacja czatu „Ilona” v1.0 (przypadki A–M) — plan wdrożenia: [docs/PLAN-ILONA.md](docs/PLAN-ILONA.md).
 
 Projekt zawiera **trzy silniki** tego samego asystenta — z tą samą wiedzą, wyglądem i zasadami bezpieczeństwa — oraz **panel sterowania**, w którym wybierasz silnik albo ich kombinację:
 
@@ -45,12 +45,13 @@ AIsupportBOT/
 │   ├── css/widget.css       wygląd czatu
 │   ├── img/                 logo i miniatura konsultantki
 │   └── js/
-│       ├── knowledge.js     ★ WIEDZA: zakładki, usługi, ceny, odpowiedzi, słowa kluczowe, fakty do kontroli strony
-│       ├── safety.js        stany nagłe (112) i kryzys psychiczny — działa przed wszystkim innym
-│       ├── pipeline.js      kolejność: czyszczenie → bezpieczeństwo → własne odpowiedzi → silnik
+│       ├── texts.js         ★ WSZYSTKIE TEKSTY odpowiedzi (przypadki A–M ze specyfikacji)
+│       ├── knowledge.js     ★ WIEDZA: usługi i ceny, przyciski, słowa kluczowe, kolejność przypadków, fakty do kontroli strony
+│       ├── safety.js        A i B: stany nagłe (112) i kryzys psychiczny — działa przed wszystkim innym
+│       ├── pipeline.js      kolejność: czyszczenie → A/B → tryb kryzysowy → własne odpowiedzi → silnik → „Napisz do nas”
 │       ├── router.js        kombinacje silników (np. nasz model → AI)
 │       ├── privacy.js       anonimizacja (numery, e-maile) przed zapisem rozmów
-│       ├── text.js          normalizacja polskiego tekstu
+│       ├── text.js          normalizacja polskiego tekstu, dopasowanie z tolerancją literówek
 │       ├── widget.js        okno czatu (Shadow DOM), zgoda na zapis rozmowy
 │       └── embed-core.js    uruchamianie z tagu <script>
 ├── bot/                     silnik 1: bot regułowy
@@ -100,6 +101,7 @@ npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 - [docs/AI-SERWER.md](docs/AI-SERWER.md) — uruchomienie serwera AI (klucz API, model Claude Haiku).
 - [docs/ZABEZPIECZENIA.md](docs/ZABEZPIECZENIA.md) — ochrona przed kosztami AI: limity, Turnstile, rate limiting, prompt caching.
 - [docs/TRENOWANIE.md](docs/TRENOWANIE.md) — jak uczyć asystentkę (także: czy da się „wytrenować własny model”).
+- [docs/PLAN-ILONA.md](docs/PLAN-ILONA.md) — plan wdrożenia specyfikacji czatu „Ilona” (odhaczane punkty, decyzje klienta).
 - [docs/POMYSLY.md](docs/POMYSLY.md) — pomysły na rozwój (bot, AI, panel) do zrobienia.
 - [docs/SOON.md](docs/SOON.md) — spis wszystkich przysłonięć „SOON” (przełącznik „Tylko bot”): gdzie są i jak je odsłonić.
 - [docs/WARIANT-4-LOKALNY.md](docs/WARIANT-4-LOKALNY.md) — informacyjnie: wariant z własnym modelem na serwerze z GPU.
@@ -107,9 +109,9 @@ npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 
 ## Zasady, których pilnujemy
 
-1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, myśli samobójcze) wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu podaje 112 (oraz 800 70 2222 / 116 123 przy kryzysie psychicznym). Tego nie da się wyłączyć ani nadpisać z panelu.
-2. **Żadnych opinii medycznych.** Bez diagnoz, dawkowania, interpretacji wyników. Tylko: jaki specjalista + która zakładka + „najlepiej skonsultować się z lekarzem”.
-3. **Jedno źródło wiedzy.** Zakładki, ceny i odpowiedzi są w `shared/js/knowledge.js`; zmiany bez programowania — w panelu sterowania.
+1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, zatrucie) i myśli samobójcze wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu pokazuje czerwoną kartę z przyciskiem 112 oraz drugi komunikat (przy kryzysie: krótki i ciepły, z psychiatrą i psychologiem). Tego nie da się wyłączyć ani nadpisać z panelu.
+2. **Żadnych opinii medycznych.** Bez diagnoz, dawkowania, interpretacji wyników. Każda dolegliwość → konsultacja lekarska (kafelki: konsultacja lekarska, recepta, konsultacja ogólna).
+3. **Jedno źródło wiedzy.** Teksty — `shared/js/texts.js`, usługi, ceny i słowa kluczowe — `shared/js/knowledge.js`; zmiany tekstów bez programowania — w panelu sterowania.
 4. **Prywatność.** Imię pacjenta nie opuszcza przeglądarki. Rejestracja rozmów jest domyślnie wyłączona; treść pytań zapisujemy tylko za zgodą i po anonimizacji.
 5. **Panel niedostępny z zewnątrz.** Pełny panel działa tylko lokalnie (publicznie wyłącznie podgląd demo); część administracyjna serwera wymaga hasła i może być ograniczona do Twojego adresu IP; plik ustawień zapisuje tylko lokalny panel.
 6. **Wersjonowanie trzech typów.** Każdy silnik ma własną wersję; `npm run check` i GitHub Actions blokują publikację, jeśli wersje, CHANGES.md lub model się rozjadą.

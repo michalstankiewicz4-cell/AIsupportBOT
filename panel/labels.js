@@ -24,6 +24,7 @@ export const INTENT_LABELS = {
   kontynuacja: 'Kontynuacja leczenia',
   badania_dom: 'Badania w domu',
   inny_specjalista: 'Inny specjalista (laryngolog, okulista…)',
+  zdrowie: 'Inna dolegliwość → konsultacja lekarska',
   jaki_specjalista: '„Jakiego specjalisty potrzebuję?”',
   cennik: 'Cennik',
   jak_dziala: 'Jak to działa',
@@ -34,11 +35,13 @@ export const INTENT_LABELS = {
   prawne: 'Regulamin, RODO, zwroty',
   powitanie: 'Powitanie',
   podziekowanie: 'Podziękowanie',
-  opinia: 'Prośba o diagnozę / dawkowanie (odmowa)',
+  opinia: 'Pytanie o dawkę / diagnozę (odmowa)',
   offtopic: 'Pytania nie na temat',
   fallback: 'Nie rozpoznano pytania',
   emergency: 'Stan nagły (112)',
   crisis: 'Kryzys psychiczny',
+  'crisis-followup': 'Kryzys — kolejna wiadomość (tryb kryzysowy)',
+  click: 'Kliknięcie przycisku',
   ai: 'AI — odpowiedź swobodna',
   error: 'Błąd',
   empty: 'Pusta wiadomość',
@@ -50,7 +53,10 @@ export const SOURCE_LABELS = {
   engine: 'Silnik',
   custom: 'Własna odpowiedź',
   safety: 'Bezpieczeństwo',
+  click: 'Kliknięcie',
 };
+
+export { CASE_LABELS } from '../shared/js/texts.js';
 
 // Nazwa tematu z uwzględnieniem własnych reguł i połączeń „opinia + temat”.
 export function intentLabel(intent, rules = []) {
@@ -60,10 +66,11 @@ export function intentLabel(intent, rules = []) {
     return `Własna: ${rule?.name || rule?.phrases?.[0] || intent.slice(7)}`;
   }
   if (intent.startsWith('opinia+')) return `Odmowa opinii → ${INTENT_LABELS[intent.slice(7)] || intent.slice(7)}`;
+  if (intent.startsWith('cennik+')) return `Cennik → ${INTENT_LABELS[intent.slice(7)] || intent.slice(7)}`;
   return INTENT_LABELS[intent] || intent;
 }
 
 // Czy wpis oznacza pytanie, którego asystentka nie umiała obsłużyć (kandydat do nauki).
 export function isUnanswered(intent) {
-  return intent === 'fallback' || intent === 'error';
+  return intent === 'fallback' || intent === 'error' || intent === 'offtopic';
 }

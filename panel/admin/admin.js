@@ -5,7 +5,8 @@
 import { LOG_LEVELS, MODE_PRESETS, ENGINES, DEFAULT_CONFIG, LIMITS, sanitizeConfig, isSafeUrl, wrapSettings, unwrapSettings } from '../schema.js';
 import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPanelConfig } from '../client.js';
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
-import { INTENTS, DOCTOR_FIRST, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
+import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
+import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
@@ -452,8 +453,14 @@ function renderMode() {
   const notes = [`Aktualnie: ${chainLabel(chain)} — ${cs.done ? '✓ zrobione' : '⏳ do zrobienia'}.`];
   if (!cs.done) notes.push(cs.hint);
   $('#chain-note').textContent = notes.join(' ');
+  $('#support-line').checked = Boolean(state.draft.safety?.supportLine);
   applyBotOnly();
 }
+
+$('#support-line').addEventListener('change', (e) => {
+  state.draft.safety = { ...(state.draft.safety || {}), supportLine: e.target.checked };
+  changed();
+});
 
 // =============================================================================
 // 2. Rejestracja rozmów
@@ -717,7 +724,6 @@ async function runTest() {
 // 4. Odpowiedzi wbudowane
 // =============================================================================
 
-$('#doctor-first').textContent = `„${DOCTOR_FIRST}”`;
 $('#builtin-search').addEventListener('input', renderBuiltin);
 $('#builtin-only').addEventListener('change', renderBuiltin);
 
@@ -726,11 +732,11 @@ function renderBuiltin() {
   box.textContent = '';
   const q = $('#builtin-search').value.trim().toLowerCase();
   const only = $('#builtin-only').checked;
-  const groups = [
-    ['Kierowanie do specjalistów i usług', INTENTS.filter((i) => i.routing).map((i) => i.id)],
-    ['Informacje o serwisie i rozmowa', INTENTS.filter((i) => !i.routing).map((i) => i.id)],
-    ['Gdy asystentka nie rozpozna pytania', ['fallback']],
-  ];
+  // Grupy według przypadków ze specyfikacji czatu (A–M), w kolejności sprawdzania.
+  const keys = Object.keys(TEXTS);
+  const groups = ['A', 'B', 'I', 'C', 'F', 'E', 'G', 'H', 'J', 'K', 'M', 'D', 'L']
+    .map((c) => [CASE_LABELS[c], keys.filter((k) => TEXTS[k].case === c)])
+    .filter(([, ids]) => ids.length);
   for (const [title, ids] of groups) {
     const cards = ids
       .map((id) => builtinCard(id))
@@ -744,12 +750,20 @@ function renderBuiltin() {
 
 function builtinCard(id) {
   const def = defaultAnswer(id);
-  const ovr = state.draft.overrides[id];
-  const intent = INTENTS.find((i) => i.id === id);
+  const ovr = def.locked ? null : state.draft.overrides[id];
   const card = el('article', `card builtin${ovr ? ' changed' : ''}`);
   const head = el('div', 'row');
-  head.append(el('strong', '', INTENT_LABELS[id] || id), el('code', 'muted small', id));
-  if (intent?.routing) head.append(pill('+ „najpierw lekarz”'), tip(`Do tej odpowiedzi asystentka zawsze dopisze: „${DOCTOR_FIRST}”. Nie musisz tego powtarzać w tekście.`));
+  head.append(el('strong', '', def.label), el('code', 'muted small', id));
+  const usedBy = INTENTS.filter((i) => i.text === id).map((i) => INTENT_LABELS[i.id] || i.id);
+  if (usedBy.length > 1) head.append(tip(`Ten tekst pokazują tematy: ${usedBy.join(', ')}. Przyciski pod odpowiedzią zależą od tematu.`));
+  if (def.locked) {
+    head.append(pill('zablokowany'), tip('Tekst alarmowy (112, kryzys) zmienia tylko programista w shared/js/texts.js — po zatwierdzeniu przez lekarza kierującego serwisem.'));
+    const box = el('details');
+    box.append(el('summary', '', def.text));
+    if (def.links?.length) box.append(el('p', 'muted small', def.links.map((l) => l.label).join('  ·  ')));
+    card.append(head, box);
+    return { id, node: card, haystack: [id, def.label, def.text].join(' ').toLowerCase() };
+  }
   if (ovr) head.append(pill('zmieniona', 'ok'));
   head.append(el('span', 'spacer'));
   if (ovr) {
@@ -770,7 +784,8 @@ function builtinCard(id) {
 
   const defBox = el('div', 'default');
   defBox.append(el('span', 'label', 'Domyślnie:'), el('p', '', def.text));
-  if (def.links?.length) defBox.append(el('p', 'muted small', def.links.map((l) => `${l.label} → ${l.url}`).join('  ·  ')));
+  if (def.links?.length) defBox.append(el('p', 'muted small', def.links.map((l) => (l.url ? `${l.label} → ${l.url}` : `${l.label} (pytanie w czacie)`)).join('  ·  ')));
+  if (/\{\w+\}/.test(TEXTS[id].text)) defBox.append(el('p', 'muted small', 'Pola w nawiasach klamrowych, np. {cena}, {telefon}, {imie}, asystentka uzupełnia sama — zostaw je w tekście.'));
 
   const ta = textArea('Twoja wersja (puste = domyślna)', ovr?.text || '', (v) => {
     if (v.trim()) state.draft.overrides[id] = { ...(state.draft.overrides[id] || {}), text: v };
@@ -778,7 +793,7 @@ function builtinCard(id) {
     card.classList.toggle('changed', Boolean(state.draft.overrides[id]));
     summary.textContent = v.trim() || def.text;
     changed();
-  }, { rows: 3, placeholder: def.text, max: LIMITS.textLength, hint: 'Wpisz nowy tekst odpowiedzi. Zostaw puste, żeby używać tekstu domyślnego. Zmiana działa w bocie i naszym modelu.' });
+  }, { rows: 3, placeholder: def.text, max: LIMITS.textLength, hint: 'Wpisz nowy tekst odpowiedzi (najlepiej 3–4 zdania, bez diagnoz i dawek). Zostaw puste, żeby używać tekstu domyślnego. Zmiana działa w bocie i naszym modelu.' });
 
   const linksToggle = el('label', 'check');
   const lcb = el('input');
@@ -794,7 +809,7 @@ function builtinCard(id) {
       linksBox.append(el('p', 'muted small', 'Najpierw wpisz własny tekst odpowiedzi.'));
       return;
     }
-    if (!Array.isArray(o.links)) o.links = structuredClone(def.links || []);
+    if (!Array.isArray(o.links)) o.links = structuredClone((def.links || []).filter((l) => l.url).map(({ label, url }) => ({ label, url })));
     linksBox.append(linksField(o.links, (v) => ((o.links = v), changed())));
   };
   lcb.addEventListener('change', () => {
@@ -807,7 +822,7 @@ function builtinCard(id) {
 
   details.append(defBox, ta, linksToggle, linksBox);
   card.append(head, details);
-  const haystack = [id, INTENT_LABELS[id], def.text, ovr?.text].join(' ').toLowerCase();
+  const haystack = [id, def.label, def.text, ovr?.text].join(' ').toLowerCase();
   return { id, node: card, haystack };
 }
 
@@ -907,8 +922,8 @@ function renderLogs() {
           ? SOURCE_LABELS[l.source] || l.source
           : `${ENGINE_LABELS[l.variant] || l.variant || '—'}${l.degraded ? ' ⚠' : ''}`,
       ),
-      el('td', '', intentLabel(l.intent, state.draft.rules)),
-      el('td', 'q', l.question || (l.consent ? '—' : 'bez zgody')),
+      el('td', '', `${l.case && l.case !== 'custom' ? `${l.case} · ` : ''}${intentLabel(l.intent, state.draft.rules)}${l.button ? ` → „${l.button}”` : ''}`),
+      el('td', 'q', l.question || (l.source === 'click' ? '—' : l.case === 'B' ? 'nie zapisujemy (kryzys)' : l.consent ? '—' : 'bez zgody')),
       el('td', 'a', l.answer ? truncate(l.answer, 140) : '—'),
     );
     const act = el('td', 'nowrap');

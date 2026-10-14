@@ -4,8 +4,9 @@
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
-import { SITE } from './knowledge.js';
-import { getPanelConfig, logTurn, newSessionId } from '../../panel/client.js';
+import { SITE, M_BUTTONS, textOf, BUTTON_KINDS } from './knowledge.js';
+import { UI_TEXTS } from './texts.js';
+import { getPanelConfig, logTurn, logClick, newSessionId } from '../../panel/client.js';
 import { isSafeUrl } from '../../panel/schema.js';
 
 // Ikony — stałe SVG (bezpieczne do wstawienia przez innerHTML).
@@ -18,16 +19,19 @@ const ICON_SEND =
 
 const BOT_LABEL = SITE.assistant; // np. „Ilona”
 const AVATAR_URL = new URL('../img/avatar.png', import.meta.url).href;
-const CHIPS = ['Jakiego specjalisty potrzebuję?', 'Cennik', 'Jak umówić wizytę?', 'Kontakt'];
 const NAME_MAX = 40;
 
+// Powitanie (przypadek M) z 6 szybkimi przyciskami — zanim pacjent cokolwiek napisze.
 const greetingFor = (name) => ({
   role: 'bot',
   greeting: true, // nie wysyłamy do AI — imię zostaje w przeglądarce
-  text: `Dzień dobry, ${name}! Jestem ${SITE.assistant}, wirtualna konsultantka. W czym mogę pomóc?`,
-  chips: CHIPS,
+  text: textOf('M', { imie: `, ${name}` }),
+  links: M_BUTTONS(),
+  case: 'M',
 });
 
+// Napisy techniczne (np. „Tryb offline…”) pacjent nie widzi (specyfikacja, pkt 8.6) —
+// pokazujemy je tylko na stronie podglądu (opcja showTech) i zapisujemy w rejestrze rozmów.
 const DEGRADED_NOTE = {
   offline: 'Tryb offline — odpowiada asystent regułowy.',
   network: 'Brak połączenia z AI — odpowiada asystent regułowy.',
@@ -51,6 +55,8 @@ export function mountWidget(opts) {
   const title = opts.title || 'Lekarze i Terapeuci';
   const storeKey = opts.storeKey || `lt-chat:${engine.name}`;
   const state = loadState(storeKey) || { open: !!opts.open, name: '', startedAt: 0, session: '', consent: false, messages: [] };
+  // Stan przebiegu rozmowy dla pipeline: tryb kryzysowy i licznik niezrozumiałych pytań.
+  state.flow = state.flow || { crisis: false, unclear: 0 };
 
   // --- Szkielet DOM ---------------------------------------------------------
   const host = document.createElement('div');
@@ -129,7 +135,7 @@ export function mountWidget(opts) {
   consentBox.lastChild.append(' ', privacy);
   nameForm.append(h, lead, label, nameInput);
   if (logging.level >= 2) nameForm.append(consentBox);
-  nameForm.append(start, hint);
+  nameForm.append(start, hint, el('p', 'sos', UI_TEXTS.emergencyFooter));
   // Logo kliniki w wolnym miejscu między nagłówkiem a formularzem.
   const introLogo = el('div', 'intro-logo');
   const logoImg = el('img');
@@ -158,15 +164,17 @@ export function mountWidget(opts) {
   const input = el('textarea', 'input');
   input.rows = 1;
   input.maxLength = 500;
-  input.placeholder = 'Napisz wiadomość…';
+  input.placeholder = UI_TEXTS.placeholder;
   input.setAttribute('aria-label', 'Twoja wiadomość');
   const send = el('button', 'send');
   send.type = 'submit';
   send.setAttribute('aria-label', 'Wyślij');
   send.innerHTML = ICON_SEND;
   form.append(input, send);
+  // Stały dopisek pod polem (specyfikacja, pkt 8.9) — widoczny zawsze.
+  const sos = el('p', 'sos', UI_TEXTS.emergencyFooter);
 
-  chatView.append(header, log, form);
+  chatView.append(header, log, form, sos);
   panel.append(intro, chatView);
   wrap.append(panel);
   if (!inline) wrap.append(launcher);
@@ -175,7 +183,7 @@ export function mountWidget(opts) {
   // --- Wyświetlanie ----------------------------------------------------------
   function renderIntroLines() {
     log.append(el('div', 'day', formatDay(state.startedAt)));
-    const notice = el('div', 'notice', 'Wirtualna konsultantka nie udziela porad medycznych. W nagłym zagrożeniu życia dzwoń 112. Infolinia: ');
+    const notice = el('div', 'notice', 'Wirtualna konsultantka nie udziela porad medycznych. Infolinia: ');
     const tel = el('a', '', SITE.phone);
     tel.href = SITE.phoneHref;
     notice.append(tel);
@@ -184,27 +192,63 @@ export function mountWidget(opts) {
 
   function renderMessage(msg, animate = true) {
     const item = el('div', `msg ${msg.role}${msg.emergency ? ' emergency' : ''}${animate ? ' enter' : ''}`);
-    item.append(whoRow(msg.role === 'user' ? state.name : BOT_LABEL, msg.role !== 'user'));
+    if (msg.emergency) {
+      // Karta alarmowa: zawsze rozwinięta, ogłaszana od razu czytnikom ekranu.
+      item.setAttribute('role', 'alert');
+      item.setAttribute('aria-live', 'assertive');
+    }
+    const who = msg.role === 'user' ? state.name : msg.title ? `${BOT_LABEL} · ${msg.title}` : BOT_LABEL;
+    item.append(whoRow(who, msg.role !== 'user'));
     const bubble = el('div', 'bubble');
     appendLinkified(bubble, msg.text);
     item.append(bubble);
 
     if (msg.links?.length) {
+      // Kafelki zakupu (przyciski główne) — kolorowe kwadraty z ceną; reszta — małe przyciski.
+      const tiles = el('div', 'tiles');
       const links = el('div', 'links');
       for (const l of msg.links) {
-        if (!isSafeUrl(l.url)) continue; // tylko https/tel/mailto — nigdy javascript:
-        const a = el('a', 'link', l.label);
-        a.href = l.url;
-        if (!l.url.startsWith('tel:')) a.target = '_top'; // otwórz zakładkę na stronie kliniki
-        links.append(a);
+        const kind = BUTTON_KINDS.includes(l.kind) ? l.kind : 'info';
+        const tile = l.main && kind !== 'alarm';
+        const node = buttonNode(l, `${tile ? 'tile' : `link${l.main ? ' main' : ''}`} k-${kind}`, tile, msg.case);
+        if (node) (tile ? tiles : links).append(node);
       }
-      item.append(links);
+      if (tiles.children.length) item.append(tiles);
+      if (links.children.length) item.append(links);
     }
-    if (msg.note) item.append(el('div', 'note', msg.note));
+    if (msg.note && opts.showTech) item.append(el('div', 'note', msg.note));
     log.append(item);
 
     if (msg.chips?.length) renderChips(msg.chips);
     log.scrollTop = log.scrollHeight;
+  }
+
+  // Jeden przycisk: link (https/tel) albo pytanie zadawane w czacie (l.ask).
+  // Kafelek: nazwa usługi + cena w drugiej linii („e-Recepta online · od 59 zł”).
+  function buttonNode(l, cls, tile, caseId) {
+    let node;
+    if (l.ask) {
+      node = el('button', cls);
+      node.type = 'button';
+      node.addEventListener('click', () => {
+        clicked(l.label, caseId);
+        ask(l.ask);
+      });
+    } else {
+      if (!isSafeUrl(l.url)) return null; // tylko https/tel/mailto — nigdy javascript:
+      node = el('a', cls);
+      node.href = l.url;
+      if (!l.url.startsWith('tel:')) node.target = '_top'; // otwórz zakładkę na stronie kliniki
+      node.addEventListener('click', () => clicked(l.label, caseId));
+    }
+    const [name, price] = String(l.label).split(' · ');
+    if (tile) {
+      node.append(el('span', 'tile-name', name));
+      if (price) node.append(el('span', 'tile-price', price));
+    } else {
+      node.textContent = l.label;
+    }
+    return node;
   }
 
   function renderChips(chips) {
@@ -245,12 +289,18 @@ export function mountWidget(opts) {
   // --- Zachowanie ------------------------------------------------------------
   let busy = false;
 
+  // Rejestr: kliknięty przycisk + przypadek A–M (bez treści rozmowy).
+  function clicked(button, caseId) {
+    logClick({ session: state.session, consent: state.consent, variant: engine.name, version: engine.version, button, caseId });
+  }
+
   function startConversation(name, consent) {
     state.name = name;
     state.consent = consent;
     state.session = newSessionId();
     state.startedAt = Date.now();
     state.messages = [greetingFor(name)];
+    state.flow = { crisis: false, unclear: 0 };
     saveState(storeKey, state);
     showScreen();
     input.focus();
@@ -275,9 +325,10 @@ export function mountWidget(opts) {
       .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
 
     const started = Date.now();
-    const reply = await respond(engine, message, history);
+    const reply = await respond(engine, message, history, state.flow);
     // Krótkie minimalne opóźnienie, żeby natychmiastowe odpowiedzi bota nie były zbyt nagłe.
-    await wait(Math.max(0, 600 - (Date.now() - started)));
+    // Karta alarmowa — bez opóźnienia.
+    if (!reply.emergency) await wait(Math.max(0, 600 - (Date.now() - started)));
     stopTyping();
 
     const botMsg = {
@@ -286,11 +337,19 @@ export function mountWidget(opts) {
       links: reply.links,
       chips: reply.chips,
       emergency: reply.emergency,
+      title: reply.title,
+      case: reply.case,
       note: reply.degraded ? DEGRADED_NOTE[reply.degraded] : '',
     };
     state.messages.push(botMsg);
-    state.messages = state.messages.slice(-40);
     renderMessage(botMsg);
+    // Drugi komunikat po karcie alarmowej (A, B) — zaraz po niej, bez opóźnienia.
+    if (reply.followup) {
+      const second = { role: 'bot', text: reply.followup.text, links: reply.followup.links, case: reply.case };
+      state.messages.push(second);
+      renderMessage(second);
+    }
+    state.messages = state.messages.slice(-40);
     saveState(storeKey, state);
 
     // Rejestr rozmów (zakres zależy od poziomu z panelu i zgody pacjenta; imię nigdy nie jest wysyłane).
@@ -352,6 +411,7 @@ export function mountWidget(opts) {
       state.session = '';
       consentInput.checked = false;
       state.messages = [];
+      state.flow = { crisis: false, unclear: 0 };
       log.textContent = '';
       nameInput.value = '';
       saveState(storeKey, state);

@@ -144,14 +144,29 @@ export function logTurn({ session, consent, variant, version, question, reply })
     variant: reply?.engine || variant,
     version: reply?.engineVersion || version,
     intent: reply?.intent,
+    case: reply?.case || '',
+    button: reply?.button || '',
     source: reply?.source || 'engine',
     degraded: reply?.degraded || '',
     question,
-    answer: reply?.text,
+    answer: [reply?.text, reply?.followup?.text].filter(Boolean).join('\n\n'),
   };
   const entry = filterLogEntry(raw, config);
   if (!entry) return;
+  sendLog(entry);
+}
 
+// Kliknięcie przycisku pod odpowiedzią (specyfikacja, pkt 8.13 i 8.20) — zapisujemy tylko
+// etykietę przycisku i przypadek A–M, bez treści rozmowy.
+export function logClick({ session, consent, variant, version, button, caseId }) {
+  const entry = filterLogEntry(
+    { session, consent, variant, version, intent: 'click', case: caseId || '', button, source: 'click', degraded: '', question: null, answer: null },
+    config,
+  );
+  if (entry) sendLog(entry);
+}
+
+function sendLog(entry) {
   if (endpoint) {
     try {
       const body = JSON.stringify(entry);

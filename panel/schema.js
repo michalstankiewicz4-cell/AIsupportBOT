@@ -58,6 +58,9 @@ export const LIMITS = {
 export const DEFAULT_CONFIG = Object.freeze({
   engine: { chain: ['bot'] },
   logging: { level: 0, retentionDays: 90 },
+  // Linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — decyzja właściciela,
+  // domyślnie wyłączona (specyfikacja czatu, sekcja 11 pkt 1).
+  safety: { supportLine: false },
   rules: [],
   overrides: {},
   updatedAt: null,
@@ -137,6 +140,7 @@ export function sanitizeConfig(input) {
         ? Math.min(LIMITS.retentionMax, Math.max(LIMITS.retentionMin, days))
         : DEFAULT_CONFIG.logging.retentionDays,
     },
+    safety: { supportLine: src.safety?.supportLine === true },
     rules,
     overrides,
     updatedAt: typeof src.updatedAt === 'string' ? src.updatedAt.slice(0, 40) : null,
@@ -185,13 +189,18 @@ export function filterLogEntry(entry, config) {
     variant: cleanText(entry?.variant, 20),
     version: cleanText(entry?.version, 20),
     intent: cleanText(entry?.intent, 60),
+    // Przypadek ze specyfikacji (A–M) i kliknięty przycisk — bez danych identyfikujących.
+    case: /^[A-M]$|^custom$/.test(String(entry?.case || '')) ? entry.case : '',
+    button: cleanText(entry?.button, 80),
     source: cleanText(entry?.source, 20),
     degraded: cleanText(entry?.degraded, 20),
     consent: level >= 2 && consent,
     question: null,
     answer: null,
   };
-  if (level >= 2 && consent) out.question = anonymize(entry?.question) || null;
-  if (level >= 3 && consent) out.answer = anonymize(entry?.answer, 1200) || null;
+  // Treści wiadomości kryzysowych (przypadek B) nie zapisujemy wcale — RODO, specyfikacja sekcja 11 pkt 5.
+  const crisis = out.case === 'B';
+  if (level >= 2 && consent && !crisis) out.question = anonymize(entry?.question) || null;
+  if (level >= 3 && consent && !crisis) out.answer = anonymize(entry?.answer, 1200) || null;
   return out;
 }

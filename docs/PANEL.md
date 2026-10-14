@@ -207,9 +207,14 @@ Limity: 200 reguł, 40 fraz na regułę, 1200 znaków odpowiedzi, 4 linki.
 
 ## 8. Odpowiedzi wbudowane
 
-Zmiana tekstu (i opcjonalnie linków) odpowiedzi bota i naszego modelu. Puste pole = tekst domyślny z `shared/js/knowledge.js`. Do odpowiedzi kierujących do specjalisty zawsze dopisywane jest zdanie „…najlepszą drogą jest zawsze konsultacja z lekarzem.”. Odpowiedzi w stanach nagłych są zablokowane.
+Wszystkie teksty asystentki są w jednym pliku — `shared/js/texts.js` — i odpowiadają przypadkom A–M ze specyfikacji czatu „Ilona” (np. `D` — dolegliwości, `F` — L4, `L` — niejasne pytanie). Zakładka pokazuje je pogrupowane według przypadków, w kolejności sprawdzania. Zmieniony tekst zapisuje się w ustawieniach (`overrides`, klucz = klucz tekstu) — w bazie albo w `panel/settings.json`, z kopią zapasową.
 
-AI formułuje odpowiedzi samodzielnie na podstawie `knowledge.js` — nadpisania jej nie zmieniają; na AI działają „Własne odpowiedzi” (sprawdzane przed AI, więc dodatkowo oszczędzają koszty).
+- Pola w nawiasach klamrowych (`{cena}`, `{telefon}`, `{imie}`…) asystentka uzupełnia sama — zostaw je w tekście.
+- Jeden tekst może obsługiwać kilka tematów (np. `D` — skóra, alergie, kręgosłup…); kafelki pod odpowiedzią zależą od tematu.
+- **Teksty alarmowe (A, B) są zablokowane** — zmienia je programista w `texts.js` po zatwierdzeniu przez lekarza kierującego serwisem.
+- Opcjonalna linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — przełącznik w zakładce „Tryb pracy” (domyślnie wyłączony, decyzja właściciela).
+
+Kafelki zakupu (kolorowe kwadraty z ceną) i małe przyciski dobiera `shared/js/knowledge.js` (tabela `SERVICES` — nazwy usług z formularza i ceny w jednym miejscu). Kolory: zielony — konsultacja lekarska, fioletowy — psychiatra, morski — psycholog/terapeuta, niebieski — recepta, L4, wyniki, skierowania, kobiety/mężczyźni, szary — informacje, czerwony — wyłącznie 112.
 
 ## 9. Nauka naszego modelu
 
@@ -230,6 +235,7 @@ Zakładka **„Nauka”** zastępuje ręczną edycję `trained/data/training.jso
 
 - Kafelki: liczba rozmów, pytań, pytań bez odpowiedzi, stanów nagłych, zgód.
 - „Najczęstsze tematy” — o co pacjenci pytają najczęściej.
+- Kolumna „Temat” pokazuje też **przypadek A–M** i **kliknięty przycisk / kafelek** (np. `D · Inna dolegliwość → „e-Recepta online · od 59 zł”`) — widać, które przypadki prowadzą do zakupu. Treści wiadomości kryzysowych (B) nie zapisujemy wcale.
 - Filtr **„Bez odpowiedzi”** — pytania, których asystentka nie rozpoznała. Przycisk **„+ Odpowiedź”** tworzy z pytania nową własną odpowiedź.
 - **Eksport CSV** — do Excela.
 - **Eksport do treningu** — pytania pogrupowane według tematu w formacie `trained/data/training.json`. Pytania nierozpoznane trafiają do `_do_przypisania` — przenieś je ręcznie do właściwego tematu, potem `npm run train` (albo przypisz je w zakładce „Nauka” — punkt 9).

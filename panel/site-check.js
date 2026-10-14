@@ -10,6 +10,7 @@
 import { PAGES, INTENTS, SITE, SITE_FACTS, defaultAnswer } from '../shared/js/knowledge.js';
 import { sanitizeConfig } from './schema.js';
 import { INTENT_LABELS } from './labels.js';
+import { TEXTS } from '../shared/js/texts.js';
 
 const MAX_PAGES = 45; // limit pobrań na jedno sprawdzenie (Cloudflare Workers: maks. 50 podzapytań)
 const MAX_HTML = 2_000_000;
@@ -28,9 +29,9 @@ export function collectLinks(config = {}) {
   };
   for (const p of Object.values(PAGES)) add(p.url, `Zakładka: ${p.label}`);
   for (const i of INTENTS) for (const l of i.answer.links || []) add(l.url, `Odpowiedź: ${INTENT_LABELS[i.id] || i.id}`);
-  for (const l of defaultAnswer('fallback').links || []) add(l.url, 'Odpowiedź: gdy nie rozpozna pytania');
+  for (const l of defaultAnswer('L').links || []) add(l.url, 'Odpowiedź: gdy nie rozpozna pytania');
   for (const [id, o] of Object.entries(cfg.overrides)) {
-    for (const l of o.links || []) add(l.url, `Zmieniona odpowiedź: ${INTENT_LABELS[id] || id}`);
+    for (const l of o.links || []) add(l.url, `Zmieniona odpowiedź: ${TEXTS[id]?.label || INTENT_LABELS[id] || id}`);
   }
   for (const r of cfg.rules) for (const l of r.links) add(l.url, `Własna odpowiedź: ${r.name || r.phrases[0]}`);
   return [...map].map(([url, where]) => ({ url, where: [...where] }));
