@@ -5,7 +5,7 @@
 Repozytorium ma gotowy workflow `.github/workflows/static.yml`. Po pushu na gałąź `main`:
 
 1. GitHub Actions uruchamia `check-versions.js` i testy — **jeśli coś się nie zgadza, strona się nie opublikuje**.
-2. Przed publikacją usuwany jest panel administratora i kod serwerów (`panel/admin`, `panel/server`, `ai/server`, `tools`) — **panel nie trafia do internetu**.
+2. Przed publikacją usuwany jest kod serwerów i narzędzia (`panel/server`, `panel/backups`, `ai/server`, `tools`). Panel administratora jest publikowany **tylko jako podgląd demo** — bez logowania do serwera i bez zapisu pliku (to działa wyłącznie lokalnie, `npm run panel`).
 3. Pliki trafiają na GitHub Pages pod adres w stylu `https://michalstankiewicz4-cell.github.io/AIsupportBOT/`.
 
 Osobny workflow `site-check.yml` codziennie sprawdza stronę kliniki (linki, ceny, telefon) i przy problemie wysyła e-mail — patrz [PANEL.md](PANEL.md#10-kontrola-strony-kliniki).
