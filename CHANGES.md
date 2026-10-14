@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-14
 
+### bot 1.6.3
+- Podgląd pływający: warianty ai, trained i „z panelu” przysłonięte SOON przy „Tylko bot” (podgląd pokazuje bota); mały znaczek SOON w rogu przycisków
+
+### ai 1.7.3
+- Podgląd pływający: warianty ai, trained i „z panelu” przysłonięte SOON przy „Tylko bot” (podgląd pokazuje bota); mały znaczek SOON w rogu przycisków
+
+### trained 1.6.3
+- Podgląd pływający: warianty ai, trained i „z panelu” przysłonięte SOON przy „Tylko bot” (podgląd pokazuje bota); mały znaczek SOON w rogu przycisków
+
 ### bot 1.6.2
 - Zakładka „Nauka” w kolorze paneli SOON (nadal klikalna)
 

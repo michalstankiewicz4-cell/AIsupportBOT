@@ -8,22 +8,52 @@
   <style>
     .page { max-width: 900px; margin: 0 auto; padding: 32px; }
     .fake { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 28px; min-height: 60vh; }
-    .switch a { margin-right: 10px; }
+    .switch { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 6px; }
+    .switch a { text-decoration: none; padding: 5px 12px; border-radius: 99px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+    .switch a.active { background: #2e2787; border-color: #2e2787; color: #fff; }
+    .switch .bot-only { margin-left: auto; padding: 5px 12px 5px 6px; border-radius: 99px; border: 1px solid var(--line); background: #fff; }
+    .switch .soon-slot { display: inline-flex; border-radius: 99px; }
   </style>
 </head>
 <body>
   <div class="page">
-    <p class="switch">Wariant: <a href="?variant=bot">bot</a><a href="?variant=ai">ai</a><a href="?variant=trained">trained</a><a href="?variant=auto">z panelu</a> · <a href="../index.html">← porównanie</a></p>
+    <p class="switch">Wariant:
+      <a href="?variant=bot" data-v="bot">bot</a>
+      <span class="soon-slot"><a href="?variant=ai" data-v="ai">ai</a></span>
+      <span class="soon-slot"><a href="?variant=trained" data-v="trained">trained</a></span>
+      <span class="soon-slot"><a href="?variant=auto" data-v="auto">z panelu</a></span>
+      <a href="../index.html">← porównanie</a>
+      <span id="bot-only-slot"></span>
+    </p>
     <div class="fake">
       <h1>Przykładowa strona kliniki</h1>
       <p>Tak będzie wyglądał asystent na lekarzeiterapeuci.pl — przycisk w prawym dolnym rogu.</p>
     </div>
   </div>
-  <script>
+  <script type="module">
+    import { getBotOnly, setSoon, createBotOnlyToggle } from '../panel/ui-prefs.js';
+
+    // Przełącznik „Tylko bot” (wspólny z panelem i stroną porównania): warianty ai, trained
+    // i „z panelu” są przysłonięte panelem SOON, a podgląd zawsze pokazuje bota.
+    const applyBotOnly = (on) => {
+      for (const slot of document.querySelectorAll('.switch .soon-slot')) {
+        setSoon(slot, on);
+        slot.querySelector('.soon-cover')?.classList.add('compact');
+      }
+    };
+    document.getElementById('bot-only-slot').append(createBotOnlyToggle((on) => {
+      applyBotOnly(on);
+      // Przełączenie zmienia ładowany wariant — przeładuj podgląd, jeśli trzeba.
+      if (on ? v !== 'bot' : requested !== v) location.reload();
+    }));
+    applyBotOnly(getBotOnly());
+
     // Ładujemy wybrany wariant dokładnie tak, jak zrobi to strona produkcyjna.
-    var v = new URLSearchParams(location.search).get('variant');
-    if (['bot', 'ai', 'trained', 'auto'].indexOf(v) < 0) v = 'bot';
-    var s = document.createElement('script');
+    let requested = new URLSearchParams(location.search).get('variant');
+    if (!['bot', 'ai', 'trained', 'auto'].includes(requested)) requested = 'bot';
+    const v = getBotOnly() ? 'bot' : requested;
+    document.querySelector(`.switch [data-v="${v}"]`)?.classList.add('active');
+    const s = document.createElement('script');
     s.src = v === 'auto' ? '../embed.js' : '../' + v + '/embed.js';
     s.dataset.open = 'true';
     document.body.appendChild(s);
