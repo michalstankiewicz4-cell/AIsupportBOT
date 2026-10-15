@@ -10,7 +10,7 @@ import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
 import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
-import { contrastWithWhite, applyTileStyle, fitTileText } from '../../shared/js/widget.js';
+import { contrastWithWhite, applyTileStyle, layoutTiles } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
@@ -1020,6 +1020,8 @@ function renderTilesCfg() {
   };
   form.append(
     toggle('fit', 'Dopasuj wysokość do zawartości', 'Kafelek bez ceny albo z krótkim tekstem jest niższy — czat zajmuje mniej miejsca w pionie. Wyłączone: wszystkie kafelki w rzędzie mają równą wysokość.'),
+    toggle('pack', 'Równe odstępy w pionie', 'Kafelki są dosunięte do siebie w kolumnach — odstęp między nimi w pionie jest zawsze taki sam, bez pustych miejsc pod niższymi kafelkami. Najlepiej razem z „Dopasuj wysokość do zawartości”. Nie działa razem z „szerokością dopasowaną do tekstu” (tam odstępy są równe same z siebie).'),
+    toggle('autoWidth', 'Szerokość dopasowana do tekstu', 'Kafelek jest tak szeroki jak jego napis — krótkie usługi („L4 online”) zajmują mniej miejsca i więcej mieści się w jednym rzędzie. Wyłączone: 3 równe kolumny.'),
     toggle('nobreak', 'Bez przenoszenia pojedynczych liter', 'Wyraz nie jest łamany w środku (np. „lekarsk-a”) — przechodzi w całości do nowej linii, a linie są wyrównane. Gdy najdłuższy wyraz się nie mieści, napis robi się odrobinę mniejszy.'),
   );
   // Symetria marginesów.
@@ -1066,10 +1068,10 @@ function renderTilesCfg() {
 
   // Podgląd — te same klasy i zmienne co w czacie.
   const preview = el('div', 'tile-preview');
-  for (const id of ['wizyta_umow', 'recepta', 'kontynuacja', 'umow_wizyte', 'psycholog_terapeuta', 'skierowanie']) preview.append(previewButton(id));
+  for (const id of ['wizyta_umow', 'recepta', 'kontynuacja', 'umow_wizyte', 'l4', 'psycholog_terapeuta', 'skierowanie', 'trt', 'leki_psych']) preview.append(previewButton(id));
   const applyPreview = (tt) => {
     applyTileStyle(preview, tt);
-    requestAnimationFrame(() => (tt.nobreak ? fitTileText(preview) : preview.querySelectorAll('.pv-name').forEach((n) => (n.style.fontSize = ''))));
+    requestAnimationFrame(() => layoutTiles(preview, tt));
   };
   applyPreview(t);
   cols.append(form, preview);

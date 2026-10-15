@@ -268,6 +268,8 @@ expect('panel: kafelki — domyślnie bez zmian', JSON.stringify(sanitizeConfig(
 {
   const tl = sanitizeConfig({ tiles: { fit: true, nobreak: true, sym: 'both', padding: { t: 4, r: 99, b: 20, l: -3 } } }).tiles;
   expect('panel: kafelki — symetria pełna i zakres 0–24 px', tl.fit && tl.nobreak && tl.padding.t === 4 && tl.padding.b === 4 && tl.padding.l === 4 && tl.padding.r === 4, tl);
+  const tp = sanitizeConfig({ tiles: { pack: true, autoWidth: true, fit: 'tak' } }).tiles;
+  expect('panel: kafelki — równe odstępy i szerokość do tekstu (tylko true)', tp.pack && tp.autoWidth && !tp.fit, tp);
   const tv = sanitizeConfig({ tiles: { sym: 'vertical', padding: { t: 6, b: 18, l: 2, r: 30 } } }).tiles;
   expect('panel: kafelki — symetria pionowa (dół = góra)', tv.padding.b === 6 && tv.padding.l === 2 && tv.padding.r === 24, tv);
 }

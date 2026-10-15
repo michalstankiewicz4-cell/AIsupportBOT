@@ -532,7 +532,9 @@ export const EXTRAS_CASES = ['C', 'D'];
 //             cały wyraz w nowej linii, a gdy się nie mieści, napis jest odrobinę mniejszy)
 //   padding — marginesy wewnętrzne kafelka w px: góra, prawo, dół, lewo
 //   sym     — symetria marginesów: none | vertical (góra = dół) | horizontal (lewo = prawo) | both
-export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
+//   pack    — równe odstępy w pionie (kafelki dosunięte w kolumnach, bez pustych miejsc)
+//   autoWidth — szerokość kafelka dopasowana do tekstu (zamiast 3 równych kolumn)
+export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
 export const TILES = { ...DEFAULT_TILES, padding: { ...DEFAULT_TILES.padding } };
 
 // Komunikaty okresowe (np. „24–26.12 infolinia nieczynna”) — widżet pokazuje aktywne w danym dniu.

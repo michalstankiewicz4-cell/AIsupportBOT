@@ -230,7 +230,7 @@ export function mountWidget(opts) {
       }
       if (tiles.children.length) {
         item.append(tiles);
-        if (TILES.nobreak) requestAnimationFrame(() => fitTileText(tiles));
+        if (TILES.nobreak || TILES.pack) requestAnimationFrame(() => layoutTiles(tiles, TILES));
       }
       if (links.children.length) item.append(links);
     }
@@ -475,6 +475,27 @@ export function applyTileStyle(node, t) {
   node.style.setProperty('--tile-pad', `${p.t}px ${p.r}px ${p.b}px ${p.l}px`);
   node.classList.toggle('tiles-fit', Boolean(t.fit));
   node.classList.toggle('tiles-nobreak', Boolean(t.nobreak));
+  node.classList.toggle('tiles-autow', Boolean(t.autoWidth));
+  node.classList.toggle('tiles-pack', Boolean(t.pack) && !t.autoWidth);
+}
+
+// Układ kafelków po narysowaniu: zmniejszenie napisu („bez przenoszenia liter”) i —
+// przy „równych odstępach w pionie” — dosunięcie kafelków w kolumnach (siatka z wierszami po 1 px,
+// każdy kafelek zajmuje tyle wierszy, ile ma wysokości + odstęp). Kolejność zostaje wierszami.
+export function layoutTiles(container, t) {
+  if (t.nobreak) fitTileText(container);
+  else container.querySelectorAll('.tile-name, .pv-name').forEach((n) => (n.style.fontSize = ''));
+  const grids = container.matches?.('.tiles, .tile-preview') ? [container] : [...container.querySelectorAll('.tiles')];
+  for (const g of grids) {
+    const items = [...g.children];
+    g.classList.remove('packed');
+    items.forEach((i) => (i.style.gridRowEnd = ''));
+    if (!t.pack || t.autoWidth) continue;
+    const gap = parseFloat(getComputedStyle(g).columnGap) || 8;
+    const heights = items.map((i) => i.getBoundingClientRect().height);
+    g.classList.add('packed');
+    items.forEach((i, k) => (i.style.gridRowEnd = `span ${Math.max(1, Math.round(heights[k] + gap))}`));
+  }
 }
 
 // „Bez przenoszenia liter”: gdy najdłuższy wyraz nie mieści się w kafelku, zmniejsz napis

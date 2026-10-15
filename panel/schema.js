@@ -165,6 +165,8 @@ export function cleanTiles(input) {
   const out = {};
   if (src.fit === true) out.fit = true;
   if (src.nobreak === true) out.nobreak = true;
+  if (src.pack === true) out.pack = true;
+  if (src.autoWidth === true) out.autoWidth = true;
   const sym = TILE_SYMS.includes(src.sym) ? src.sym : 'none';
   if (sym !== 'none') out.sym = sym;
   const p = { ...DEFAULT_TILES.padding };

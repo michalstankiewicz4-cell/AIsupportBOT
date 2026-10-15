@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.3
+- Panel: wygląd kafelków — równe odstępy w pionie (kafelki dosunięte w kolumnach) i szerokość dopasowana do tekstu (domyślnie wyłączone)
+
+### ai 1.10.3
+- Panel: wygląd kafelków — równe odstępy w pionie (kafelki dosunięte w kolumnach) i szerokość dopasowana do tekstu (domyślnie wyłączone)
+
+### trained 1.9.3
+- Panel: wygląd kafelków — równe odstępy w pionie (kafelki dosunięte w kolumnach) i szerokość dopasowana do tekstu (domyślnie wyłączone)
+
 ### bot 1.9.2
 - Panel: wygląd kafelków — dopasowanie wysokości do zawartości, bez przenoszenia pojedynczych liter, marginesy góra/dół/lewo/prawo z symetrią (domyślnie bez zmian)
 
