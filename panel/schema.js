@@ -3,7 +3,7 @@
 // (panel/admin/) i serwer panelu (panel/server/worker.js), więc zasady
 // są jednakowe wszędzie, a serwer i tak sprawdza wszystko ponownie.
 import { anonymize } from '../shared/js/privacy.js';
-import { SERVICES, BUTTONS, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, DEFAULT_TILES, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
 import { normalize } from '../shared/js/text.js';
 import { TEXTS } from '../shared/js/texts.js';
 
@@ -75,6 +75,7 @@ export const DEFAULT_CONFIG = Object.freeze({
   keywords: {},
   topics: {},
   notices: [],
+  tiles: {},
   rules: [],
   overrides: {},
   updatedAt: null,
@@ -152,6 +153,29 @@ function cleanButtons(input) {
       .filter(Boolean)
       .slice(0, 20);
   }
+  return out;
+}
+
+// --- Wygląd kafelków ----------------------------------------------------------------
+export const TILE_PADDING_MAX = 24;
+export const TILE_SYMS = ['none', 'vertical', 'horizontal', 'both'];
+// Zapisuje tylko zmiany; symetria jest wymuszana także w danych (góra = dół itd.).
+export function cleanTiles(input) {
+  const src = input && typeof input === 'object' ? input : {};
+  const out = {};
+  if (src.fit === true) out.fit = true;
+  if (src.nobreak === true) out.nobreak = true;
+  const sym = TILE_SYMS.includes(src.sym) ? src.sym : 'none';
+  if (sym !== 'none') out.sym = sym;
+  const p = { ...DEFAULT_TILES.padding };
+  for (const k of ['t', 'r', 'b', 'l']) {
+    const v = Math.round(Number(src.padding?.[k]));
+    if (Number.isFinite(v)) p[k] = Math.min(TILE_PADDING_MAX, Math.max(0, v));
+  }
+  if (sym === 'vertical' || sym === 'both') p.b = p.t;
+  if (sym === 'horizontal' || sym === 'both') p.r = p.l;
+  if (sym === 'both') p.l = p.r = p.t;
+  if (['t', 'r', 'b', 'l'].some((k) => p[k] !== DEFAULT_TILES.padding[k])) out.padding = p;
   return out;
 }
 
@@ -291,6 +315,7 @@ export function sanitizeConfig(input) {
     keywords: cleanKeywords(src.keywords),
     topics: cleanTopics(src.topics),
     notices: cleanNotices(src.notices),
+    tiles: cleanTiles(src.tiles),
     rules,
     overrides,
     updatedAt: typeof src.updatedAt === 'string' ? src.updatedAt.slice(0, 40) : null,
@@ -317,7 +342,7 @@ export function unwrapSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('To nie jest plik ustawień (oczekiwano obiektu JSON).');
   const cfg = data.format === SETTINGS_FORMAT || data.config ? data.config : data;
   if (!cfg || typeof cfg !== 'object') throw new Error('W pliku brakuje ustawień.');
-  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons', 'site', 'pages', 'keywords', 'topics', 'notices'];
+  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons', 'site', 'pages', 'keywords', 'topics', 'notices', 'tiles'];
   if (!known.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
   return sanitizeConfig(cfg);
 }

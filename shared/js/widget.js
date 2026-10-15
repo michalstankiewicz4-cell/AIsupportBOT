@@ -4,7 +4,7 @@
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
-import { SITE, textOf, replyFor, fill, activeNotices } from './knowledge.js';
+import { SITE, TILES, textOf, replyFor, fill, activeNotices } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { getPanelConfig, logTurn, logClick, newSessionId } from '../../panel/client.js';
 import { isSafeUrl } from '../../panel/schema.js';
@@ -79,6 +79,7 @@ export function mountWidget(opts) {
 
   const wrap = el('div', `chat ${inline ? 'inline' : 'floating'} ${position === 'left' ? 'left' : 'right'}`);
   if (accent) wrap.style.setProperty('--accent', accent);
+  applyTileStyle(wrap, TILES);
   wrap.dataset.variant = engine.name;
   wrap.dataset.version = engine.version;
   root.appendChild(wrap);
@@ -227,7 +228,10 @@ export function mountWidget(opts) {
         if (!alarm) paint(node, l.color, tile && !l.outline);
         (tile ? tiles : links).append(node);
       }
-      if (tiles.children.length) item.append(tiles);
+      if (tiles.children.length) {
+        item.append(tiles);
+        if (TILES.nobreak) requestAnimationFrame(() => fitTileText(tiles));
+      }
       if (links.children.length) item.append(links);
     }
     if (msg.note && opts.showTech) item.append(el('div', 'note', msg.note));
@@ -463,6 +467,27 @@ function whoRow(name, withAvatar) {
   }
   row.append(el('span', '', name));
   return row;
+}
+
+// Wygląd kafelków z panelu: marginesy (zmienne CSS) i przełączniki jako klasy.
+export function applyTileStyle(node, t) {
+  const p = t.padding;
+  node.style.setProperty('--tile-pad', `${p.t}px ${p.r}px ${p.b}px ${p.l}px`);
+  node.classList.toggle('tiles-fit', Boolean(t.fit));
+  node.classList.toggle('tiles-nobreak', Boolean(t.nobreak));
+}
+
+// „Bez przenoszenia liter”: gdy najdłuższy wyraz nie mieści się w kafelku, zmniejsz napis
+// (maks. do 11 px) zamiast łamać wyraz w środku.
+export function fitTileText(root) {
+  for (const name of root.querySelectorAll('.tile-name, .pv-name')) {
+    name.style.fontSize = '';
+    let size = parseFloat(getComputedStyle(name).fontSize) || 13.5;
+    while (name.scrollWidth > name.clientWidth + 0.5 && size > 11) {
+      size -= 0.5;
+      name.style.fontSize = `${size}px`;
+    }
+  }
 }
 
 // Kontrast koloru z białym tekstem (WCAG) — eksportowany też do panelu.

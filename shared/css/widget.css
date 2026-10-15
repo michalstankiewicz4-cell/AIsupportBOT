@@ -333,7 +333,7 @@
   justify-content: space-between;
   gap: 6px;
   min-height: 70px;
-  padding: 10px 11px;
+  padding: var(--tile-pad, 10px 11px);
   border: 2px solid var(--k);
   border-radius: 14px;
   background: var(--k);
@@ -351,6 +351,11 @@
 .tile-name { font-size: 13.5px; font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
 .tile-price { align-self: flex-start; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, currentColor 18%, transparent); }
 @media (max-width: 380px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Przełącznik „dopasuj wysokość”: kafelek tak wysoki jak jego treść (bez ceny — niższy). */
+.tiles-fit .tiles { align-items: start; }
+.tiles-fit .tile { min-height: 0; justify-content: flex-start; }
+/* Przełącznik „bez przenoszenia liter”: wyrazy nie są łamane w środku; linie wyrównane. */
+.tiles-nobreak .tile-name { overflow-wrap: normal; word-break: normal; hyphens: manual; text-wrap: balance; }
 
 /* Stały dopisek „W nagłym zagrożeniu życia dzwoń 112 lub 999.” */
 .sos { margin: 0; padding: 0 14px 12px; background: var(--surface); font-size: 12.5px; font-weight: 650; color: #8e2418; text-align: center; }

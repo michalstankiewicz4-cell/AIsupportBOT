@@ -526,6 +526,15 @@ export const DEFAULT_EXTRAS = Object.freeze(Object.fromEntries(INTENTS.map((i) =
 // Tematy, przy których panel pozwala zmieniać przyciski dodatkowe (specjalista, informacje).
 export const EXTRAS_CASES = ['C', 'D'];
 
+// Wygląd kafelków usług w czacie (panel → „Usługi i przyciski” → „Wygląd kafelków”).
+//   fit     — wysokość dopasowana do zawartości (np. kafelek bez ceny jest niższy)
+//   nobreak — bez dzielenia wyrazów (zamiast przenosić ostatnią literę do nowej linii —
+//             cały wyraz w nowej linii, a gdy się nie mieści, napis jest odrobinę mniejszy)
+//   padding — marginesy wewnętrzne kafelka w px: góra, prawo, dół, lewo
+//   sym     — symetria marginesów: none | vertical (góra = dół) | horizontal (lewo = prawo) | both
+export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
+export const TILES = { ...DEFAULT_TILES, padding: { ...DEFAULT_TILES.padding } };
+
 // Komunikaty okresowe (np. „24–26.12 infolinia nieczynna”) — widżet pokazuje aktywne w danym dniu.
 let NOTICES = [];
 export function activeNotices(date = new Date()) {
@@ -561,4 +570,6 @@ export function applySettings(cfg = {}) {
   }
 
   NOTICES = Array.isArray(cfg.notices) ? cfg.notices : [];
+  Object.assign(TILES, DEFAULT_TILES, cfg.tiles || {});
+  TILES.padding = { ...DEFAULT_TILES.padding, ...(cfg.tiles?.padding || {}) };
 }

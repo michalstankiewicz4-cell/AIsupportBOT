@@ -220,6 +220,11 @@ Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usług
 
 - **usługi** — nazwę na przycisku, cenę, kolor kafelka (z palety albo dowolny własny; ostrzeżenie, gdy kontrast z białym napisem jest słaby albo kolor jest czerwony — zarezerwowany dla 112), **kolor plakietki z ceną** („Auto” = odcień koloru kafelka, albo z palety / własny — napis na plakietce sam dobiera się biały lub ciemny), „sam obrys” (wariant tej samej grupy, np. Kontynuacja leczenia przy recepcie) i nazwę usługi w formularzu (`?service=`);
 - **przyciski pod każdą odpowiedzią** — które, w jakiej kolejności i z jaką etykietą; panel ostrzega, gdy sąsiednie kafelki mają ten sam kolor.
+- **wygląd kafelków** (dla wszystkich naraz, z podglądem w szerokości okna czatu):
+  - *Dopasuj wysokość do zawartości* — kafelek bez ceny albo z krótkim tekstem jest niższy (czat zajmuje mniej miejsca w pionie);
+  - *Bez przenoszenia pojedynczych liter* — wyraz nie jest łamany w środku, przechodzi w całości do nowej linii; gdy się nie mieści, napis jest odrobinę mniejszy;
+  - *marginesy wewnętrzne* góra / dół / lewo / prawo (0–24 px) z symetrią: brak, pionowa (góra = dół), pozioma (lewo = prawo) albo pełna.
+  Domyślnie wygląd jak dotąd: oba przełączniki wyłączone, marginesy 10 px (góra, dół) i 11 px (boki).
 
 Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.js`: `SERVICES`, `BUTTONS`, `CASE_BUTTONS`); w ustawieniach (`services`, `buttons`) zapisywane są tylko zmiany, więc „Przywróć domyślne” zawsze wraca do dokumentu. Bez edycji zostają: przyciski alarmowe (A, B — zielona odpowiedź u góry, czerwona karta z 112 zawsze na dole) i odpowiedź z ceną rozpoznanej usługi (J — budowana z cen usług).
 

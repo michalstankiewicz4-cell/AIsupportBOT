@@ -7,10 +7,10 @@ import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPan
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
-import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
-import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword } from '../schema.js';
+import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
-import { contrastWithWhite } from '../../shared/js/widget.js';
+import { contrastWithWhite, applyTileStyle, fitTileText } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
@@ -879,6 +879,7 @@ function previewButton(entry) {
 
 function renderDesign() {
   setDesignOverrides({ services: state.draft.services, buttons: state.draft.buttons });
+  renderTilesCfg();
   renderServices();
   renderCaseButtons();
 }
@@ -976,6 +977,103 @@ function renderServices() {
     card.append(head, grid);
     box.append(card);
   }
+}
+
+// --- Wygląd kafelków: dopasowanie wysokości, bez przenoszenia liter, marginesy z symetrią ---
+const SIDES = [['t', 'Góra'], ['b', 'Dół'], ['l', 'Lewo'], ['r', 'Prawo']];
+const SYM_LABELS = { none: 'Bez symetrii', vertical: 'Pionowa (góra = dół)', horizontal: 'Pozioma (lewo = prawo)', both: 'Pełna (wszystkie równe)' };
+
+function tilesNow() {
+  const t = { ...DEFAULT_TILES, ...state.draft.tiles };
+  t.padding = { ...DEFAULT_TILES.padding, ...(state.draft.tiles.padding || {}) };
+  return t;
+}
+
+function setTiles(next) {
+  state.draft.tiles = cleanTiles(next);
+  renderTilesCfg();
+  changed();
+}
+
+function renderTilesCfg() {
+  const box = $('#tiles-cfg');
+  box.textContent = '';
+  const t = tilesNow();
+  const head = el('div', 'row');
+  head.append(el('span', 'muted small', 'Ustawienia dotyczą wszystkich kafelków w czacie. Podgląd obok pokazuje przykładowe kafelki w szerokości okna czatu.'), el('span', 'spacer'));
+  if (Object.keys(state.draft.tiles).length) {
+    const reset = el('button', 'btn ghost small', 'Przywróć domyślne');
+    reset.type = 'button';
+    reset.addEventListener('click', () => setTiles({}));
+    head.append(pill('zmienione', 'ok'), reset);
+  }
+  const cols = el('div', 'tiles-cols');
+  const form = el('div');
+  const toggle = (key, label, hint) => {
+    const l = el('label', 'check');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = Boolean(t[key]);
+    cb.addEventListener('change', () => setTiles({ ...t, [key]: cb.checked }));
+    l.append(cb, el('span', '', label), tip(hint));
+    return l;
+  };
+  form.append(
+    toggle('fit', 'Dopasuj wysokość do zawartości', 'Kafelek bez ceny albo z krótkim tekstem jest niższy — czat zajmuje mniej miejsca w pionie. Wyłączone: wszystkie kafelki w rzędzie mają równą wysokość.'),
+    toggle('nobreak', 'Bez przenoszenia pojedynczych liter', 'Wyraz nie jest łamany w środku (np. „lekarsk-a”) — przechodzi w całości do nowej linii, a linie są wyrównane. Gdy najdłuższy wyraz się nie mieści, napis robi się odrobinę mniejszy.'),
+  );
+  // Symetria marginesów.
+  const symF = el('label', 'field');
+  const sym = el('select');
+  for (const [k, v] of Object.entries(SYM_LABELS)) sym.append(option(k, v));
+  sym.value = t.sym;
+  sym.addEventListener('change', () => setTiles({ ...t, sym: sym.value }));
+  symF.append(labelSpan('Symetria marginesów', 'Przy symetrii zmiana jednego suwaka ustawia też przeciwny (pionowa: góra i dół; pozioma: lewo i prawo; pełna: wszystkie cztery).'), sym);
+  form.append(symF);
+  // Suwaki marginesów.
+  const linked = (k) => {
+    if (t.sym === 'both') return ['t', 'r', 'b', 'l'];
+    if (t.sym === 'vertical' && (k === 't' || k === 'b')) return ['t', 'b'];
+    if (t.sym === 'horizontal' && (k === 'l' || k === 'r')) return ['l', 'r'];
+    return [k];
+  };
+  const sliders = el('div', 'pad-grid');
+  for (const [k, label] of SIDES) {
+    const f = el('label', 'field');
+    const r = el('input');
+    r.type = 'range';
+    r.min = '0';
+    r.max = String(TILE_PADDING_MAX);
+    r.value = String(t.padding[k]);
+    const val = el('code', 'small', `${t.padding[k]} px`);
+    r.addEventListener('input', () => {
+      val.textContent = `${r.value} px`;
+      const p = { ...t.padding };
+      for (const s of linked(k)) p[s] = Number(r.value);
+      applyPreview({ ...t, padding: p });
+    });
+    r.addEventListener('change', () => {
+      const p = { ...t.padding };
+      for (const s of linked(k)) p[s] = Number(r.value);
+      setTiles({ ...t, padding: p });
+    });
+    const lab = el('span', '', `${label} `);
+    lab.append(val);
+    f.append(lab, r);
+    sliders.append(f);
+  }
+  form.append(sliders);
+
+  // Podgląd — te same klasy i zmienne co w czacie.
+  const preview = el('div', 'tile-preview');
+  for (const id of ['wizyta_umow', 'recepta', 'kontynuacja', 'umow_wizyte', 'psycholog_terapeuta', 'skierowanie']) preview.append(previewButton(id));
+  const applyPreview = (tt) => {
+    applyTileStyle(preview, tt);
+    requestAnimationFrame(() => (tt.nobreak ? fitTileText(preview) : preview.querySelectorAll('.pv-name').forEach((n) => (n.style.fontSize = ''))));
+  };
+  applyPreview(t);
+  cols.append(form, preview);
+  box.append(head, cols);
 }
 
 // Paleta kolorów: kliknięcie próbki ustawia kolor (zaznaczona = bieżący).

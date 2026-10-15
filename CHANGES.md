@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.2
+- Panel: wygląd kafelków — dopasowanie wysokości do zawartości, bez przenoszenia pojedynczych liter, marginesy góra/dół/lewo/prawo z symetrią (domyślnie bez zmian)
+
+### ai 1.10.2
+- Panel: wygląd kafelków — dopasowanie wysokości do zawartości, bez przenoszenia pojedynczych liter, marginesy góra/dół/lewo/prawo z symetrią (domyślnie bez zmian)
+
+### trained 1.9.2
+- Panel: wygląd kafelków — dopasowanie wysokości do zawartości, bez przenoszenia pojedynczych liter, marginesy góra/dół/lewo/prawo z symetrią (domyślnie bez zmian)
+
 ### bot 1.9.1
 - Panel „Usługi i przyciski”: paleta kolorów kafelków oraz kolor plakietki z ceną (auto albo z palety / własny)
 
