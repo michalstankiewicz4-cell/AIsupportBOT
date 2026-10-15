@@ -248,6 +248,7 @@ Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usług
 - **przyciski pod każdą odpowiedzią** — które, w jakiej kolejności i z jaką etykietą; panel ostrzega, gdy sąsiednie kafelki mają ten sam kolor.
 - **wygląd kafelków** (dla wszystkich naraz, z podglądem w szerokości okna czatu):
   - *Dopasuj wysokość do zawartości* — kafelek bez ceny albo z krótkim tekstem jest niższy (czat zajmuje mniej miejsca w pionie);
+  - *Pojedynczy kafelek dopasowany do treści* (domyślnie włączone) — gdy odpowiedź ma tylko jeden kafelek, nie jest wciśnięty w jedną trzecią szerokości: napis w jednej linii, wysokość według treści;
   - *Wyśrodkuj w poziomie* i *Wyśrodkuj w pionie* — dwa niezależne przełączniki: nazwa usługi i cena na środku szerokości i/lub wysokości kafelka;
   - *Wielkość czcionki* — 10–20 px (domyślnie 13,5 px), cena proporcjonalnie mniejsza;
   - *Równe odstępy w pionie* — kafelki dosunięte do siebie w kolumnach, bez pustych miejsc pod niższymi (najlepiej razem z „Dopasuj wysokość”);

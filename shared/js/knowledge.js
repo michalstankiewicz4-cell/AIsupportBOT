@@ -537,7 +537,7 @@ export const EXTRAS_CASES = ['C', 'D'];
 //   order   — kolejność kafelków: default (z ustawień) | priced (najpierw z ceną) | cheap (od najtańszej) | expensive (od najdroższej)
 //   centerH / centerV — zawartość kafelka wyśrodkowana w poziomie / w pionie (niezależnie)
 //   fontSize — wielkość napisu na kafelku w px (cena proporcjonalnie mniejsza)
-export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, centerH: false, centerV: false, fontSize: 13.5, order: 'default', padding: Object.freeze({ t: 5, r: 5, b: 5, l: 5 }), sym: 'none' });
+export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, centerH: false, centerV: false, singleFit: true, fontSize: 13.5, order: 'default', padding: Object.freeze({ t: 5, r: 5, b: 5, l: 5 }), sym: 'none' });
 export const TILES = { ...DEFAULT_TILES, padding: { ...DEFAULT_TILES.padding } };
 
 // Kolejność kafelków według ustawienia „order”. Sortowanie stabilne — przy równych cenach

@@ -370,6 +370,10 @@
 .tiles-center-h .tile { align-items: center; text-align: center; }
 .tiles-center-h .tile-price { align-self: center; }
 .tiles-center-v .tile { justify-content: center; }
+/* Tylko jeden kafelek w odpowiedzi — nie wciśnięty w 1/3 szerokości: napis w jednej linii
+   (jeśli się mieści), wysokość według treści (bez min. 70 px). */
+.tiles-single-fit .tiles.single { display: flex; }
+.tiles-single-fit .tiles.single .tile { flex: 0 1 auto; max-width: 100%; min-height: 0; justify-content: flex-start; }
 
 /* Stały dopisek „W nagłym zagrożeniu życia dzwoń 112 lub 999.” */
 .sos { margin: 0; padding: 0 14px 12px; background: var(--surface); font-size: 12.5px; font-weight: 650; color: #8e2418; text-align: center; }

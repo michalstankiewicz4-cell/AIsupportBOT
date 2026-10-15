@@ -1120,6 +1120,7 @@ function renderTilesCfg() {
   };
   form.append(
     toggle('fit', 'Dopasuj wysokość do zawartości', 'Kafelek bez ceny albo z krótkim tekstem jest niższy — czat zajmuje mniej miejsca w pionie. Wyłączone: wszystkie kafelki w rzędzie mają równą wysokość.'),
+    toggle('singleFit', 'Pojedynczy kafelek dopasowany do treści', 'Gdy w odpowiedzi jest tylko jeden kafelek, nie jest wciśnięty w jedną trzecią szerokości: napis mieści się w jednej linii, a wysokość dopasowuje się do napisu i ceny (bez pustego miejsca). Przy kilku kafelkach decydują pozostałe ustawienia. Domyślnie włączone.'),
     toggle('centerH', 'Wyśrodkuj w poziomie', 'Nazwa usługi i cena na środku szerokości kafelka. Wyłączone: do lewej.'),
     toggle('centerV', 'Wyśrodkuj w pionie', 'Nazwa usługi i cena na środku wysokości kafelka (widać, gdy kafelek jest wyższy niż jego treść). Wyłączone: nazwa u góry, cena na dole.'),
     toggle('pack', 'Równe odstępy w pionie', 'Kafelki są dosunięte do siebie w kolumnach — odstęp między nimi w pionie jest zawsze taki sam, bez pustych miejsc pod niższymi kafelkami. Najlepiej razem z „Dopasuj wysokość do zawartości”. Nie działa razem z „szerokością dopasowaną do tekstu” (tam odstępy są równe same z siebie).'),

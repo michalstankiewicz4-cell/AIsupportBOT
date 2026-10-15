@@ -330,6 +330,7 @@ expect('panel: kafelki — domyślnie bez zmian', JSON.stringify(sanitizeConfig(
   const tf = sanitizeConfig({ tiles: { center: true, fontSize: 99 } }).tiles;
   const th = sanitizeConfig({ tiles: { centerH: true } }).tiles;
   expect('panel: kafelki — wyśrodkowanie w poziomie i w pionie osobno', th.centerH && !th.centerV, th);
+  expect('panel: kafelki — pojedynczy kafelek dopasowany domyślnie (zapis tylko wyłączenia)', !('singleFit' in sanitizeConfig({ tiles: { singleFit: true } }).tiles) && sanitizeConfig({ tiles: { singleFit: false } }).tiles.singleFit === false);
   expect('panel: kafelki — wyśrodkowanie (stare „center” = oba) i czcionka (10–20 px)', tf.centerH && tf.centerV && tf.fontSize === 20 && sanitizeConfig({ tiles: { fontSize: 11.3 } }).tiles.fontSize === 11.5 && !('fontSize' in sanitizeConfig({ tiles: { fontSize: 13.5 } }).tiles), tf);
   const tv = sanitizeConfig({ tiles: { sym: 'vertical', padding: { t: 6, b: 18, l: 2, r: 30 } } }).tiles;
   expect('panel: kafelki — symetria pionowa (dół = góra)', tv.padding.b === 6 && tv.padding.l === 2 && tv.padding.r === 24, tv);

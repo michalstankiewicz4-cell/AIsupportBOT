@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.2
+- Pojedynczy kafelek w odpowiedzi dopasowany do treści (przełącznik w panelu, domyślnie włączony)
+
+### ai 1.11.2
+- Pojedynczy kafelek w odpowiedzi dopasowany do treści (przełącznik w panelu, domyślnie włączony)
+
+### trained 1.10.2
+- Pojedynczy kafelek w odpowiedzi dopasowany do treści (przełącznik w panelu, domyślnie włączony)
+
 ### bot 1.10.1
 - Panel: zakładki w kolorowych grupach (Działanie, Odpowiedzi, Wygląd i usługi, Analiza)
 

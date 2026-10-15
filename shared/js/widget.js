@@ -232,6 +232,7 @@ export function mountWidget(opts) {
         (tile ? tiles : links).append(node);
       }
       if (tiles.children.length) {
+        tiles.classList.toggle('single', tiles.children.length === 1); // „Pojedynczy kafelek dopasowany do treści”
         item.append(tiles);
         if (TILES.nobreak || TILES.pack) requestAnimationFrame(() => layoutTiles(tiles, TILES));
       }
@@ -483,6 +484,7 @@ export function applyTileStyle(node, t) {
   node.classList.toggle('tiles-autow', Boolean(t.autoWidth));
   node.classList.toggle('tiles-center-h', Boolean(t.centerH));
   node.classList.toggle('tiles-center-v', Boolean(t.centerV));
+  node.classList.toggle('tiles-single-fit', t.singleFit !== false);
   node.style.setProperty('--tile-fs', `${t.fontSize || 13.5}px`);
   node.classList.toggle('tiles-pack', Boolean(t.pack) && !t.autoWidth);
 }
