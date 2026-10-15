@@ -61,15 +61,18 @@ export const LIMITS = {
 // Tryb kryzysowy: 'all' — niejasne i spoza tematu, 'unclear' — tylko niejasne, 'off' — wyłączony.
 export const CRISIS_FOLLOWUPS = ['all', 'unclear', 'off'];
 export const CRISIS_LIMIT_MAX = 50;
+export const DEFAULT_SAFETY = Object.freeze({ supportLine: false, crisisFollowup: 'off', crisisLimit: 1, crisisEndOnTopic: true });
 
 function cleanSafety(src) {
   const s = src && typeof src === 'object' ? src : {};
   const limit = Math.round(Number(s.crisisLimit));
+  const d = DEFAULT_SAFETY;
   return {
     supportLine: s.supportLine === true,
-    crisisFollowup: CRISIS_FOLLOWUPS.includes(s.crisisFollowup) ? s.crisisFollowup : 'all',
-    crisisLimit: Number.isFinite(limit) ? Math.min(CRISIS_LIMIT_MAX, Math.max(0, limit)) : 0,
-    crisisEndOnTopic: s.crisisEndOnTopic === true,
+    crisisFollowup: CRISIS_FOLLOWUPS.includes(s.crisisFollowup) ? s.crisisFollowup : d.crisisFollowup,
+    crisisLimit: s.crisisLimit !== undefined && s.crisisLimit !== null && s.crisisLimit !== '' && Number.isFinite(limit)
+      ? Math.min(CRISIS_LIMIT_MAX, Math.max(0, limit)) : d.crisisLimit,
+    crisisEndOnTopic: typeof s.crisisEndOnTopic === 'boolean' ? s.crisisEndOnTopic : d.crisisEndOnTopic,
   };
 }
 
@@ -79,9 +82,11 @@ export const DEFAULT_CONFIG = Object.freeze({
   // Linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — decyzja właściciela,
   // domyślnie wyłączona (specyfikacja czatu, sekcja 11 pkt 1).
   // Tryb kryzysowy po B (shared/js/pipeline.js): co dostaje ponownie komunikat B, ile razy
-  // i czy konkretne pytanie go kończy. Domyślnie jak w specyfikacji (sekcja 11): każda
-  // niezrozumiała wiadomość, do końca rozmowy.
-  safety: { supportLine: false, crisisFollowup: 'all', crisisLimit: 0, crisisEndOnTopic: false },
+  // i czy konkretne pytanie go kończy. Domyślnie (decyzja właściciela, odstępstwo od
+  // specyfikacji sekcja 11): nie powtarzamy — kolejne niejasne pytanie dostaje zwykłe
+  // „Nie jestem pewna…” z usługami. Limit 1 i „konkretne pytanie kończy” są ustawione
+  // na wypadek przełączenia trybu na „tylko niejasne” albo „niejasne i spoza tematu”.
+  safety: { ...DEFAULT_SAFETY },
   // Usługi (nazwa, cena, kolor, obrys, nazwa w formularzu) i przyciski pod odpowiedziami —
   // tylko ZMIANY względem wartości domyślnych ze specyfikacji (shared/js/knowledge.js).
   services: {},

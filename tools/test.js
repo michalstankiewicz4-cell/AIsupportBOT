@@ -182,8 +182,10 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
 // 12: tryb kryzysowy — po B „nie wiem” dostaje odpowiedź B (góra) + czerwoną kartę (dół), nie „Nie jestem pewna…”.
 {
   const flow = {};
+  setPanelConfig(sanitizeConfig({ safety: { crisisFollowup: 'all', crisisLimit: 0 } })); // zachowanie ze specyfikacji
   await respond(botEngine, 'nie chcę żyć', [], flow);
   const r = await respond(botEngine, 'nie wiem', [], flow);
+  setPanelConfig(sanitizeConfig({}));
   const pass = r.case === 'B' && B_OK(r) && r.text.includes('Nie jesteś z tym sam(a)');
   if (pass) accOk++;
   else { failed++; console.log('  ✗ [spec 12] tryb kryzysowy', r); }
@@ -191,7 +193,7 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
 // Panel: ustawienia trybu kryzysowego (safety.crisisFollowup / crisisLimit / crisisEndOnTopic).
 {
   const cfg = sanitizeConfig({ safety: { crisisFollowup: 'xx', crisisLimit: 99, crisisEndOnTopic: 'tak' } });
-  expect('tryb kryzysowy: walidacja', cfg.safety.crisisFollowup === 'all' && cfg.safety.crisisLimit === 50 && cfg.safety.crisisEndOnTopic === false, cfg.safety);
+  expect('tryb kryzysowy: walidacja', cfg.safety.crisisFollowup === 'off' && cfg.safety.crisisLimit === 50 && cfg.safety.crisisEndOnTopic === true, cfg.safety);
   const run = async (safety, msgs) => {
     setPanelConfig(sanitizeConfig({ safety }));
     const flow = {};
@@ -201,15 +203,20 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
     setPanelConfig(sanitizeConfig({}));
     return out;
   };
-  let o = await run({}, ['jaka jest pogoda', 'nie wiem']);
-  expect('tryb kryzysowy domyślnie: pogoda → B', o[0] === 'crisis-followup' && o[1] === 'crisis-followup', o);
-  o = await run({ crisisFollowup: 'unclear' }, ['jaka jest pogoda', 'nie wiem']);
+  const d = sanitizeConfig({}).safety;
+  expect('tryb kryzysowy: domyślne (nigdy, 1 raz, konkretne pytanie kończy)', d.crisisFollowup === 'off' && d.crisisLimit === 1 && d.crisisEndOnTopic === true, d);
+  expect('tryb kryzysowy: 0 = bez limitu zostaje', sanitizeConfig({ safety: { crisisLimit: 0 } }).safety.crisisLimit === 0);
+  let o = await run({}, ['jaka jest pogoda', 'co polecacie na weekend', 'nie wiem']);
+  expect('tryb kryzysowy domyślnie: zwykłe odpowiedzi', o.every((x) => x !== 'crisis-followup'), o);
+  o = await run({ crisisFollowup: 'all', crisisLimit: 0, crisisEndOnTopic: false }, ['jaka jest pogoda', 'nie wiem']);
+  expect('tryb kryzysowy „niejasne i spoza tematu”: pogoda → B', o[0] === 'crisis-followup' && o[1] === 'crisis-followup', o);
+  o = await run({ crisisFollowup: 'unclear', crisisLimit: 0 }, ['jaka jest pogoda', 'nie wiem']);
   expect('tryb kryzysowy „tylko niejasne”: pogoda → zwykła odpowiedź', o[0] === 'offtopic' && o[1] === 'crisis-followup', o);
   o = await run({ crisisFollowup: 'off' }, ['nie wiem']);
   expect('tryb kryzysowy wyłączony', o[0] !== 'crisis-followup', o);
-  o = await run({ crisisLimit: 1 }, ['nie wiem', 'nie wiem']);
+  o = await run({ crisisFollowup: 'all', crisisLimit: 1 }, ['nie wiem', 'nie wiem']);
   expect('tryb kryzysowy: limit 1', o[0] === 'crisis-followup' && o[1] !== 'crisis-followup', o);
-  o = await run({ crisisEndOnTopic: true }, ['ile kosztuje e-recepta', 'nie wiem']);
+  o = await run({ crisisFollowup: 'all', crisisLimit: 0, crisisEndOnTopic: true }, ['ile kosztuje e-recepta', 'nie wiem']);
   expect('tryb kryzysowy: konkretne pytanie kończy', o[0] !== 'crisis-followup' && o[1] !== 'crisis-followup', o);
 }
 // 8.19: po dwóch niezrozumiałych wiadomościach z rzędu — „Napisz do nas”.

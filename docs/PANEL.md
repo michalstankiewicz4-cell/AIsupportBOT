@@ -223,9 +223,10 @@ Wszystkie teksty asystentki są w jednym pliku — `shared/js/texts.js` — i od
 - **Teksty alarmowe (A, B) są zablokowane** — zmienia je programista w `texts.js` po zatwierdzeniu przez lekarza kierującego serwisem.
 - Opcjonalna linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — przełącznik w zakładce „Tryb pracy” (domyślnie wyłączony, decyzja właściciela).
 - Tryb kryzysowy po komunikacie B — w zakładce „Tryb pracy”:
-  - **Kiedy powtarzać komunikat B**: niejasne wiadomości i pytania spoza tematu (domyślnie, jak w specyfikacji), tylko niejasne („nie wiem”, „nic” — pytanie np. o pogodę dostaje zwykłą odpowiedź) albo nigdy.
-  - **Ile razy najwyżej**: bez limitu (domyślnie, do końca rozmowy) albo wpisana liczba 1–50, potem zwykłe odpowiedzi (0 = bez limitu).
-  - **Konkretne pytanie kończy tryb kryzysowy** (np. o receptę, L4, cennik) — domyślnie wyłączone.
+  - **Kiedy powtarzać komunikat B**: niejasne wiadomości i pytania spoza tematu (jak w specyfikacji), tylko niejasne („nie wiem”, „nic” — pytanie np. o pogodę dostaje zwykłą odpowiedź) albo nigdy (**domyślnie** — kolejne niejasne pytanie dostaje zwykłe „Nie jestem pewna…” z usługami).
+  - **Ile razy najwyżej**: wpisana liczba 0–50 (0 = bez limitu, do końca rozmowy), potem zwykłe odpowiedzi; **domyślnie 1**.
+  - **Konkretne pytanie kończy tryb kryzysowy** (np. o receptę, L4, cennik) — **domyślnie włączone**.
+  - Limit i zakończenie konkretnym pytaniem działają dopiero po przełączeniu „Kiedy powtarzać” z „Nigdy”.
   - Wiadomość, która sama zawiera frazę kryzysową, zawsze dostaje komunikat B — ustawienia dotyczą tylko kolejnych wiadomości.
 
 ### Usługi i przyciski (osobna zakładka)

@@ -8,7 +8,7 @@ import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered 
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
-import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX, CRISIS_LIMIT_MAX } from '../schema.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX, CRISIS_LIMIT_MAX, DEFAULT_SAFETY } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite, applyTileStyle, layoutTiles, mountWidget } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
@@ -544,12 +544,12 @@ $('#support-line').addEventListener('change', (e) => {
 
 // Tryb kryzysowy po B — co powtarza komunikat B, ile razy, czy konkretne pytanie go kończy.
 function renderCrisisCfg() {
-  const s = state.draft.safety || {};
+  const s = { ...DEFAULT_SAFETY, ...(state.draft.safety || {}) };
   const limitSel = $('#crisis-limit');
-  $('#crisis-followup').value = s.crisisFollowup || 'all';
-  if (document.activeElement !== limitSel) limitSel.value = String(s.crisisLimit || 0);
+  $('#crisis-followup').value = s.crisisFollowup;
+  if (document.activeElement !== limitSel) limitSel.value = String(s.crisisLimit);
   $('#crisis-end-topic').checked = Boolean(s.crisisEndOnTopic);
-  const off = (s.crisisFollowup || 'all') === 'off';
+  const off = s.crisisFollowup === 'off';
   limitSel.disabled = off;
   $('#crisis-end-topic').disabled = off;
 }

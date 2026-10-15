@@ -16,6 +16,7 @@ import { checkSafety, cleanInput } from './safety.js';
 import { FALLBACK_REPLY, alarmReply, PAGES } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { matchRule, getPanelConfig } from '../../panel/client.js';
+import { DEFAULT_SAFETY } from '../../panel/schema.js';
 
 // Odpowiedź „nie rozpoznano” (przypadek L): niejasne pytanie albo poza tematem.
 const UNCLEAR = (r) => r.case === 'L' || r.intent === 'fallback' || r.intent === 'offtopic';
@@ -65,21 +66,22 @@ export async function respond(engine, rawMessage, history = [], session = {}) {
 
 // Tryb kryzysowy (po B): czy zamiast tej odpowiedzi pokazać ponownie B (góra) + czerwoną kartę (dół)?
 // Ustawienia z panelu (zakładka „Tryb pracy”, safety):
-//   crisisFollowup  'all' — niejasne i spoza tematu (domyślnie, specyfikacja sekcja 11),
+//   crisisFollowup  'all' — niejasne i spoza tematu (jak w specyfikacji, sekcja 11),
 //                   'unclear' — tylko niejasne („nie wiem”); pytanie spoza tematu dostaje zwykłą odpowiedź,
-//                   'off' — tryb wyłączony,
-//   crisisLimit     ile razy powtórzyć B; 0 = do końca rozmowy,
-//   crisisEndOnTopic  konkretne pytanie (np. o receptę) kończy tryb kryzysowy.
+//                   'off' — tryb wyłączony (domyślnie),
+//   crisisLimit     ile razy powtórzyć B; 0 = do końca rozmowy (domyślnie 1),
+//   crisisEndOnTopic  konkretne pytanie (np. o receptę) kończy tryb kryzysowy (domyślnie tak).
+// Wartości domyślne: DEFAULT_SAFETY w panel/schema.js.
 function crisisFollowup(reply, session) {
-  const cfg = getPanelConfig().safety || {};
-  const mode = cfg.crisisFollowup || 'all';
+  const cfg = { ...DEFAULT_SAFETY, ...(getPanelConfig().safety || {}) };
+  const mode = cfg.crisisFollowup;
   if (mode === 'off') { session.crisis = false; return false; }
   if (!UNCLEAR(reply)) {
     if (cfg.crisisEndOnTopic) session.crisis = false;
     return false;
   }
   if (mode === 'unclear' && reply.intent === 'offtopic') return false;
-  const limit = Number(cfg.crisisLimit) || 0;
+  const limit = Number(cfg.crisisLimit) || 0; // 0 = bez limitu
   if (limit > 0 && (session.crisisRepeats || 0) >= limit) { session.crisis = false; return false; }
   session.crisisRepeats = (session.crisisRepeats || 0) + 1;
   return true;

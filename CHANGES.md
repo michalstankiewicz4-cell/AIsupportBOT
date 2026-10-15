@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.12
+- Tryb kryzysowy: nowe domyślne — nigdy, limit 1, konkretne pytanie kończy
+
+### ai 1.10.12
+- Tryb kryzysowy: nowe domyślne — nigdy, limit 1, konkretne pytanie kończy
+
+### trained 1.9.12
+- Tryb kryzysowy: nowe domyślne — nigdy, limit 1, konkretne pytanie kończy
+
 ### bot 1.9.11
 - Panel: przycisk Dev reset — czyszczenie pamięci przeglądarki i ustawienia domyślne
 
