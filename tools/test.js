@@ -190,6 +190,11 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
   if (pass) accOk++;
   else { failed++; console.log('  ✗ [spec 12] tryb kryzysowy', r); }
 }
+// „dzieci” to nie „dzięki” (tolerancja literówek wyłączona dla podziękowań).
+for (const [q, want] of [['czy przyjmujecie dzieci', 'inny_specjalista'], ['dzięki', 'podziekowanie'], ['ok dzięki', 'podziekowanie']]) {
+  const r = await respond(botEngine, q, [], {});
+  expect(`temat: ${q}`, r.intent === want, r.intent);
+}
 // Nowe frazy A: przedawkowanie narkotyków / dopalaczy.
 for (const q of ['wziąłem za dużo narkotyków', 'przećpałem', 'za dużo dopalaczy']) {
   const r = await respond(botEngine, q, [], {});

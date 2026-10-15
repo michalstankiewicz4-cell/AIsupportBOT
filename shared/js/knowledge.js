@@ -340,7 +340,7 @@ export const INTENTS = [
   { id: 'uklad_moczowy', case: 'D', text: 'D', routing: true, service: 'wizyta', extras: ['info_uklad_moczowy'],
     keywords: ['pecherz*', 'mocz*', 'sikan*', 'pieczen*', 'cystit*', 'urolog*', 'nerk*'] },
   { id: 'inny_specjalista', case: 'D', text: 'D', routing: true, service: 'wizyta',
-    keywords: ['laryngolog*', 'okulist*', 'pediatr*', 'ortoped*', 'stomatolog*', 'dentyst*', 'reumatolog*', 'onkolog*', 'chirurg*', 'ucho', 'uszu', 'ucha', 'oko', 'oczy', 'oczu', 'wzrok*', 'zab', 'zeby', 'zeba', 'kregoslup*', 'kolano', 'kolana', 'staw*', 'plecy', 'plecow'] },
+    keywords: ['laryngolog*', 'okulist*', 'pediatr*', 'przyjmujecie dzieci', 'leczycie dzieci', 'konsultacje dla dzieci', 'wizyta dla dziecka', 'ortoped*', 'stomatolog*', 'dentyst*', 'reumatolog*', 'onkolog*', 'chirurg*', 'ucho', 'uszu', 'ucha', 'oko', 'oczy', 'oczu', 'wzrok*', 'zab', 'zeby', 'zeba', 'kregoslup*', 'kolano', 'kolana', 'staw*', 'plecy', 'plecow'] },
 
   // --- D: słownik zdrowia (specyfikacja, pkt 9: SLOWNIK_ZDROWIE) — każda dolegliwość bez konkretnego tematu ---
   { id: 'zdrowie', case: 'D', text: 'D', routing: true, service: 'wizyta', weight: 0.5,
@@ -374,7 +374,7 @@ export const INTENTS = [
   { id: 'powitanie', case: 'M', text: 'M',
     keywords: ['dzien dobry', 'witam', 'czesc', 'hej', 'siema', 'halo', 'dobry wieczor', 'kim jestes', 'start'] },
   { id: 'podziekowanie', case: 'M', text: 'M_DZIEKUJE',
-    keywords: ['dziekuj*', 'dzieki', 'thx', 'super', 'ok dzieki'] },
+    keywords: ['dziekuj*', '=dzieki', 'thx', 'super', '=ok dzieki'] }, // „=” — bez literówek, żeby „dzieci” nie było „dzięki”
 
   // --- L: poza tematem (pogoda, polityka…) — ta sama odpowiedź co przy niejasnym pytaniu ---
   { id: 'offtopic', case: 'L', text: 'L',

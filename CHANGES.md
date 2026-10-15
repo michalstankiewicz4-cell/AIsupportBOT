@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.4
+- Bot: „dzieci” nie jest już brane za „dzięki”; „czy przyjmujecie dzieci” → konsultacja (pediatra)
+
+### ai 1.11.4
+- Bot: „dzieci” nie jest już brane za „dzięki”; „czy przyjmujecie dzieci” → konsultacja (pediatra)
+
+### trained 1.10.4
+- Bot: „dzieci” nie jest już brane za „dzięki”; „czy przyjmujecie dzieci” → konsultacja (pediatra)
+
 ### bot 1.10.3
 - Import ustawień rozpoznaje wszystkie pola (także tryb kryzysowy i słowa alarmowe); test eksportu/importu każdego pola
 
