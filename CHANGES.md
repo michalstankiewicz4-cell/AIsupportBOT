@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.5
+- Kafelki: domyślne marginesy wewnętrzne 5 px z każdej strony
+
+### ai 1.10.5
+- Kafelki: domyślne marginesy wewnętrzne 5 px z każdej strony
+
+### trained 1.9.5
+- Kafelki: domyślne marginesy wewnętrzne 5 px z każdej strony
+
 ### bot 1.9.4
 - Panel: kolejność kafelków — domyślna, najpierw z ceną, od najtańszej, od najdroższej (podpowiedzi zawsze na dole)
 

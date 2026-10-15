@@ -227,7 +227,7 @@ Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usług
   - *Bez przenoszenia pojedynczych liter* — wyraz nie jest łamany w środku, przechodzi w całości do nowej linii; gdy się nie mieści, napis jest odrobinę mniejszy;
   - *kolejność kafelków* — domyślna (jak w ustawieniach przycisków), najpierw kafelki z ceną, od najtańszej albo od najdroższej usługi; kafelki bez ceny (np. „Umów wizytę”) przy sortowaniu są na końcu, a szare podpowiedzi („Jaki specjalista?”, „Cennik”) zawsze na samym dole;
   - *marginesy wewnętrzne* góra / dół / lewo / prawo (0–24 px) z symetrią: brak, pionowa (góra = dół), pozioma (lewo = prawo) albo pełna.
-  Domyślnie wygląd jak dotąd: wszystkie przełączniki wyłączone, marginesy 10 px (góra, dół) i 11 px (boki).
+  Domyślnie wygląd jak dotąd: wszystkie przełączniki wyłączone, marginesy 5 px z każdej strony.
 
 Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.js`: `SERVICES`, `BUTTONS`, `CASE_BUTTONS`); w ustawieniach (`services`, `buttons`) zapisywane są tylko zmiany, więc „Przywróć domyślne” zawsze wraca do dokumentu. Bez edycji zostają: przyciski alarmowe (A, B — zielona odpowiedź u góry, czerwona karta z 112 zawsze na dole) i odpowiedź z ceną rozpoznanej usługi (J — budowana z cen usług).
 

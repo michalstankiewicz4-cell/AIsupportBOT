@@ -535,7 +535,7 @@ export const EXTRAS_CASES = ['C', 'D'];
 //   pack    — równe odstępy w pionie (kafelki dosunięte w kolumnach, bez pustych miejsc)
 //   autoWidth — szerokość kafelka dopasowana do tekstu (zamiast 3 równych kolumn)
 //   order   — kolejność kafelków: default (z ustawień) | priced (najpierw z ceną) | cheap (od najtańszej) | expensive (od najdroższej)
-export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, order: 'default', padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
+export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, order: 'default', padding: Object.freeze({ t: 5, r: 5, b: 5, l: 5 }), sym: 'none' });
 export const TILES = { ...DEFAULT_TILES, padding: { ...DEFAULT_TILES.padding } };
 
 // Kolejność kafelków według ustawienia „order”. Sortowanie stabilne — przy równych cenach

@@ -333,7 +333,7 @@
   justify-content: space-between;
   gap: 6px;
   min-height: 70px;
-  padding: var(--tile-pad, 10px 11px);
+  padding: var(--tile-pad, 5px);
   border: 2px solid var(--k);
   border-radius: 14px;
   background: var(--k);
