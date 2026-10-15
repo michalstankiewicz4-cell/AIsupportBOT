@@ -6,13 +6,13 @@
 //   4. własne odpowiedzi na frazy z panelu sterowania
 //   5. engine.ask() — bot, trained, ai albo ich kombinacja (router); kolejność przypadków C–L w silniku
 //   6. po dwóch niezrozumiałych wiadomościach z rzędu — przycisk „Napisz do nas”
-// Każda odpowiedź ma { text, links, chips, intent, case, source } i opcjonalnie followup
-// (drugi komunikat po karcie alarmowej).
+// Każda odpowiedź ma { text, links, chips, intent, case, source }; przy A i B dodatkowo `alarm` —
+// czerwona karta z 112, którą widżet pokazuje ZAWSZE POD odpowiedzią (specyfikacja v1.1).
 //
 // session — mały obiekt stanu rozmowy przechowywany przez widżet ({ crisis, unclear });
 // pipeline go aktualizuje. Nie zawiera treści ani danych osobowych.
 import { checkSafety, cleanInput } from './safety.js';
-import { FALLBACK_REPLY, crisisFollowup, PAGES } from './knowledge.js';
+import { FALLBACK_REPLY, alarmReply, PAGES } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { matchRule, getPanelConfig } from '../../panel/client.js';
 
@@ -47,10 +47,9 @@ export async function respond(engine, rawMessage, history = [], session = {}) {
   }
 
   if (UNCLEAR(reply)) {
-    // Tryb kryzysowy: zamiast „Nie jestem pewna…” ponownie komunikat B + 112 (bez karty).
+    // Tryb kryzysowy: zamiast „Nie jestem pewna…” ponownie odpowiedź B (góra) + czerwona karta (dół).
     if (session.crisis) {
-      const f = crisisFollowup({ supportLine: getPanelConfig().safety?.supportLine });
-      return { ...reply, text: f.text, links: f.links, case: 'B', intent: 'crisis-followup', source: 'safety' };
+      return { ...alarmReply('B', { supportLine: getPanelConfig().safety?.supportLine }), intent: 'crisis-followup', source: 'safety' };
     }
     session.unclear = (session.unclear || 0) + 1;
     // Po dwóch niezrozumiałych wiadomościach z rzędu — przekazanie do człowieka.

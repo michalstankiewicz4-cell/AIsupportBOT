@@ -214,7 +214,16 @@ Wszystkie teksty asystentki są w jednym pliku — `shared/js/texts.js` — i od
 - **Teksty alarmowe (A, B) są zablokowane** — zmienia je programista w `texts.js` po zatwierdzeniu przez lekarza kierującego serwisem.
 - Opcjonalna linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — przełącznik w zakładce „Tryb pracy” (domyślnie wyłączony, decyzja właściciela).
 
-Kafelki zakupu (kolorowe kwadraty z ceną) i małe przyciski dobiera `shared/js/knowledge.js` (tabela `SERVICES` — nazwy usług z formularza i ceny w jednym miejscu). Kolory: zielony — konsultacja lekarska, fioletowy — psychiatra, morski — psycholog/terapeuta, niebieski — recepta, L4, wyniki, skierowania, kobiety/mężczyźni, szary — informacje, czerwony — wyłącznie 112.
+### Usługi i przyciski (osobna zakładka)
+
+Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usługi. W zakładce **„Usługi i przyciski”** zmieniasz bez programisty:
+
+- **usługi** — nazwę na przycisku, cenę, kolor (z ostrzeżeniem, gdy kontrast z białym napisem jest słaby albo kolor jest czerwony — zarezerwowany dla 112), „sam obrys” (wariant tej samej grupy, np. Kontynuacja leczenia przy recepcie) i nazwę usługi w formularzu (`?service=`);
+- **przyciski pod każdą odpowiedzią** — które, w jakiej kolejności i z jaką etykietą; panel ostrzega, gdy sąsiednie kafelki mają ten sam kolor.
+
+Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.js`: `SERVICES`, `BUTTONS`, `CASE_BUTTONS`); w ustawieniach (`services`, `buttons`) zapisywane są tylko zmiany, więc „Przywróć domyślne” zawsze wraca do dokumentu. Bez edycji zostają: przyciski alarmowe (A, B — zielona odpowiedź u góry, czerwona karta z 112 zawsze na dole) i odpowiedź z ceną rozpoznanej usługi (J — budowana z cen usług).
+
+> Kontrola strony sprawdza ceny wpisane w `SITE_FACTS` (domyślne). Po zmianie ceny w panelu sprawdź, czy zgadza się ze stroną.
 
 ## 9. Nauka naszego modelu
 

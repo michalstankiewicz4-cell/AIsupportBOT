@@ -7,6 +7,8 @@ import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPan
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
+import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides } from '../../shared/js/knowledge.js';
+import { contrastWithWhite } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
@@ -254,6 +256,7 @@ function changed() {
     : 'Zapisuje wszystkie zakładki naraz.';
   $('#rules-count').textContent = state.draft.rules.length || '';
   $('#ovr-count').textContent = Object.keys(state.draft.overrides).length || '';
+  $('#design-count').textContent = Object.keys(state.draft.services).length + Object.keys(state.draft.buttons).length || '';
 }
 
 $('#save').addEventListener('click', async () => {
@@ -376,6 +379,7 @@ function applyBotOnly() {
 
 function renderAll() {
   renderMode();
+  renderDesign();
   renderLogging();
   renderRules();
   renderBuiltin();
@@ -795,35 +799,223 @@ function builtinCard(id) {
     changed();
   }, { rows: 3, placeholder: def.text, max: LIMITS.textLength, hint: 'Wpisz nowy tekst odpowiedzi (najlepiej 3–4 zdania, bez diagnoz i dawek). Zostaw puste, żeby używać tekstu domyślnego. Zmiana działa w bocie i naszym modelu.' });
 
-  const linksToggle = el('label', 'check');
-  const lcb = el('input');
-  lcb.type = 'checkbox';
-  lcb.checked = Array.isArray(ovr?.links);
-  linksToggle.append(lcb, el('span', '', 'Zmień też linki pod odpowiedzią'), tip('Domyślnie zostają przyciski z odpowiedzi wbudowanej. Zaznacz, żeby ustawić własne.'));
-  const linksBox = el('div');
-  const drawLinks = () => {
-    linksBox.textContent = '';
-    const o = state.draft.overrides[id];
-    if (!lcb.checked) return;
-    if (!o) {
-      linksBox.append(el('p', 'muted small', 'Najpierw wpisz własny tekst odpowiedzi.'));
-      return;
-    }
-    if (!Array.isArray(o.links)) o.links = structuredClone((def.links || []).filter((l) => l.url).map(({ label, url }) => ({ label, url })));
-    linksBox.append(linksField(o.links, (v) => ((o.links = v), changed())));
-  };
-  lcb.addEventListener('change', () => {
-    const o = state.draft.overrides[id];
-    if (!lcb.checked && o) delete o.links;
-    drawLinks();
-    changed();
-  });
-  drawLinks();
+  // Stare nadpisanie linków (sprzed zakładki „Usługi i przyciski”) — można je tylko usunąć.
+  const legacy = el('div');
+  if (Array.isArray(ovr?.links)) {
+    const drop = el('button', 'btn ghost small', 'Usuń stare własne linki — użyj przycisków z zakładki „Usługi i przyciski”');
+    drop.type = 'button';
+    drop.addEventListener('click', () => {
+      delete state.draft.overrides[id].links;
+      renderBuiltin();
+      changed();
+    });
+    legacy.append(el('p', 'muted small', `Ta odpowiedź ma własne linki: ${ovr.links.map((l) => l.label).join(', ')}.`), drop);
+  }
+  const btnNote = el('p', 'muted small', 'Przyciski pod tą odpowiedzią (kolory, ceny, kolejność) zmieniasz w zakładce „Usługi i przyciski”.');
 
-  details.append(defBox, ta, linksToggle, linksBox);
+  details.append(defBox, ta, btnNote, legacy);
   card.append(head, details);
   const haystack = [id, def.label, def.text, ovr?.text].join(' ').toLowerCase();
   return { id, node: card, haystack };
+}
+
+
+// =============================================================================
+// Usługi i przyciski — nazwy, ceny, kolory, obrys, nazwa w formularzu oraz przyciski
+// pod każdą odpowiedzią. Domyślnie wartości ze specyfikacji czatu v1.1; w ustawieniach
+// zapisujemy tylko zmiany (services, buttons).
+// =============================================================================
+
+const SERVICE_FIELDS = [
+  ['label', 'Nazwa na przycisku', 'text', 60],
+  ['price', 'Cena', 'text', 20],
+  ['service', 'Usługa w formularzu (?service=)', 'text', 80],
+  ['priceName', 'Początek zdania z ceną (odpowiedź „Cennik”)', 'text', 80],
+];
+
+function svcValue(id, key) {
+  const o = state.draft.services[id];
+  return o && key in o ? o[key] : SERVICES[id][key];
+}
+
+function setSvc(id, key, value) {
+  const def = SERVICES[id][key] ?? (key === 'outline' ? false : '');
+  const o = { ...(state.draft.services[id] || {}) };
+  if (value === def || (key === 'outline' && Boolean(value) === Boolean(def))) delete o[key];
+  else o[key] = value;
+  if (Object.keys(o).length) state.draft.services[id] = o;
+  else delete state.draft.services[id];
+  setDesignOverrides({ services: state.draft.services, buttons: state.draft.buttons });
+  changed();
+}
+
+// Podgląd przycisku tak, jak w czacie (te same klasy co widżet, style w admin.css).
+function previewButton(entry) {
+  const b = resolveButton(entry);
+  if (!b) return el('span', 'muted small', `? ${entry}`);
+  const [name, price] = b.label.split(' · ');
+  const node = el('span', b.tile ? `pv-tile${b.outline ? ' outline' : ''}` : 'pv-link');
+  node.style.setProperty('--k', b.color);
+  if (b.tile && !b.outline && contrastWithWhite(b.color) < 3) node.style.setProperty('--k-ink', '#1d1d1f');
+  node.append(el('span', 'pv-name', name));
+  if (price) node.append(el('span', 'pv-price', price));
+  return node;
+}
+
+function renderDesign() {
+  setDesignOverrides({ services: state.draft.services, buttons: state.draft.buttons });
+  renderServices();
+  renderCaseButtons();
+}
+
+function renderServices() {
+  const box = $('#svc-list');
+  box.textContent = '';
+  for (const id of Object.keys(SERVICES)) {
+    const changedSvc = Boolean(state.draft.services[id]);
+    const card = el('article', `card svc${changedSvc ? ' changed' : ''}`);
+    const head = el('div', 'row');
+    const pv = el('span', 'pv-slot');
+    pv.append(previewButton(id === 'psycholog' ? 'psycholog' : id === 'wizyta' ? 'wizyta' : Object.keys(BUTTONS).find((k) => BUTTONS[k].svc === id && !BUTTONS[k].label) || id));
+    head.append(pv, el('code', 'muted small', id), el('span', 'spacer'));
+    if (changedSvc) {
+      head.append(pill('zmieniona', 'ok'));
+      const reset = el('button', 'btn ghost small', 'Przywróć domyślne');
+      reset.type = 'button';
+      reset.addEventListener('click', () => {
+        delete state.draft.services[id];
+        renderDesign();
+        changed();
+      });
+      head.append(reset);
+    }
+    const grid = el('div', 'svc-grid');
+    for (const [key, label, , max] of SERVICE_FIELDS) {
+      const f = el('label', 'field');
+      const input = el('input');
+      input.type = 'text';
+      input.maxLength = max;
+      input.value = svcValue(id, key) || '';
+      input.placeholder = SERVICES[id][key] || (key === 'service' ? '(puste = formularz bez wybranej usługi)' : '');
+      input.addEventListener('change', () => {
+        setSvc(id, key, input.value.trim());
+        renderDesign();
+      });
+      f.append(el('span', '', label), input);
+      grid.append(f);
+    }
+    // Kolor + obrys + kontrast.
+    const cf = el('div', 'field');
+    cf.append(labelSpan('Kolor', 'Kolor przycisku tej usługi. Czerwony jest zarezerwowany dla 112. Sąsiednie przyciski w jednej odpowiedzi nie powinny mieć tego samego koloru.'));
+    const crow = el('div', 'row');
+    const color = el('input');
+    color.type = 'color';
+    color.value = svcValue(id, 'color');
+    const hex = el('code', 'small', svcValue(id, 'color'));
+    color.addEventListener('input', () => (hex.textContent = color.value.toUpperCase()));
+    color.addEventListener('change', () => {
+      setSvc(id, 'color', color.value.toUpperCase());
+      renderDesign();
+    });
+    const outline = el('label', 'check');
+    const ocb = el('input');
+    ocb.type = 'checkbox';
+    ocb.checked = Boolean(svcValue(id, 'outline'));
+    ocb.addEventListener('change', () => {
+      setSvc(id, 'outline', ocb.checked);
+      renderDesign();
+    });
+    outline.append(ocb, el('span', '', 'sam obrys'), tip('Obrys oznacza wariant lub uzupełnienie tej samej grupy (np. Kontynuacja leczenia przy recepcie, Terapeuta przy psychologu).'));
+    crow.append(color, hex, outline);
+    const c = svcValue(id, 'color');
+    const ratio = contrastWithWhite(c);
+    if (/^#c0392b$/i.test(c)) crow.append(pill('czerwony jest tylko dla 112', 'warn'));
+    else if (!ocb.checked && ratio < 4.5) crow.append(pill(`słaby kontrast z białym (${ratio.toFixed(1)}:1)${ratio < 3 ? ' — napis będzie ciemny' : ''}`, 'warn'));
+    cf.append(crow);
+    grid.append(cf);
+    card.append(head, grid);
+    box.append(card);
+  }
+}
+
+function renderCaseButtons() {
+  const box = $('#btn-cases');
+  box.textContent = '';
+  const keys = Object.keys(CASE_BUTTONS).filter((k) => !TEXTS[k]?.locked);
+  const choices = Object.keys(BUTTONS);
+  for (const key of keys) {
+    const list = state.draft.buttons[key] ? [...state.draft.buttons[key]] : [...CASE_BUTTONS[key]];
+    const isChanged = Boolean(state.draft.buttons[key]);
+    const card = el('article', `card${isChanged ? ' changed' : ''}`);
+    const head = el('div', 'row');
+    head.append(el('strong', '', TEXTS[key]?.label || key), el('code', 'muted small', key), el('span', 'spacer'));
+    const save = (next) => {
+      if (JSON.stringify(next) === JSON.stringify(CASE_BUTTONS[key])) delete state.draft.buttons[key];
+      else state.draft.buttons[key] = next;
+      renderDesign();
+      changed();
+    };
+    if (isChanged) {
+      head.append(pill('zmienione', 'ok'));
+      const reset = el('button', 'btn ghost small', 'Przywróć domyślne');
+      reset.type = 'button';
+      reset.addEventListener('click', () => save([...CASE_BUTTONS[key]]));
+      head.append(reset);
+    }
+    const preview = el('div', 'pv-row');
+    list.forEach((e) => preview.append(previewButton(e)));
+    // Ostrzeżenie: sąsiednie kafelki w tym samym kolorze.
+    const tilesR = list.map((e) => resolveButton(e)).filter((b) => b?.tile);
+    const clash = tilesR.some((b, i) => i && b.color === tilesR[i - 1].color && !b.outline && !tilesR[i - 1].outline);
+    const rows = el('div', 'btn-rows');
+    list.forEach((entry, i) => {
+      const [id, custom] = entry.split('|');
+      const r = el('div', 'row btn-row');
+      const sel = el('select');
+      for (const c of choices) sel.append(option(c, buttonName(c)));
+      sel.value = id;
+      sel.addEventListener('change', () => save(list.map((x, j) => (j === i ? (custom ? `${sel.value}|${custom}` : sel.value) : x))));
+      const lab = el('input');
+      lab.type = 'text';
+      lab.maxLength = 60;
+      lab.placeholder = 'własna etykieta (opcjonalnie)';
+      lab.value = custom || '';
+      lab.addEventListener('change', () => save(list.map((x, j) => (j === i ? (lab.value.trim() ? `${id}|${lab.value.trim().replace(/\|/g, '')}` : id) : x))));
+      const mk = (txt, title, fn, dis) => {
+        const b = el('button', 'btn ghost small', txt);
+        b.type = 'button';
+        b.title = title;
+        b.disabled = dis;
+        b.addEventListener('click', fn);
+        return b;
+      };
+      const swap = (a, b) => {
+        const n = [...list];
+        [n[a], n[b]] = [n[b], n[a]];
+        save(n);
+      };
+      r.append(sel, lab, mk('↑', 'Wyżej', () => swap(i, i - 1), i === 0), mk('↓', 'Niżej', () => swap(i, i + 1), i === list.length - 1), mk('✕', 'Usuń', () => save(list.filter((_, j) => j !== i)), list.length <= 1));
+      rows.append(r);
+    });
+    const add = el('select');
+    add.append(option('', '+ Dodaj przycisk…'));
+    for (const c of choices) add.append(option(c, buttonName(c)));
+    add.addEventListener('change', () => add.value && save([...list, add.value]));
+    const details = el('details');
+    details.open = isChanged;
+    details.append(el('summary', '', 'Zmień przyciski'), rows, add);
+    card.append(head, preview);
+    if (clash) card.append(el('p', 'warn-text small', 'Sąsiednie kafelki mają ten sam kolor — zmień kolejność albo kolor usługi.'));
+    card.append(details);
+    box.append(card);
+  }
+}
+
+function buttonName(id) {
+  const b = BUTTONS[id];
+  if (b.svc) return `Usługa: ${b.label || SERVICES[b.svc].label}${b.label ? ` (${SERVICES[b.svc].label})` : ''}`;
+  if (b.ask) return `Pytanie w czacie: ${b.label}`;
+  return `Link: ${b.label || id}`;
 }
 
 // =============================================================================

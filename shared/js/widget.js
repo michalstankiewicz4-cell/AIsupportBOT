@@ -4,7 +4,7 @@
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
-import { SITE, M_BUTTONS, textOf, BUTTON_KINDS } from './knowledge.js';
+import { SITE, textOf, replyFor } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { getPanelConfig, logTurn, logClick, newSessionId } from '../../panel/client.js';
 import { isSafeUrl } from '../../panel/schema.js';
@@ -26,7 +26,7 @@ const greetingFor = (name) => ({
   role: 'bot',
   greeting: true, // nie wysyłamy do AI — imię zostaje w przeglądarce
   text: textOf('M', { imie: `, ${name}` }),
-  links: M_BUTTONS(),
+  links: replyFor('powitanie').links,
   case: 'M',
 });
 
@@ -204,14 +204,18 @@ export function mountWidget(opts) {
     item.append(bubble);
 
     if (msg.links?.length) {
-      // Kafelki zakupu (przyciski główne) — kolorowe kwadraty z ceną; reszta — małe przyciski.
+      // Usługi — kolorowe kafelki z ceną (każda usługa w swoim kolorze, obrys = wariant);
+      // informacje (cennik, kontakt, „Jaki specjalista?”) — małe szare przyciski; 112 — czerwony.
       const tiles = el('div', 'tiles');
       const links = el('div', 'links');
       for (const l of msg.links) {
-        const kind = BUTTON_KINDS.includes(l.kind) ? l.kind : 'info';
-        const tile = l.main && kind !== 'alarm';
-        const node = buttonNode(l, `${tile ? 'tile' : `link${l.main ? ' main' : ''}`} k-${kind}`, tile, msg.case);
-        if (node) (tile ? tiles : links).append(node);
+        const alarm = l.kind === 'alarm';
+        const tile = !alarm && (l.tile || (l.main && l.kind !== 'info'));
+        const cls = alarm ? 'link main k-alarm' : tile ? `tile${l.outline ? ' outline' : ''}` : 'link';
+        const node = buttonNode(l, cls, tile, msg.case);
+        if (!node) continue;
+        if (!alarm) paint(node, l.color, tile && !l.outline);
+        (tile ? tiles : links).append(node);
       }
       if (tiles.children.length) item.append(tiles);
       if (links.children.length) item.append(links);
@@ -221,6 +225,13 @@ export function mountWidget(opts) {
 
     if (msg.chips?.length) renderChips(msg.chips);
     log.scrollTop = log.scrollHeight;
+  }
+
+  // Kolor przycisku z ustawień (tylko #rrggbb). Na jasnym kolorze napis ciemny — dla czytelności.
+  function paint(node, color, filled) {
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return;
+    node.style.setProperty('--k', color);
+    if (filled && contrastWithWhite(color) < 3) node.style.setProperty('--k-ink', '#1d1d1f');
   }
 
   // Jeden przycisk: link (https/tel) albo pytanie zadawane w czacie (l.ask).
@@ -336,18 +347,18 @@ export function mountWidget(opts) {
       text: reply.text,
       links: reply.links,
       chips: reply.chips,
-      emergency: reply.emergency,
       title: reply.title,
       case: reply.case,
       note: reply.degraded ? DEGRADED_NOTE[reply.degraded] : '',
     };
     state.messages.push(botMsg);
     renderMessage(botMsg);
-    // Drugi komunikat po karcie alarmowej (A, B) — zaraz po niej, bez opóźnienia.
-    if (reply.followup) {
-      const second = { role: 'bot', text: reply.followup.text, links: reply.followup.links, case: reply.case };
-      state.messages.push(second);
-      renderMessage(second);
+    // A i B: czerwona karta z 112 ZAWSZE jako ostatnia wiadomość — na dole, tuż nad polem wpisywania.
+    if (reply.alarm) {
+      const card = { role: 'bot', text: reply.alarm.text, links: reply.alarm.links, emergency: true, title: 'komunikat alarmowy', case: reply.case };
+      state.messages.push(card);
+      renderMessage(card);
+      log.scrollTop = log.scrollHeight;
     }
     state.messages = state.messages.slice(-40);
     saveState(storeKey, state);
@@ -434,6 +445,13 @@ function whoRow(name, withAvatar) {
   }
   row.append(el('span', '', name));
   return row;
+}
+
+// Kontrast koloru z białym tekstem (WCAG) — eksportowany też do panelu.
+export function contrastWithWhite(hex) {
+  const c = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  const L = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return 1.05 / (L + 0.05);
 }
 
 function el(tag, className = '', text) {

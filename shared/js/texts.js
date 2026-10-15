@@ -1,4 +1,4 @@
-// WSZYSTKIE TEKSTY ODPOWIEDZI ASYSTENTKI — w jednym pliku (specyfikacja v1.0, pkt 8.7).
+// WSZYSTKIE TEKSTY ODPOWIEDZI ASYSTENTKI — w jednym pliku (specyfikacja v1.1, pkt 8.7).
 //
 // Każdy tekst ma klucz (np. "D"), przypadek ze specyfikacji (A–M) i opis dla panelu.
 // Właściciel zmienia teksty bez programisty w panelu: „Odpowiedzi wbudowane”
@@ -13,7 +13,7 @@ export const TEXTS = {
   // --- A / B: zagrożenie życia (warstwa bezpieczeństwa, shared/js/safety.js) ---
   ALARM: {
     case: 'A',
-    label: 'Karta alarmowa (czerwona) — A i B',
+    label: 'Karta alarmowa (czerwona, zawsze NA DOLE czatu) — A i B',
     locked: true,
     text:
       'To może być stan nagły. Proszę natychmiast zadzwonić pod numer alarmowy 112 lub 999 (pogotowie) albo udać się na najbliższy SOR. ' +
@@ -21,19 +21,21 @@ export const TEXTS = {
   },
   A2: {
     case: 'A',
-    label: 'A — komunikat 2 (po karcie alarmowej)',
+    label: 'A — odpowiedź 1 (zielona, u góry; czerwona karta pod nią)',
     locked: true,
-    text: 'Najpierw zadbaj o swoje bezpieczeństwo i wezwij pomoc. Gdy sytuacja będzie opanowana, lekarz online pomoże w dalszym leczeniu.',
+    text:
+      'Zadbaj o swoje bezpieczeństwo i wezwij pomoc. Jeśli potrzebujesz konsultacji lekarskiej online i uważasz, ' +
+      'że jesteśmy w stanie Ci pomóc — umów konsultację lekarską.',
   },
   B2: {
     case: 'B',
-    label: 'B — komunikat 2 (kryzys psychiczny)',
+    label: 'B — odpowiedź 1 (zielona, u góry; czerwona karta pod nią)',
     locked: true,
     text: 'Bardzo mi przykro, że tak się czujesz. Nie jesteś z tym sam(a). Jeśli grozi Ci niebezpieczeństwo, zadzwoń pod 112.',
   },
   B2_BLISKI: {
     case: 'B',
-    label: 'B — komunikat 2, gdy chodzi o osobę bliską',
+    label: 'B — odpowiedź 1, gdy chodzi o osobę bliską',
     locked: true,
     text: 'Bardzo mi przykro, że to dotyczy kogoś bliskiego. Jeśli ktoś jest w niebezpieczeństwie, zadzwoń pod 112.',
   },
@@ -63,7 +65,7 @@ export const TEXTS = {
     text:
       'Przy takich dolegliwościach najlepszym pierwszym krokiem jest konsultacja lekarska online. ' +
       'Lekarz oceni Twoją sytuację, omówi wyniki badań, jeśli je masz — a jeśli się nie badałeś(aś), może wystawić skierowanie na badania. ' +
-      'Nie oceniam objawów ani nie udzielam porad medycznych.',
+      'Nie oceniam objawów ani nie udzielam porad medycznych — robi to lekarz, dlatego najlepszym krokiem jest konsultacja online.',
   },
 
   // --- E–H: usługi ---
@@ -71,7 +73,8 @@ export const TEXTS = {
     case: 'E',
     label: 'E — recepta',
     text:
-      'E-receptę wystawia lekarz po konsultacji online — nawet w 15 minut. Wybierz konsultację i wypełnij krótki formularz. ' +
+      'E-receptę wystawia lekarz po konsultacji online — nawet w 15 minut. ' +
+      'Wybierz, czego potrzebujesz: konsultację lekarską, nową receptę albo kontynuację leczenia. ' +
       'To lekarz decyduje, czy wystawienie recepty jest możliwe.',
   },
   F: {
@@ -107,13 +110,13 @@ export const TEXTS = {
   // {cena} zastępuje zdanie z ceną rozpoznanej usługi (tabela SERVICES w knowledge.js).
   J: {
     case: 'J',
-    label: 'J — cena rozpoznanej usługi ({cena} = zdanie z ceną)',
-    text: '{cena} Pełny cennik znajdziesz poniżej.',
+    label: 'J — cena rozpoznanej usługi ({cena} = zdanie z ceną usługi i usługi pokrewnej)',
+    text: '{cena} Wybierz i umów od razu:',
   },
   J_OGOLNY: {
     case: 'J',
     label: 'J — cennik, gdy usługa nie jest rozpoznana ({ceny} = 4 najczęstsze)',
-    text: 'Najczęściej wybierane: {ceny}. Pełny cennik znajdziesz poniżej.',
+    text: 'Najczęściej wybierane: {ceny}. Wybierz i umów od razu:',
   },
 
   // --- K: jak umówić / jaki specjalista / kontakt ---
@@ -129,7 +132,7 @@ export const TEXTS = {
     label: 'K — jaki specjalista?',
     text:
       'Jaki specjalista? Dolegliwości i choroby → lekarz. Nastrój, lęk, leki psychiatryczne → psychiatra. ' +
-      'Rozmowa i wsparcie → psycholog / terapeuta.',
+      'Rozmowa i wsparcie → psycholog lub terapeuta. Każdą konsultację umówisz online.',
   },
   K_KONTAKT: {
     case: 'K',
@@ -160,7 +163,7 @@ export const TEXTS = {
     label: 'L — niejasne pytanie / poza tematem',
     text:
       'Nie jestem pewna, czego dotyczy pytanie. Proszę opisać je krótko — z jakim problemem zdrowotnym jest związane. ' +
-      'Na przykład: skóra, recepta, L4. Wtedy będę mogła pomóc.',
+      'Na przykład: skóra, konsultacja lekarska, recepta, L4, tabletka „dzień po”. Wtedy będę mogła pomóc.',
   },
 
   // --- M: powitanie / podziękowanie ---
@@ -170,7 +173,7 @@ export const TEXTS = {
     label: 'M — powitanie (start czatu i „cześć”); {imie} = imię pacjenta',
     text:
       'Dzień dobry{imie}! Jestem {asystentka}, wirtualna konsultantka. Nie jestem lekarzem i nie udzielam porad medycznych — ' +
-      'pomogę wybrać właściwą konsultację. Opisz krótko, w czym mogę pomóc, albo wybierz poniżej.',
+      'pomogę wybrać właściwą konsultację. Opisz krótko, w czym mogę pomóc, albo wybierz poniżej (ceny przy każdej usłudze).',
   },
   M_DZIEKUJE: {
     case: 'M',

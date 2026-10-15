@@ -84,6 +84,7 @@
       <button role="tab" data-tab="logging">Rejestracja rozmów</button>
       <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
       <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
+      <button role="tab" data-tab="design">Usługi i przyciski <span class="count" id="design-count"></span></button>
       <button role="tab" data-tab="learn">Nauka <span class="count warn" id="learn-count"></span></button>
       <button role="tab" data-tab="logs">Rozmowy</button>
       <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
@@ -156,6 +157,19 @@
           </aside>
           <div id="rule-editor" class="editor"></div>
         </div>
+      </section>
+
+      <!-- Usługi i przyciski -->
+      <section class="tab" id="tab-design" hidden>
+        <div class="intro">
+          <h2>Usługi i przyciski <span class="tip" tabindex="0" data-tip="Zmiany działają w czacie po kliknięciu „Zapisz zmiany”. „Przywróć domyślne” wraca do wartości ze specyfikacji czatu.">?</span></h2>
+          <p>Kolorowe kafelki pod odpowiedziami prowadzą prosto do formularza wybranej usługi. Domyślne nazwy, ceny i kolory pochodzą ze specyfikacji czatu „Ilona” v1.1 — tu możesz je zmienić bez programisty: np. nową cenę, kolor albo kolejność przycisków. Czerwony jest zarezerwowany dla przycisku 112, a przyciski alarmowe (A, B) się nie zmieniają.</p>
+        </div>
+        <h3 class="group">Usługi — nazwa, cena, kolor</h3>
+        <div id="svc-list" class="svc-list"></div>
+        <h3 class="group">Przyciski pod odpowiedziami</h3>
+        <p class="muted small">Każda odpowiedź ma swój zestaw przycisków. Usługi wyświetlają się jako kolorowe kafelki z ceną, linki i pytania — jako małe szare przyciski.</p>
+        <div id="btn-cases"></div>
       </section>
 
       <!-- Odpowiedzi wbudowane -->

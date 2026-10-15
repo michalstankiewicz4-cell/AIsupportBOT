@@ -13,6 +13,18 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 <!-- NEW ENTRIES BELOW -->
 
+## 2026-10-15
+
+### bot 1.8.0
+- Specyfikacja czatu „Ilona” v1.1: przy A/B zielona odpowiedź u góry i czerwona karta 112 na dole, każda usługa w swoim kolorze, nowe zestawy przycisków (D, E, F, H, J, K, L, M), panel „Usługi i przyciski” (nazwy, ceny, kolory, obrys, kolejność przycisków; domyślnie z dokumentu)
+
+### ai 1.9.0
+- Specyfikacja czatu „Ilona” v1.1: przy A/B zielona odpowiedź u góry i czerwona karta 112 na dole, każda usługa w swoim kolorze, nowe zestawy przycisków (D, E, F, H, J, K, L, M), panel „Usługi i przyciski” (nazwy, ceny, kolory, obrys, kolejność przycisków; domyślnie z dokumentu)
+
+### trained 1.8.0
+- Specyfikacja czatu „Ilona” v1.1: przy A/B zielona odpowiedź u góry i czerwona karta 112 na dole, każda usługa w swoim kolorze, nowe zestawy przycisków (D, E, F, H, J, K, L, M), panel „Usługi i przyciski” (nazwy, ceny, kolory, obrys, kolejność przycisków; domyślnie z dokumentu)
+
+
 ## 2026-10-14
 
 ### bot 1.7.0

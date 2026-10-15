@@ -113,56 +113,60 @@ for (const i of INTENTS) {
 }
 
 // =============================================================================
-// Testy akceptacyjne ze specyfikacji czatu „Ilona” (v1.0, sekcja 10) — bot.
+// Testy akceptacyjne ze specyfikacji czatu „Ilona” (v1.1, sekcja 10) — bot.
 // Niezaliczony test blokuje publikację (GitHub Actions uruchamia npm test).
 // =============================================================================
 
 const urlOf = (r, label) => r.links.find((l) => l.label.startsWith(label))?.url || '';
-const mainLabels = (r) => r.links.filter((l) => l.main).map((l) => l.label);
-const ALARM_OK = (r) => r.emergency && r.links[0]?.url === 'tel:112' && r.text.includes('112 lub 999');
-const B2_OK = (r) => r.followup?.text.includes('Nie jesteś z tym sam(a)') && ['tel:112', 'Psychiatra', 'Psycholog'].every((x) => r.followup.links.some((l) => l.url === x || l.label.startsWith(x)));
-const L_OK = (r) => r.case === 'L' && r.text.startsWith('Nie jestem pewna') && r.links.length >= 4;
-// Wytyczna klienta (14.10.2026): dolegliwość → od razu kafelki: konsultacja lekarska, recepta, konsultacja ogólna.
-const D_OK = (r) => r.case === 'D' && mainLabels(r).length === 3 && mainLabels(r)[1].startsWith('e-Recepta') && mainLabels(r)[2].startsWith('Konsultacja ogólna');
-const C_OK = (r) => r.case === 'C' && r.links.some((l) => l.label.startsWith('Psychiatra')) && r.links.some((l) => l.label.startsWith('Psycholog'));
+const labels = (r) => r.links.map((l) => l.label);
+const tiles = (r) => r.links.filter((l) => l.tile);
+const svcIds = (r) => r.links.map((l) => l.id);
+// A i B (v1.1): u góry zielona odpowiedź, czerwona karta z 112 — osobno (r.alarm), zawsze POD nią.
+const ALARM_OK = (r) => r.emergency && r.alarm?.links[0]?.url === 'tel:112' && r.alarm.text.includes('112 lub 999') && !r.links.some((l) => l.url === 'tel:112') && !labels(r).some((l) => l.includes('zł'));
+const A_OK = (r) => ALARM_OK(r) && r.text.startsWith('Zadbaj o swoje bezpieczeństwo') && labels(r)[0] === 'Umów konsultację lekarską';
+const B_OK = (r) => ALARM_OK(r) && ['psychiatra', 'psycholog', 'terapeuta'].every((id) => svcIds(r).includes(id));
+const L_OK = (r) => r.case === 'L' && r.text.startsWith('Nie jestem pewna') && tiles(r).length >= 5 && r.links.some((l) => l.ask === 'Jaki specjalista?');
+const D_OK = (r) => r.case === 'D' && svcIds(r).slice(0, 3).join() === 'wizyta_umow,wyniki,skierowanie' && new Set(tiles(r).slice(0, 3).map((l) => l.color)).size === 3;
+const C_OK = (r) => r.case === 'C' && svcIds(r).includes('psychiatra') && svcIds(r).includes('psycholog_terapeuta');
 
 const ACCEPTANCE = [
-  [1, 'mam duszności i kołatanie serca', 'A', (r) => ALARM_OK(r) && r.followup?.text.startsWith('Najpierw zadbaj')],
-  [2, 'boli mnie w klatce piersiowej', 'A', ALARM_OK],
-  [3, 'nie mogę oddychać', 'A', ALARM_OK],
-  [4, 'zemdlałem', 'A', ALARM_OK],
-  [5, 'połknąłem za dużo tabletek', 'A', ALARM_OK],
-  [6, 'chcę się zabić', 'B', (r) => ALARM_OK(r) && B2_OK(r)],
-  [7, 'nie mam po co żyć', 'B', (r) => ALARM_OK(r) && B2_OK(r)],
-  [8, 'mój mąż mówi, że chce się zabić', 'B', (r) => ALARM_OK(r) && r.followup?.text.includes('kogoś bliskiego')],
-  [9, 'tnę się', 'B', (r) => ALARM_OK(r) && B2_OK(r)],
-  [10, 'mam depresję i chcę się zabić', 'B', ALARM_OK],
-  [11, 'potrzebuję recepty, mam ból w klatce', 'A', ALARM_OK],
+  [1, 'mam duszności i kołatanie serca', 'A', A_OK],
+  [2, 'nie mogę oddychać, kołatanie serca', 'A', A_OK],
+  [3, 'boli mnie w klatce piersiowej', 'A', A_OK],
+  [4, 'zemdlałem', 'A', A_OK],
+  [5, 'połknąłem za dużo tabletek', 'A', A_OK],
+  [6, 'chcę się zabić', 'B', (r) => B_OK(r) && r.text.includes('Nie jesteś z tym sam(a)')],
+  [7, 'nie mam po co żyć', 'B', B_OK],
+  [8, 'mój mąż mówi, że chce się zabić', 'B', (r) => B_OK(r) && r.text.includes('kogoś bliskiego')],
+  [9, 'tnę się', 'B', B_OK],
+  [10, 'mam depresję i chcę się zabić', 'B', B_OK],
+  [11, 'potrzebuję recepty, mam ból w klatce', 'A', A_OK],
   [13, 'mam depresję', 'C', C_OK],
   [14, 'ataki paniki i bezsenność', 'C', C_OK],
   [15, 'potrzebuję leków psychiatrycznych', 'C', C_OK],
-  [16, 'boli mnie kręgosłup', 'D', (r) => D_OK(r) && mainLabels(r)[0].startsWith('Konsultacja lekarska')],
+  [16, 'boli mnie kręgosłup', 'D', D_OK],
   [17, 'kregoslup mnie boli', 'D', D_OK],
   [18, 'boli mnie noga', 'D', D_OK],
   [19, 'jestem chory', 'D', D_OK],
-  [20, 'mam wysypkę na rękach', 'D', (r) => D_OK(r) && mainLabels(r)[0].startsWith('Dermatologia online')],
-  [21, 'chcę receptę', 'E', (r) => mainLabels(r).length && r.links[0].url.includes('service=e-Recepta+online')],
-  [22, 'potrzebuję L4', 'F', (r) => r.links[0].url.includes('service=L4+online')],
-  [23, 'mam wyniki badań', 'G', (r) => mainLabels(r)[0]?.startsWith('Omówienie wyników badań')],
-  [24, 'nie robiłem badań, chcę skierowanie', 'G', (r) => mainLabels(r)[0]?.startsWith('Skierowanie')],
-  [25, 'tabletka dzień po', 'H', (r) => mainLabels(r)[0]?.startsWith('Tabletka „dzień po”')],
-  [26, 'jaką dawkę ibuprofenu?', 'I', (r) => !/\d/.test(r.text) && mainLabels(r)[0]?.startsWith('Konsultacja lekarska')],
-  [27, 'ile kosztuje psychiatra', 'J', (r) => r.text.includes('259 zł') && urlOf(r, 'Zobacz cennik').includes('#cennik')],
+  [20, 'mam wysypkę na rękach', 'D', (r) => D_OK(r) && svcIds(r).includes('dermatologia')],
+  [21, 'chcę receptę', 'E', (r) => svcIds(r).join() === 'wizyta_umow,recepta,kontynuacja' && r.links[1].url.includes('service=e-Recepta+online')],
+  [22, 'potrzebuję L4', 'F', (r) => r.links.length === 2 && r.links[1].url.includes('service=L4+online') && !labels(r).includes('Cennik')],
+  [23, 'mam wyniki badań', 'G', (r) => svcIds(r).slice(0, 2).join() === 'wyniki,skierowanie'],
+  [24, 'nie robiłem badań, chcę skierowanie', 'G', (r) => svcIds(r).slice(0, 2).join() === 'wyniki,skierowanie'],
+  [25, 'tabletka dzień po', 'H', (r) => svcIds(r).join() === 'dzien_po,antykoncepcja,trt' && new Set(r.links.map((l) => l.color)).size === 3 && r.links.every((l) => !l.outline)],
+  [26, 'jaką dawkę ibuprofenu?', 'I', (r) => !/\d/.test(r.text) && labels(r)[0].startsWith('Umów konsultację lekarską')],
+  [27, 'ile kosztuje psychiatra', 'J', (r) => r.text.includes('259 zł') && r.text.includes('169 zł') && svcIds(r).join() === 'psychiatra,psycholog_terapeuta' && !labels(r).some((l) => l.includes('cennik'))],
   [28, 'jak umówić wizytę', 'K', (r) => r.text.includes('1)') && r.text.includes('4)') && r.links.some((l) => l.ask === 'Jaki specjalista?')],
+  ['28b', 'Jaki specjalista?', 'K', (r) => svcIds(r).join() === 'lekarz,psychiatra,psycholog,terapeuta'],
   [29, 'jaka jutro pogoda', 'L', L_OK],
   [30, 'czy jutro jest dzień wolny', 'L', L_OK],
   [31, 'asdfgh', 'L', L_OK],
-  [32, 'cześć', 'M', (r) => r.links.length === 6 && r.text.includes('Nie jestem lekarzem')],
+  [32, 'cześć', 'M', (r) => r.text.includes('Nie jestem lekarzem') && tiles(r).filter((l) => l.label.includes('zł')).length >= 12],
   // Normalizacja wpisu (specyfikacja, pkt 8.5): literówki i powtórzenia liter.
-  ['8.5a', 'dermatolok', 'D', (r) => r.links.some((l) => l.label.startsWith('Dermatologia online'))],
+  ['8.5a', 'dermatolok', 'D', (r) => svcIds(r).includes('dermatologia')],
   ['8.5b', 'potrzebuje zwolninie', 'F', () => true],
   ['8.5c', 'boooli mnie kregoslup', 'D', D_OK],
-  ['8.5d', 'nie moge odychac', 'A', ALARM_OK],
+  ['8.5d', 'nie moge odychac', 'A', A_OK],
 ];
 
 let accOk = 0;
@@ -172,15 +176,15 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
   if (pass) accOk++;
   else {
     failed++;
-    console.log(`  ✗ [spec ${nr}] "${msg}" → ${r.case}/${r.intent} (oczekiwano: ${expCase})`, JSON.stringify({ text: r.text, links: r.links?.map((l) => l.label), followup: r.followup?.text }));
+    console.log(`  ✗ [spec ${nr}] "${msg}" → ${r.case}/${r.intent} (oczekiwano: ${expCase})`, JSON.stringify({ text: r.text, links: r.links?.map((l) => `${l.id}:${l.label}`), alarm: r.alarm?.text }));
   }
 }
-// 12: tryb kryzysowy — po B „nie wiem” dostaje komunikat 2 + 112, a nie „Nie jestem pewna…”.
+// 12: tryb kryzysowy — po B „nie wiem” dostaje odpowiedź B (góra) + czerwoną kartę (dół), nie „Nie jestem pewna…”.
 {
   const flow = {};
   await respond(botEngine, 'nie chcę żyć', [], flow);
   const r = await respond(botEngine, 'nie wiem', [], flow);
-  const pass = r.case === 'B' && !r.emergency && r.text.includes('Nie jesteś z tym sam(a)') && r.links[0]?.url === 'tel:112';
+  const pass = r.case === 'B' && B_OK(r) && r.text.includes('Nie jesteś z tym sam(a)');
   if (pass) accOk++;
   else { failed++; console.log('  ✗ [spec 12] tryb kryzysowy', r); }
 }
@@ -203,11 +207,17 @@ console.log(`Testy akceptacyjne specyfikacji: ${accOk}/${ACCEPTANCE.length + 2}`
     const a = i.answer;
     if (!a.links.length) { failed++; console.log(`  ✗ temat ${i.id} bez przycisku`); }
     // Wytyczna klienta: każda odpowiedź prowadzi do zakupu — co najmniej jeden kafelek usługi.
-    if (!a.links.some((l) => l.main && (l.url?.includes('wypelnij-formularz') || l.ask))) { failed++; console.log(`  ✗ temat ${i.id} bez kafelka zakupu`); }
-    if (a.links.some((l) => l.kind === 'alarm')) { failed++; console.log(`  ✗ temat ${i.id} ma czerwony przycisk`); }
+    if (!a.links.some((l) => l.tile && l.url?.includes('wypelnij-formularz'))) { failed++; console.log(`  ✗ temat ${i.id} bez kafelka zakupu`); }
+    if (a.links.some((l) => l.kind === 'alarm' || /^#c0392b$/i.test(l.color || ''))) { failed++; console.log(`  ✗ temat ${i.id} ma czerwony przycisk`); }
+    // Specyfikacja v1.1: sąsiednie kafelki nie mają tego samego koloru (chyba że jeden to obrys).
+    const t = a.links.filter((l) => l.tile);
+    for (let k = 1; k < t.length; k++) {
+      if (t[k].color === t[k - 1].color && !t[k].outline && !t[k - 1].outline) { failed++; console.log(`  ✗ temat ${i.id}: sąsiednie kafelki w tym samym kolorze (${t[k - 1].label} / ${t[k].label})`); }
+    }
   }
   for (const [k, t] of Object.entries(TEXTS)) {
-    const sentences = t.text.split(/[.!?](?:\s|$)/).filter((x) => x.trim()).length;
+    // Krótkie wtrącenia („Jaki specjalista?”) nie liczą się jako zdanie.
+    const sentences = t.text.split(/[.!?](?:\s|$)/).filter((x) => x.trim().split(/\s+/).length > 3).length;
     if (sentences > 4) { failed++; console.log(`  ✗ tekst ${k} ma ${sentences} zdań (maks. 4)`); }
   }
 }
@@ -241,11 +251,19 @@ expect('stan nagły wygrywa z własną regułą', r.intent === 'emergency' && r.
 r = await respond(botEngine, 'mam wysypkę');
 expect('nadpisanie tekstu działa (bot)', r.text === 'Skóra → dermatolog.', r.text);
 r = await respond(botEngine, 'nie mogę oddychać');
-expect('tekstu alarmowego nie da się nadpisać', r.text.startsWith('To może być stan nagły'), r.text);
+expect('tekstu alarmowego nie da się nadpisać', r.alarm?.text.startsWith('To może być stan nagły'), r.alarm);
 r = await respond(trainedOffline, 'mam trądzik');
 expect('nadpisanie tekstu działa (trained)', r.text.startsWith('Skóra → dermatolog.'), r.text);
 r = await respond(botEngine, 'qwerty zxcv');
 expect('nadpisanie „nie rozpoznano” działa', r.intent === 'fallback' && r.text === 'Nie wiem.', r);
+// Usługi i przyciski z panelu: cena, kolor i kolejność przycisków bez programisty.
+setPanelConfig({ services: { psychiatra: { price: '299 zł', color: '#123456' }, nieznana: { price: '1 zł' } }, buttons: { F: ['l4', 'xxx', 'cennik|Ceny'], ALARM: ['cennik'] } });
+r = await respond(botEngine, 'ile kosztuje psychiatra');
+expect('panel: nowa cena i kolor usługi', r.text.includes('299 zł') && r.links[0].color === '#123456' && r.links[0].label.endsWith('299 zł'), r);
+r = await respond(botEngine, 'potrzebuję L4');
+expect('panel: własne przyciski (nieznane id odrzucone, własna etykieta)', r.links.map((l) => l.label).join() === 'L4 online · od 79 zł,Ceny', r.links);
+expect('panel: tylko znane usługi i przyciski', !sanitizeConfig({ services: { nieznana: { price: '1' } }, buttons: { ALARM: ['cennik'], J: ['l4'] } }).services.nieznana && !Object.keys(sanitizeConfig({ buttons: { ALARM: ['cennik'], J: ['l4'] } }).buttons).length);
+expect('panel: kolor tylko #rrggbb', !sanitizeConfig({ services: { l4: { color: 'red;background:url(x)' } } }).services.l4);
 setPanelConfig(DEFAULT_CONFIG);
 r = await respond(botEngine, 'mam wysypkę');
 expect('powrót do tekstu domyślnego', !r.text.startsWith('Skóra →'), r.text);

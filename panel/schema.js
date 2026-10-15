@@ -3,6 +3,8 @@
 // (panel/admin/) i serwer panelu (panel/server/worker.js), więc zasady
 // są jednakowe wszędzie, a serwer i tak sprawdza wszystko ponownie.
 import { anonymize } from '../shared/js/privacy.js';
+import { SERVICES, BUTTONS } from '../shared/js/knowledge.js';
+import { TEXTS } from '../shared/js/texts.js';
 
 // Poziomy rejestracji rozmów.
 export const LOG_LEVELS = [
@@ -61,6 +63,10 @@ export const DEFAULT_CONFIG = Object.freeze({
   // Linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — decyzja właściciela,
   // domyślnie wyłączona (specyfikacja czatu, sekcja 11 pkt 1).
   safety: { supportLine: false },
+  // Usługi (nazwa, cena, kolor, obrys, nazwa w formularzu) i przyciski pod odpowiedziami —
+  // tylko ZMIANY względem wartości domyślnych ze specyfikacji (shared/js/knowledge.js).
+  services: {},
+  buttons: {},
   rules: [],
   overrides: {},
   updatedAt: null,
@@ -98,6 +104,45 @@ function cleanRule(rule, index) {
     links: cleanLinks(rule?.links),
     active: rule?.active !== false,
   };
+}
+
+const HEX = /^#[0-9a-f]{6}$/i;
+
+// Zmiany usług: tylko znane usługi i poprawne wartości; pole pominięte = wartość domyślna.
+function cleanServices(input) {
+  const out = {};
+  for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
+    if (!SERVICES[id] || !v || typeof v !== 'object') continue;
+    const e = {};
+    if (typeof v.label === 'string' && v.label.trim()) e.label = cleanText(v.label, 60);
+    if (typeof v.price === 'string') e.price = cleanText(v.price, 20);
+    if (typeof v.priceName === 'string' && v.priceName.trim()) e.priceName = cleanText(v.priceName, 80);
+    if (typeof v.service === 'string') e.service = cleanText(v.service, 80);
+    if (HEX.test(v.color || '')) e.color = v.color.toUpperCase();
+    if (typeof v.outline === 'boolean') e.outline = v.outline;
+    if (Object.keys(e).length) out[id] = e;
+  }
+  return out;
+}
+
+// Przyciski pod odpowiedziami: klucz tekstu → lista "id" albo "id|etykieta" (id z katalogu BUTTONS).
+function cleanButtons(input) {
+  const out = {};
+  for (const [key, list] of Object.entries(input && typeof input === 'object' ? input : {})) {
+    // J (cena rozpoznanej usługi) jest budowane automatycznie; teksty alarmowe (A, B) — bez zmian.
+    if (!TEXTS[key] || key === 'J' || TEXTS[key].locked || !Array.isArray(list)) continue;
+    out[key] = list
+      .map((x) => String(x || ''))
+      .map((x) => {
+        const [id, label] = x.split('|');
+        if (!BUTTONS[id]) return null;
+        const l = label ? cleanText(label, 60).replace(/\|/g, '') : '';
+        return l ? `${id}|${l}` : id;
+      })
+      .filter(Boolean)
+      .slice(0, 20);
+  }
+  return out;
 }
 
 // Zwraca poprawny obiekt ustawień — nieznane pola i błędne wartości są odrzucane.
@@ -141,6 +186,8 @@ export function sanitizeConfig(input) {
         : DEFAULT_CONFIG.logging.retentionDays,
     },
     safety: { supportLine: src.safety?.supportLine === true },
+    services: cleanServices(src.services),
+    buttons: cleanButtons(src.buttons),
     rules,
     overrides,
     updatedAt: typeof src.updatedAt === 'string' ? src.updatedAt.slice(0, 40) : null,
@@ -167,7 +214,7 @@ export function unwrapSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('To nie jest plik ustawień (oczekiwano obiektu JSON).');
   const cfg = data.format === SETTINGS_FORMAT || data.config ? data.config : data;
   if (!cfg || typeof cfg !== 'object') throw new Error('W pliku brakuje ustawień.');
-  const known = ['engine', 'logging', 'rules', 'overrides'];
+  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons'];
   if (!known.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
   return sanitizeConfig(cfg);
 }

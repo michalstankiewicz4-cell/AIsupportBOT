@@ -285,93 +285,60 @@
 }
 .emergency .who { color: #8e2418; }
 
-/* Przyciski pod odpowiedzią: główny — pełny kolor, pozostałe — obrysowane. */
+/* Małe przyciski informacyjne (cennik, kontakt, „Jaki specjalista?”) — szary obrys. */
 .links { display: flex; flex-wrap: wrap; gap: 7px; }
 .link {
-  --k: var(--k-info);
+  --k: #5f6b7a;
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  padding: 7px 13px;
-  border-radius: 12px;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
   border: 1.5px solid var(--k);
   background: var(--surface);
   color: var(--k);
   font: inherit;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 650;
   line-height: 1.2;
-  text-align: left;
   text-decoration: none;
   cursor: pointer;
 }
-.link.main { background: var(--k); color: #fff; }
 .link:hover { background: var(--k); color: #fff; }
-.link.main:hover { filter: brightness(1.1); }
 .link:focus-visible { outline: 3px solid color-mix(in srgb, var(--k) 40%, transparent); outline-offset: 2px; }
-.link.k-alarm { min-height: 44px; padding: 10px 18px; font-size: 15px; font-weight: 800; }
+/* 112 — czerwony, WYŁĄCZNIE tutaj; min. 44 px wysokości. */
+.link.k-alarm { --k: #c0392b; background: var(--k); color: #fff; min-height: 44px; padding: 10px 18px; border-radius: 12px; font-size: 15px; font-weight: 800; }
+.link.k-alarm:hover { filter: brightness(1.1); }
 
-/* Kafelki zakupu — kolorowe kwadraty z nazwą usługi i ceną (czat ma prowadzić do zakupu). */
+/* Kafelki usług — kolor z ustawień (--k); obrys = wariant tej samej grupy. */
 .msg.bot:has(.tiles) { max-width: 100%; width: 100%; }
 .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .tile {
-  --k: var(--k-info);
+  --k: #2f7d5a;
+  --k-ink: #fff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   gap: 6px;
-  min-height: 74px;
+  min-height: 70px;
   padding: 10px 11px;
-  border: 0;
+  border: 2px solid var(--k);
   border-radius: 14px;
   background: var(--k);
-  color: #fff;
+  color: var(--k-ink);
   font: inherit;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--k) 28%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--k) 25%, transparent);
   transition: transform 0.12s ease, filter 0.12s ease;
 }
-.tile:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.tile.outline { background: var(--surface); color: var(--k); box-shadow: none; }
+.tile:hover { transform: translateY(-2px); filter: brightness(1.06); }
 .tile:focus-visible { outline: 3px solid color-mix(in srgb, var(--k) 45%, transparent); outline-offset: 2px; }
 .tile-name { font-size: 13.5px; font-weight: 750; line-height: 1.2; overflow-wrap: anywhere; }
-.tile-price { align-self: flex-start; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: rgba(255, 255, 255, 0.22); }
+.tile-price { align-self: flex-start; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, currentColor 18%, transparent); }
 @media (max-width: 380px) { .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-/* Kolor przycisku / kafelka według znaczenia (po .link i .tile, żeby nadpisać domyślny szary). */
-.k-alarm { --k: var(--k-alarm); }
-.k-doctor { --k: var(--k-doctor); }
-.k-psych { --k: var(--k-psych); }
-.k-therapy { --k: var(--k-therapy); }
-.k-paper { --k: var(--k-paper); }
-.k-info { --k: var(--k-info); }
-.inline-link { color: inherit; font-weight: 650; }
-.note { font-size: 11.5px; color: var(--muted); font-style: italic; }
-
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: -4px; }
-.chip {
-  font: inherit;
-  font-size: 13px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  cursor: pointer;
-}
-.chip:hover { border-color: var(--accent); color: var(--accent); }
-
-.typing .bubble { display: flex; gap: 6px; padding: 15px 18px; width: fit-content; }
-.typing i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: var(--brand);
-  animation: blink 1.2s infinite;
-}
-.typing i:nth-child(2) { animation-delay: 0.15s; }
-.typing i:nth-child(3) { animation-delay: 0.3s; }
 
 /* Stały dopisek „W nagłym zagrożeniu życia dzwoń 112 lub 999.” */
 .sos { margin: 0; padding: 0 14px 12px; background: var(--surface); font-size: 12.5px; font-weight: 650; color: #8e2418; text-align: center; }

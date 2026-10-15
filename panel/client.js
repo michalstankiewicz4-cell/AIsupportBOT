@@ -11,7 +11,7 @@
 //   4. ustawienia domyślne (bot, rejestracja wyłączona).
 import { DEFAULT_CONFIG, sanitizeConfig, publicConfig, filterLogEntry, unwrapSettings } from './schema.js';
 import { normalize, containsAny } from '../shared/js/text.js';
-import { setAnswerOverrides } from '../shared/js/knowledge.js';
+import { setAnswerOverrides, setDesignOverrides } from '../shared/js/knowledge.js';
 
 export const LOCAL_CONFIG_KEY = 'lt-panel:config';
 export const LOCAL_LOGS_KEY = 'lt-panel:logs';
@@ -29,6 +29,7 @@ let source = 'default';
 export function setPanelConfig(cfg) {
   config = publicConfig(cfg);
   setAnswerOverrides(config.overrides);
+  setDesignOverrides({ services: config.services, buttons: config.buttons });
   return config;
 }
 
@@ -149,7 +150,7 @@ export function logTurn({ session, consent, variant, version, question, reply })
     source: reply?.source || 'engine',
     degraded: reply?.degraded || '',
     question,
-    answer: [reply?.text, reply?.followup?.text].filter(Boolean).join('\n\n'),
+    answer: [reply?.text, reply?.alarm?.text].filter(Boolean).join('\n\n'),
   };
   const entry = filterLogEntry(raw, config);
   if (!entry) return;

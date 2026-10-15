@@ -1,6 +1,6 @@
-# Plan wdrożenia specyfikacji czatu „Ilona” (wersja 1.0 z 14.10.2026)
+# Plan wdrożenia specyfikacji czatu „Ilona” (wersje 1.0 i 1.1)
 
-Źródło: „Czat Ilona · lekarzeiterapeuci.pl · specyfikacja dla programisty”, wersja 1.0 z 14.10.2026 (PDF od klienta, celowo nie w repo).
+Źródło: „Czat Ilona · lekarzeiterapeuci.pl · specyfikacja dla programisty”, wersja 1.0 i 1.1 z 14.10.2026 (PDF-y od klienta, celowo nie w repo). Wersja 1.1 zastępuje 1.0 tam, gdzie się różnią (sekcja „Specyfikacja v1.1” niżej).
 Kolejność punktów wybrana tak, żeby każdy krok dało się od razu przetestować. Numery w nawiasach odnoszą się do sekcji 8 specyfikacji („Co zmienić”).
 Status: `[x]` zrobione · `[~]` zrobione częściowo (opis niżej) · `[ ]` do zrobienia · `[?]` decyzja klienta.
 
@@ -39,11 +39,23 @@ Na start pracujemy na **bocie regułowym**, więc zmiany dotyczą przede wszystk
 - [~] **21. Wstępne wypełnienie formularza (18)** — usługa wybrana w czacie przekazywana do formularza. Czat przekazuje usługę w adresie (`?service=`); zapamiętanie wyboru w formularzu — po stronie formularza serwisu.
 - [ ] **22. Statystyki (20)** — kliknięcia z czatu → rozpoczęte formularze (które przypadki najlepiej konwertują).
 
+## Specyfikacja v1.1 (15.10.2026)
+
+- [x] **V1. A i B — kolejność odwrócona** — u góry zielona odpowiedź (A: „Zadbaj o swoje bezpieczeństwo…” + „Umów konsultację lekarską”; B: psychiatra, psycholog, terapeuta), **na dole czerwona karta z 112**, zawsze ostatnia; czat przewija się do końca. W alarmie bez cen. Tryb kryzysowy: ponownie obie wiadomości.
+- [x] **V2. Każda usługa ma własny kolor** (tabela kolorów z sekcji 4): konsultacja — zielony, wyniki — niebieski, skierowanie — bursztynowy, e-recepta — różowy (kontynuacja — różowy obrys), L4 — błękitny, „dzień po” — pomarańczowy, antykoncepcja — śliwkowy, TRT — grafitowy, otyłość — oliwkowy, psychiatra — fioletowy (leki psychiatryczne — obrys), psycholog — morski (terapeuta — obrys), specjaliści i informacje — szary obrys; czerwony tylko 112. Test: sąsiednie kafelki nie mają tego samego koloru.
+- [x] **V3. Nowe przyciski i teksty:** D — konsultacja + wyniki + skierowanie (3 kolory) i dopisek „robi to lekarz”; E — konsultacja + e-recepta + kontynuacja; F — dokładnie 2 linki, bez „Cennik”; H — 3 wypełnione przyciski w osobnych kolorach; J — od razu cena i linki do usług (bez „Zobacz cennik”); K — po „Jaki specjalista?”: lekarz, psychiatra, psycholog, terapeuta; L — przyciski usług + małe linki; M — pełna lista usług z cenami.
+- [x] **V4. Testy akceptacyjne v1.1** — 38/38 (nowy test 2 „nie mogę oddychać, kołatanie serca”, 28b „Jaki specjalista?”).
+- [x] **V5. Edycja w panelu zamiast w kodzie** (pomysł właściciela) — nowa zakładka **„Usługi i przyciski”**: nazwa, cena, kolor (z ostrzeżeniem o słabym kontraście i o czerwonym), obrys, nazwa usługi w formularzu oraz zestaw i kolejność przycisków pod każdą odpowiedzią. Domyślnie wartości ze specyfikacji v1.1; zapisywane są tylko zmiany; „Przywróć domyślne” wraca do dokumentu. Przyciski alarmowe (A, B) i cena rozpoznanej usługi (J) — bez edycji.
+- [?] **V6. Kontrast kolorów** — biały napis na bursztynowym (skierowanie) ma kontrast ok. 2,7:1, na pomarańczowym, błękitnym i oliwkowym ok. 3–3,7:1 (WCAG AA dla zwykłego tekstu wymaga 4,5:1). Na najjaśniejszych kolorach czat sam przełącza napis na ciemny; panel pokazuje ostrzeżenie. Do decyzji: zostawić czy przyciemnić kolory.
+
 ## Wytyczne klienta (14.10.2026, po specyfikacji)
+
+> W1–W2 są nadal spełnione (kafelki z ceną w każdej odpowiedzi). Zestawy przycisków z W2 zastąpiła specyfikacja v1.1 (np. D: konsultacja + wyniki + skierowanie zamiast konsultacja + recepta + konsultacja ogólna), więc pytanie W3 jest nieaktualne.
+
 
 - [x] **W1. Czat zawsze prowadzi do zakupu usługi** — każda odpowiedź pokazuje od razu kolorowe **kafelki usług z ceną** (sprawdza to test „każdy temat ma kafelek zakupu”).
 - [x] **W2. Dolegliwość (np. „kręgosłup mnie boli”) → od razu kafelki:** 1) Konsultacja lekarska (usługa specjalisty, gdy pasuje, np. wysypka → Dermatologia online), 2) Recepta, 3) Konsultacja ogólna; „i tak z każdą usługą” — L4, recepta, wyniki, psychika, kobiety/mężczyźni, cennik, jak umówić: każda z 3 kafelkami zakupu.
-- [?] **W3. „Konsultacja ogólna” a „Konsultacja lekarska”** — na stronie jest jedna ogólna „Wizyta lekarska” (formularz bez usługi). Przyjęte: „Konsultacja ogólna” → Wizyta lekarska; do potwierdzenia, czy ma prowadzić gdzie indziej.
+- [x] ~~**W3. „Konsultacja ogólna” a „Konsultacja lekarska”** — na stronie jest jedna ogólna „Wizyta lekarska” (formularz bez usługi). Przyjęte: „Konsultacja ogólna” → Wizyta lekarska; do potwierdzenia, czy ma prowadzić gdzie indziej.~~ Nieaktualne po v1.1.
 
 ## Etap 4 — przeniesienie bota do repo klienta
 
@@ -53,7 +65,7 @@ Na start pracujemy na **bocie regułowym**, więc zmiany dotyczą przede wszystk
 ## Decyzje właściciela (sekcja 11) — do potwierdzenia
 
 - [?] **D1. Telefon wsparcia w komunikacie B** — domyślnie (decyzja właściciela) bez numerów pomocowych. Rekomendacja ze specyfikacji: jedna linia „Możesz też zadzwonić na bezpłatny telefon wsparcia: 116 123 (dorośli) lub 116 111 (dzieci i młodzież).”
-- [?] **D2. „Nie jesteś z tym sam(a)”** — przyjęte w tekście B; prosimy o potwierdzenie.
+- [x] **D2. „Nie jesteś z tym sam(a)”** — potwierdzone przez właściciela (v1.1).
 - [?] **D3. Przegląd medyczny** — listę objawów alarmowych (A), frazy kryzysowe (B) i teksty komunikatów zatwierdza lekarz kierujący serwisem (zapisać datę i wersję zatwierdzenia).
 - [?] **D4. Czat nie diagnozuje** — przed dodaniem funkcji oceniających objawy (w tym warstwy AI, pkt 20) konsultacja z prawnikiem (wyroby medyczne).
 - [?] **D5. RODO** — logi bez danych identyfikujących, treści kryzysowe nie dłużej niż konieczne; opis w polityce prywatności.
@@ -90,4 +102,5 @@ Na start pracujemy na **bocie regułowym**, więc zmiany dotyczą przede wszystk
 ## Dziennik zmian planu
 
 - 14.10.2026 — plan utworzony.
+- 15.10.2026 — specyfikacja v1.1: odwrócona kolejność A/B, kolory usług, nowe przyciski, zakładka „Usługi i przyciski” w panelu (bot 1.8.0).
 - 14.10.2026 — etap 1 i 2 zrobione (bot 1.7.0); dodane wytyczne klienta W1–W3 (kafelki zakupu) i etap 4 (repo klienta).
