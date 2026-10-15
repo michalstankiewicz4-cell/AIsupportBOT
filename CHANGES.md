@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.6
+- Panel: podgląd czatu na żywo z prawej strony (bieżące, także niezapisane ustawienia; przełącznik „Podgląd czatu”); widżet nie przewija strony przy ustawianiu kursora
+
+### ai 1.10.6
+- Panel: podgląd czatu na żywo z prawej strony (bieżące, także niezapisane ustawienia; przełącznik „Podgląd czatu”); widżet nie przewija strony przy ustawianiu kursora
+
+### trained 1.9.6
+- Panel: podgląd czatu na żywo z prawej strony (bieżące, także niezapisane ustawienia; przełącznik „Podgląd czatu”); widżet nie przewija strony przy ustawianiu kursora
+
 ### bot 1.9.5
 - Kafelki: domyślne marginesy wewnętrzne 5 px z każdej strony
 

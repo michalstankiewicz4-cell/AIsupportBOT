@@ -68,6 +68,7 @@
       </div>
       <div class="top-actions">
         <span id="bot-only-slot"></span>
+        <button id="preview-toggle" class="btn ghost" type="button" aria-pressed="true" title="Pokazuje / ukrywa podgląd czatu z prawej strony. Podgląd używa bieżących — także niezapisanych — ustawień.">Podgląd czatu</button>
         <span id="dirty" class="dirty" hidden>Niezapisane zmiany</span>
         <button id="export" class="btn ghost" type="button" title="Pobiera plik z bieżącymi ustawieniami (także niezapisanymi). Możesz go zaimportować później albo wgrać na hosting jako panel/settings.json.">Eksport</button>
         <button id="import" class="btn ghost" type="button" title="Wczytuje ustawienia z pliku (z eksportu albo panel/settings.json). Przed zapisem możesz je sprawdzić — nic nie zmienia się, dopóki nie klikniesz „Zapisz zmiany”.">Import</button>
@@ -93,6 +94,7 @@
       <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
     </nav>
 
+    <div class="workspace">
     <main>
       <!-- Tryb pracy -->
       <section class="tab" id="tab-mode">
@@ -350,6 +352,17 @@
         </details>
       </section>
     </main>
+    <!-- Podgląd czatu na żywo — to samo okno co na stronie z czatami, z niezapisanymi ustawieniami -->
+    <aside id="live-preview" class="live-preview" aria-label="Podgląd czatu">
+      <div class="lp-head">
+        <strong>Podgląd czatu</strong>
+        <span class="tip" tabindex="0" data-tip="Tak zobaczy czat pacjent. Podgląd odświeża się sam po każdej zmianie w panelu (także niezapisanej). Możesz w nim pisać i klikać — rozmowa nie jest nigdzie zapisywana.">?</span>
+        <span class="spacer"></span>
+        <button id="lp-reset" class="btn ghost small" type="button" title="Zaczyna rozmowę od nowa (powitanie z kafelkami).">Od nowa</button>
+      </div>
+      <div id="lp-chat" class="lp-chat"></div>
+    </aside>
+    </div>
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

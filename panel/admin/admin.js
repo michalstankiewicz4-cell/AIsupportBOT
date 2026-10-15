@@ -10,7 +10,7 @@ import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
 import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
-import { contrastWithWhite, applyTileStyle, layoutTiles } from '../../shared/js/widget.js';
+import { contrastWithWhite, applyTileStyle, layoutTiles, mountWidget } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
 import { chainLabel } from '../../shared/js/router.js';
@@ -197,6 +197,7 @@ async function connect(api) {
   // Czat w tej przeglądarce (np. podgląd czatów) korzysta z tego samego źródła.
   localStorage.setItem(SOURCE_KEY, JSON.stringify({ remote: 'server', file: 'file', local: 'local' }[api.kind]));
   renderAll();
+  setPreviewOn(previewOn);
   loadLogs();
   loadSiteCheck();
   loadTraining();
@@ -235,6 +236,7 @@ $('#logout').addEventListener('click', () => {
   sessionStorage.removeItem(PASSWORD_KEY);
   localStorage.removeItem(MODE_KEY);
   $('#login-password').value = '';
+  destroyPreview();
   showLogin();
 });
 
@@ -247,6 +249,7 @@ function isDirty() {
 }
 
 function changed() {
+  schedulePreview();
   const dirty = isDirty();
   const readOnly = Boolean(state.api?.readOnly);
   $('#dirty').hidden = !dirty;
@@ -345,6 +348,69 @@ function selectTab(name) {
   if (name === 'site') renderSite();
   if (name === 'learn') renderLearn();
 }
+
+// =============================================================================
+// Podgląd czatu na żywo — to samo okno co na stronie z czatami, z bieżącymi
+// (także niezapisanymi) ustawieniami. Rozmowa w podglądzie nie jest nigdzie zapisywana.
+// =============================================================================
+
+const PREVIEW_KEY = 'lt-admin:preview';
+const PREVIEW_STORE = 'lt-chat:admin-preview';
+let previewWidget = null;
+let previewTimer = 0;
+let previewOn = (() => {
+  try {
+    return localStorage.getItem(PREVIEW_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+})();
+
+function setPreviewOn(on) {
+  previewOn = on;
+  try {
+    localStorage.setItem(PREVIEW_KEY, on ? 'on' : 'off');
+  } catch { /* pomijamy */ }
+  $('#preview-toggle').setAttribute('aria-pressed', String(on));
+  document.querySelector('.workspace').classList.toggle('with-preview', on);
+  if (on) refreshPreview();
+  else destroyPreview();
+}
+
+function destroyPreview() {
+  previewWidget?.destroy();
+  previewWidget = null;
+}
+
+// Po zmianie ustawień odświeżamy podgląd z małym opóźnieniem (np. przy przesuwaniu suwaka).
+function schedulePreview() {
+  if (!previewOn || !state.draft) return;
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshPreview, 350);
+}
+
+async function refreshPreview() {
+  if (!previewOn || !state.draft) return;
+  setPanelConfig(state.draft); // podgląd z niezapisanymi zmianami
+  const engine = await loadChain(state.draft.engine.chain);
+  destroyPreview();
+  try {
+    sessionStorage.removeItem(PREVIEW_STORE);
+  } catch { /* pomijamy */ }
+  previewWidget = mountWidget({
+    engine,
+    cssUrl: new URL('../../shared/css/widget.css', import.meta.url).href,
+    container: $('#lp-chat'),
+    storeKey: PREVIEW_STORE,
+    autoStartName: 'Anna',
+    fill: true,
+  });
+}
+
+// Podgląd jest „przyklejony” tuż pod górnym paskiem (pasek może mieć różną wysokość).
+new ResizeObserver(([e]) => document.documentElement.style.setProperty('--topbar-h', `${Math.ceil(e.target.getBoundingClientRect().height)}px`)).observe(document.querySelector('.topbar'));
+$('#preview-toggle').addEventListener('click', () => setPreviewOn(!previewOn));
+$('#lp-reset').addEventListener('click', refreshPreview);
 
 // =============================================================================
 // Przełącznik „Tylko bot” — na start pracujemy na bocie regułowym, więc wszystko,

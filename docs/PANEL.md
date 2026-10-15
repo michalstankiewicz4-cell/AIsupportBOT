@@ -233,6 +233,10 @@ Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.j
 
 > Kontrola strony sprawdza ceny wpisane w `SITE_FACTS` (domyślne). Po zmianie ceny w panelu sprawdź, czy zgadza się ze stroną.
 
+### Podgląd czatu na żywo
+
+Z prawej strony panelu jest **podgląd czatu** — to samo okno, które widzi pacjent (jak na stronie z czatami), z bieżącymi **także niezapisanymi** ustawieniami: teksty, usługi, kolory, wygląd kafelków, kontakt, komunikaty. Odświeża się sam po każdej zmianie; można w nim pisać i klikać (rozmowa nie jest nigdzie zapisywana), a „Od nowa” zaczyna od powitania. Przycisk **„Podgląd czatu”** w górnym pasku chowa i pokazuje podgląd (zapamiętane w przeglądarce). Na wąskim ekranie podgląd jest pod zakładkami.
+
 ### Tematy i słowa kluczowe
 
 Zakładka **„Tematy”** pokazuje każdy temat (np. „Inny specjalista”, „L4”) z jego słowami kluczowymi:

@@ -77,7 +77,7 @@ export function mountWidget(opts) {
   css.href = opts.cssUrl;
   root.appendChild(css);
 
-  const wrap = el('div', `chat ${inline ? 'inline' : 'floating'} ${position === 'left' ? 'left' : 'right'}`);
+  const wrap = el('div', `chat ${inline ? 'inline' : 'floating'} ${position === 'left' ? 'left' : 'right'}${opts.fill ? ' fill' : ''}`);
   if (accent) wrap.style.setProperty('--accent', accent);
   applyTileStyle(wrap, TILES);
   wrap.dataset.variant = engine.name;
@@ -339,7 +339,7 @@ export function mountWidget(opts) {
     state.flow = { crisis: false, unclear: 0 };
     saveState(storeKey, state);
     showScreen();
-    input.focus();
+    input.focus({ preventScroll: true });
   }
 
   async function ask(text) {
@@ -393,7 +393,7 @@ export function mountWidget(opts) {
 
     busy = false;
     send.disabled = false;
-    input.focus();
+    input.focus({ preventScroll: true });
   }
 
   function setOpen(open) {
@@ -401,7 +401,7 @@ export function mountWidget(opts) {
     wrap.classList.toggle('open', open);
     launcher.setAttribute('aria-expanded', String(open));
     saveState(storeKey, state);
-    if (open) setTimeout(() => (state.name ? input : nameInput).focus(), 50);
+    if (open) setTimeout(() => (state.name ? input : nameInput).focus({ preventScroll: true }), 50);
   }
 
   nameForm.addEventListener('submit', (e) => {
@@ -435,6 +435,8 @@ export function mountWidget(opts) {
 
   showScreen();
   setOpen(inline ? true : state.open);
+  // Podgląd w panelu: rozmowa startuje od razu (bez ekranu z imieniem), żeby widać było powitanie.
+  if (opts.autoStartName && !state.name) startConversation(opts.autoStartName, false);
 
   return {
     open: () => setOpen(true),

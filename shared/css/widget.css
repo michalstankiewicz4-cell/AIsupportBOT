@@ -83,6 +83,9 @@
   height: 620px;
   box-shadow: 0 6px 24px rgba(20, 26, 46, 0.08);
 }
+/* Okno wypełniające kontener (podgląd w panelu sterowania). */
+.chat.fill { height: 100%; }
+.inline.fill .panel { height: 100%; }
 
 /* Przełączanie ekranów: bez imienia — ekran powitalny, z imieniem — rozmowa. */
 .chat-view { display: none; }
