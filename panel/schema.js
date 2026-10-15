@@ -5,6 +5,7 @@
 import { anonymize } from '../shared/js/privacy.js';
 import { SERVICES, BUTTONS, DEFAULT_TILES, TILE_ORDERS, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
 import { normalize } from '../shared/js/text.js';
+import { DEFAULT_ALARM_PHRASES } from '../shared/js/safety.js';
 import { TEXTS } from '../shared/js/texts.js';
 
 // Poziomy rejestracji rozmów.
@@ -87,6 +88,8 @@ export const DEFAULT_CONFIG = Object.freeze({
   // „Nie jestem pewna…” z usługami. Limit 1 i „konkretne pytanie kończy” są ustawione
   // na wypadek przełączenia trybu na „tylko niejasne” albo „niejasne i spoza tematu”.
   safety: { ...DEFAULT_SAFETY },
+  // Słowa alarmowe A (112) i B (kryzys) — tylko ZMIANY względem list z shared/js/safety.js.
+  alarms: {},
   // Usługi (nazwa, cena, kolor, obrys, nazwa w formularzu) i przyciski pod odpowiedziami —
   // tylko ZMIANY względem wartości domyślnych ze specyfikacji (shared/js/knowledge.js).
   services: {},
@@ -273,6 +276,27 @@ function cleanKeywords(input) {
   return out;
 }
 
+// Słowa alarmowe: jak słowa kluczowe (gwiazdka na końcu słowa), dodatkowo „=” na początku
+// wyłącza tolerancję literówek (np. „=polknal*”). Usuwać można tylko frazy z list domyślnych.
+export function cleanAlarmPhrase(k) {
+  const raw = String(k || '').trim();
+  const exact = raw.startsWith('=');
+  const body = cleanKeyword(exact ? raw.slice(1) : raw);
+  return body ? (exact ? '=' : '') + body : '';
+}
+function cleanAlarms(input) {
+  const out = {};
+  for (const key of ['A', 'B']) {
+    const v = input && typeof input === 'object' ? input[key] : null;
+    if (!v || typeof v !== 'object') continue;
+    const defaults = DEFAULT_ALARM_PHRASES[key];
+    const add = [...new Set((Array.isArray(v.add) ? v.add : []).map(cleanAlarmPhrase).filter((p) => p && !defaults.includes(p)))].slice(0, 200);
+    const remove = [...new Set((Array.isArray(v.remove) ? v.remove : []).map(String).filter((p) => defaults.includes(p)))];
+    if (add.length || remove.length) out[key] = { add, remove };
+  }
+  return out;
+}
+
 // Przyciski dodatkowe tematów (np. „wysypka” → Dermatologia online) — tylko C i D.
 function cleanTopics(input) {
   const out = {};
@@ -341,6 +365,7 @@ export function sanitizeConfig(input) {
         : DEFAULT_CONFIG.logging.retentionDays,
     },
     safety: cleanSafety(src.safety),
+    alarms: cleanAlarms(src.alarms),
     services: cleanServices(src.services),
     buttons: cleanButtons(src.buttons),
     site: cleanSite(src.site),

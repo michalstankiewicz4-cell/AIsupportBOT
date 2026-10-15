@@ -4,6 +4,7 @@
 // przeoczony stan nagły to najgorszy możliwy błąd. Lepiej uruchomić alarm za często niż za rzadko.
 // Wystarczy jedno trafienie frazy — bez analizy kontekstu. Frazy są dopasowywane z tolerancją
 // literówek (shared/js/text.js). Listy do zatwierdzenia przez lekarza (specyfikacja, sekcja 11).
+// Panel może dopisać frazy albo wyłączyć domyślne (setAlarmPhrases) — zmiany też zatwierdza lekarz.
 import { normalize, matchesAny } from './text.js';
 import { alarmReply } from './knowledge.js';
 
@@ -33,6 +34,7 @@ export const EMERGENCY = [
   'silne krwawienie', 'mocno krwawi', 'krwotok*', 'wymiotuje krwia', 'kaszle krwia',
   // zatrucie / przedawkowanie
   'przedawkow*', 'zatrucie', 'zatrul*', 'zatruci*', 'czadem', '=polknal*', '=polknel*', 'za duzo tabletek', 'za duzo lekow', 'za duzo leku', 'za duzo pigulek',
+  'za duzo narkotyk*', 'za duzo dopalacz*', 'za duzo amfetamin*', 'za duzo kokain*', 'za duzo heroin*', 'za duzo alkoholu i tabletek', 'za duzo alkoholu i lekow', 'przecpal*',
   // ciężka reakcja alergiczna
   'obrzek gardla', 'obrzek jezyka', 'puchnie gardlo', 'puchnie jezyk', 'spuchl jezyk', 'spuchlo gardlo', 'wstrzas anafilakt*', 'anafilaks*',
   // nagły, „najgorszy w życiu” ból głowy
@@ -48,6 +50,23 @@ const CLOSE_PERSON = [
   'dziecko', 'dziecka', 'dzieci', 'babcia', 'dziadek', 'znajom*', 'sasiad*', 'mowi ze', 'mowi', 'twierdzi', 'grozi ze', 'pisze ze',
 ];
 
+// Zmiany z panelu (zakładka „Tematy” → „Słowa alarmowe”): { A: { add, remove }, B: { add, remove } }.
+// Domyślne listy powyżej zostają nietknięte — aktywne listy liczymy od nowa przy każdej zmianie.
+export const DEFAULT_ALARM_PHRASES = Object.freeze({ A: EMERGENCY, B: CRISIS });
+let active = { A: EMERGENCY, B: CRISIS };
+export function setAlarmPhrases(cfg = {}) {
+  const build = (key) => {
+    const c = cfg?.[key] || {};
+    const remove = new Set(Array.isArray(c.remove) ? c.remove : []);
+    const add = Array.isArray(c.add) ? c.add : [];
+    return [...DEFAULT_ALARM_PHRASES[key].filter((p) => !remove.has(p)), ...add.filter((p) => !DEFAULT_ALARM_PHRASES[key].includes(p))];
+  };
+  active = { A: build('A'), B: build('B') };
+}
+export function alarmPhrases(key) {
+  return active[key];
+}
+
 /**
  * Zwraca gotową odpowiedź (karta alarmowa + komunikat 2), jeśli wiadomość wymaga pilnej reakcji,
  * w przeciwnym razie null. B ma pierwszeństwo przed A.
@@ -56,10 +75,10 @@ const CLOSE_PERSON = [
  */
 export function checkSafety(message, opts = {}) {
   const t = normalize(message);
-  if (matchesAny(t, CRISIS)) {
+  if (matchesAny(t, active.B)) {
     return alarmReply('B', { closePerson: matchesAny(t, CLOSE_PERSON, { fuzzy: false }), supportLine: Boolean(opts.supportLine) });
   }
-  if (matchesAny(t, EMERGENCY)) return alarmReply('A');
+  if (matchesAny(t, active.A)) return alarmReply('A');
   return null;
 }
 

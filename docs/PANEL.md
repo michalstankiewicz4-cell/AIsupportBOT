@@ -263,7 +263,13 @@ Zakładka **„Tematy”** pokazuje każdy temat (np. „Inny specjalista”, �
 - „Sprawdź pytanie” pokazuje odpowiedź bota z niezapisanymi zmianami;
 - przy dolegliwościach (D) i zdrowiu psychicznym (C) można zmienić **przyciski dodatkowe** tematu (np. „wysypka” → Dermatologia online).
 
-Zmiany słów działają w bocie od razu po zapisaniu; nasz model (trained) uczy się ich dopiero po „Zapisz i naucz model” w zakładce „Nauka”. **Słowa alarmowe (112, kryzys) są celowo poza panelem** — zmienia je programista w `shared/js/safety.js` po zatwierdzeniu przez lekarza.
+Zmiany słów działają w bocie od razu po zapisaniu; nasz model (trained) uczy się ich dopiero po „Zapisz i naucz model” w zakładce „Nauka”. **Słowa alarmowe (112, kryzys)** mają osobną sekcję na górze zakładki „Tematy”:
+
+- dwie grupy: **B** (kryzys psychiczny) i **A** (zagrożenie życia: objawy, zatrucie, przedawkowanie, wypadek);
+- kliknięcie frazy domyślnej ją wyłącza (przekreślona; panel pyta o potwierdzenie), ponowne kliknięcie przywraca; własne frazy dopisujesz po przecinku;
+- gwiazdka na końcu słowa = dowolna końcówka („przedawkow*”), znak `=` na początku wyłącza tolerancję literówek („=polknal*”);
+- działa od razu po zapisaniu we wszystkich wariantach czatu (bot, nasz model, AI) — alarm jest sprawdzany przed nimi;
+- **zmiany powinien zatwierdzić lekarz** (decyzja D3); listy domyślne są w `shared/js/safety.js`.
 
 ### Komunikaty
 

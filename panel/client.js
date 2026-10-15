@@ -12,6 +12,7 @@
 import { DEFAULT_CONFIG, sanitizeConfig, publicConfig, filterLogEntry, unwrapSettings } from './schema.js';
 import { normalize, containsAny } from '../shared/js/text.js';
 import { applySettings } from '../shared/js/knowledge.js';
+import { setAlarmPhrases } from '../shared/js/safety.js';
 
 export const LOCAL_CONFIG_KEY = 'lt-panel:config';
 export const LOCAL_LOGS_KEY = 'lt-panel:logs';
@@ -29,6 +30,7 @@ let source = 'default';
 export function setPanelConfig(cfg) {
   config = publicConfig(cfg);
   applySettings(config);
+  setAlarmPhrases(config.alarms);
   return config;
 }
 

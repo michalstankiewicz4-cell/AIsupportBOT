@@ -8,7 +8,8 @@ import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered 
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
-import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX, CRISIS_LIMIT_MAX, DEFAULT_SAFETY } from '../schema.js';
+import { DEFAULT_ALARM_PHRASES } from '../../shared/js/safety.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanAlarmPhrase, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX, CRISIS_LIMIT_MAX, DEFAULT_SAFETY } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite, applyTileStyle, layoutTiles, mountWidget } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
@@ -263,7 +264,7 @@ function changed() {
   $('#rules-count').textContent = state.draft.rules.length || '';
   $('#ovr-count').textContent = Object.keys(state.draft.overrides).length || '';
   $('#design-count').textContent = Object.keys(state.draft.services).length + Object.keys(state.draft.buttons).length || '';
-  $('#topics-count').textContent = new Set([...Object.keys(state.draft.keywords), ...Object.keys(state.draft.topics)]).size || '';
+  $('#topics-count').textContent = new Set([...Object.keys(state.draft.keywords), ...Object.keys(state.draft.topics)]).size + Object.keys(state.draft.alarms || {}).length || '';
   $('#notices-count').textContent = state.draft.notices.filter((n) => noticeState(n)[0] === 'widoczny teraz').length || '';
   $('#sitecfg-count').textContent = Object.keys(state.draft.site).length + Object.keys(state.draft.pages).length || '';
 }
@@ -1552,7 +1553,78 @@ function setKw(id, next) {
   changed();
 }
 
+// Słowa alarmowe A (112) i B (kryzys) — zmiany względem list z shared/js/safety.js.
+const ALARM_GROUPS = [
+  ['B', 'B — kryzys psychiczny, myśli samobójcze', 'np. nie chce zyc, samoboj*'],
+  ['A', 'A — zagrożenie życia (objawy, zatrucie, przedawkowanie, wypadek)', 'np. za duzo narkotyk*, =polknal*'],
+];
+function setAlarm(key, next) {
+  if (next.add.length || next.remove.length) state.draft.alarms[key] = next;
+  else delete state.draft.alarms[key];
+  renderAlarms();
+  changed();
+}
+function renderAlarms() {
+  const box = $('#alarms-list');
+  box.textContent = '';
+  if (!state.draft.alarms) state.draft.alarms = {};
+  for (const [key, title, example] of ALARM_GROUPS) {
+    const defaults = DEFAULT_ALARM_PHRASES[key];
+    const cur = state.draft.alarms[key] || { add: [], remove: [] };
+    const isChanged = Boolean(state.draft.alarms[key]);
+    const card = el('article', `card${isChanged ? ' changed' : ''}`);
+    const head = el('div', 'row');
+    head.append(pill(key, 'safety'), el('strong', '', title), el('span', 'spacer'));
+    if (isChanged) {
+      const reset = el('button', 'btn ghost small', 'Przywróć domyślne');
+      reset.type = 'button';
+      reset.addEventListener('click', () => setAlarm(key, { add: [], remove: [] }));
+      head.append(pill('zmieniony', 'ok'), reset);
+    }
+    const chips = el('div', 'kw-chips');
+    for (const w of defaults) {
+      const removed = cur.remove.includes(w);
+      const c = el('button', `kw${removed ? ' removed' : ''}`, w);
+      c.type = 'button';
+      c.title = removed ? 'Przywróć tę frazę' : 'Wyłącz tę frazę';
+      c.addEventListener('click', () => {
+        if (!removed && !confirm(`Wyłączyć frazę alarmową „${w}”?\n\nWiadomości z tą frazą przestaną uruchamiać kartę z 112. Zmianę powinien zatwierdzić lekarz.`)) return;
+        setAlarm(key, { add: cur.add, remove: removed ? cur.remove.filter((x) => x !== w) : [...cur.remove, w] });
+      });
+      chips.append(c);
+    }
+    for (const w of cur.add) {
+      const c = el('button', 'kw added', w);
+      c.type = 'button';
+      c.title = 'Usuń dodaną frazę';
+      c.addEventListener('click', () => setAlarm(key, { add: cur.add.filter((x) => x !== w), remove: cur.remove }));
+      chips.append(c);
+    }
+    const addRow = el('div', 'row');
+    const input = el('input');
+    input.type = 'text';
+    input.placeholder = `Dodaj frazy — po przecinku, ${example}`;
+    input.style.flex = '1';
+    const btn = el('button', 'btn ghost small', 'Dodaj');
+    btn.type = 'button';
+    const doAdd = () => {
+      const words = input.value.split(',').map(cleanAlarmPhrase).filter((w) => w && !defaults.includes(w) && !cur.add.includes(w));
+      if (words.length) setAlarm(key, { add: [...cur.add, ...words], remove: cur.remove });
+    };
+    btn.addEventListener('click', doAdd);
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && doAdd());
+    addRow.append(input, btn);
+    const details = el('details');
+    details.open = isChanged;
+    const active = defaults.length - cur.remove.length + cur.add.length;
+    details.append(el('summary', '', `${active} fraz${cur.remove.length ? ` · ${cur.remove.length} wyłączonych` : ''}${cur.add.length ? ` · ${cur.add.length} dodanych` : ''}`), chips, addRow);
+    card.append(head, details);
+    box.append(card);
+  }
+}
+
 function renderTopics() {
+  renderAlarms();
   const box = $('#topics-list');
   box.textContent = '';
   const q = normalize($('#topics-search').value);

@@ -190,6 +190,27 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
   if (pass) accOk++;
   else { failed++; console.log('  ✗ [spec 12] tryb kryzysowy', r); }
 }
+// Nowe frazy A: przedawkowanie narkotyków / dopalaczy.
+for (const q of ['wziąłem za dużo narkotyków', 'przećpałem', 'za dużo dopalaczy']) {
+  const r = await respond(botEngine, q, [], {});
+  expect(`A: ${q}`, r.case === 'A', r.intent);
+}
+// Panel: słowa alarmowe (dodanie, wyłączenie domyślnej, walidacja).
+{
+  const cfg = sanitizeConfig({ alarms: { A: { add: ['Ćpałem całą noc', '=Zażyłem*', 'x'], remove: ['zawal*', 'nie-ma-takiej'] }, Z: { add: ['a b'] } } });
+  expect('alarmy: walidacja', JSON.stringify(cfg.alarms) === JSON.stringify({ A: { add: ['cpalem cala noc', '=zazylem*'], remove: ['zawal*'] } }), cfg.alarms);
+  setPanelConfig(cfg);
+  let r = await respond(botEngine, 'ćpałem całą noc', [], {});
+  expect('alarmy: dodana fraza → A', r.case === 'A', r.intent);
+  r = await respond(botEngine, 'chyba mam zawał', [], {});
+  expect('alarmy: wyłączona fraza nie uruchamia A', r.case !== 'A', r.intent);
+  setPanelConfig(sanitizeConfig({ alarms: { B: { add: ['mam wszystkiego dosc'] } } }));
+  r = await respond(botEngine, 'mam wszystkiego dość', [], {});
+  expect('alarmy: dodana fraza → B', r.case === 'B', r.intent);
+  setPanelConfig(sanitizeConfig({}));
+  r = await respond(botEngine, 'chyba mam zawał', [], {});
+  expect('alarmy: domyślne wracają', r.case === 'A', r.intent);
+}
 // Panel: ustawienia trybu kryzysowego (safety.crisisFollowup / crisisLimit / crisisEndOnTopic).
 {
   const cfg = sanitizeConfig({ safety: { crisisFollowup: 'xx', crisisLimit: 99, crisisEndOnTopic: 'tak' } });

@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.0
+- Słowa alarmowe A/B edytowane w panelu; nowe frazy przedawkowania narkotyków i dopalaczy
+
+### ai 1.11.0
+- Słowa alarmowe A/B edytowane w panelu; nowe frazy przedawkowania narkotyków i dopalaczy
+
+### trained 1.10.0
+- Słowa alarmowe A/B edytowane w panelu; nowe frazy przedawkowania narkotyków i dopalaczy
+
 ### bot 1.9.12
 - Tryb kryzysowy: nowe domyślne — nigdy, limit 1, konkretne pytanie kończy
 

@@ -66,7 +66,7 @@ Na start pracujemy na **bocie regułowym**, więc zmiany dotyczą przede wszystk
 
 - [?] **D1. Telefon wsparcia w komunikacie B** — domyślnie (decyzja właściciela) bez numerów pomocowych. Rekomendacja ze specyfikacji: jedna linia „Możesz też zadzwonić na bezpłatny telefon wsparcia: 116 123 (dorośli) lub 116 111 (dzieci i młodzież).”
 - [x] **D2. „Nie jesteś z tym sam(a)”** — potwierdzone przez właściciela (v1.1).
-- [?] **D3. Przegląd medyczny** — listę objawów alarmowych (A), frazy kryzysowe (B) i teksty komunikatów zatwierdza lekarz kierujący serwisem (zapisać datę i wersję zatwierdzenia).
+- [?] **D3. Przegląd medyczny** — listę objawów alarmowych (A), frazy kryzysowe (B) i teksty komunikatów zatwierdza lekarz kierujący serwisem (zapisać datę i wersję zatwierdzenia). Frazy A/B można teraz zmieniać w panelu („Tematy” → „Słowa alarmowe”); dodane: przedawkowanie narkotyków/dopalaczy („za dużo narkotyków”, „przećpałem” itp.).
 - [?] **D4. Czat nie diagnozuje** — przed dodaniem funkcji oceniających objawy (w tym warstwy AI, pkt 20) konsultacja z prawnikiem (wyroby medyczne).
 - [?] **D5. RODO** — logi bez danych identyfikujących, treści kryzysowe nie dłużej niż konieczne; opis w polityce prywatności.
 
