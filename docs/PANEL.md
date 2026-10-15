@@ -218,7 +218,7 @@ Wszystkie teksty asystentki są w jednym pliku — `shared/js/texts.js` — i od
 
 Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usługi. W zakładce **„Usługi i przyciski”** zmieniasz bez programisty:
 
-- **usługi** — nazwę na przycisku, cenę, kolor (z ostrzeżeniem, gdy kontrast z białym napisem jest słaby albo kolor jest czerwony — zarezerwowany dla 112), „sam obrys” (wariant tej samej grupy, np. Kontynuacja leczenia przy recepcie) i nazwę usługi w formularzu (`?service=`);
+- **usługi** — nazwę na przycisku, cenę, kolor kafelka (z palety albo dowolny własny; ostrzeżenie, gdy kontrast z białym napisem jest słaby albo kolor jest czerwony — zarezerwowany dla 112), **kolor plakietki z ceną** („Auto” = odcień koloru kafelka, albo z palety / własny — napis na plakietce sam dobiera się biały lub ciemny), „sam obrys” (wariant tej samej grupy, np. Kontynuacja leczenia przy recepcie) i nazwę usługi w formularzu (`?service=`);
 - **przyciski pod każdą odpowiedzią** — które, w jakiej kolejności i z jaką etykietą; panel ostrzega, gdy sąsiednie kafelki mają ten sam kolor.
 
 Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.js`: `SERVICES`, `BUTTONS`, `CASE_BUTTONS`); w ustawieniach (`services`, `buttons`) zapisywane są tylko zmiany, więc „Przywróć domyślne” zawsze wraca do dokumentu. Bez edycji zostają: przyciski alarmowe (A, B — zielona odpowiedź u góry, czerwona karta z 112 zawsze na dole) i odpowiedź z ceną rozpoznanej usługi (J — budowana z cen usług).

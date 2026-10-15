@@ -103,6 +103,7 @@ export const DOCTOR_FIRST =
 //   service — nazwa usługi w formularzu (?service=…), sprawdzona na stronie 14.10.2026
 //   color   — kolor przycisku; outline = sam obrys (wariant / uzupełnienie tej samej grupy)
 //   priceName — początek zdania z ceną w odpowiedzi J („… kosztuje 259 zł.”)
+//   priceColor — kolor plakietki z ceną na kafelku; brak = „auto” (odcień koloru kafelka)
 // ---------------------------------------------------------------------------
 export const SERVICES = {
   wizyta: { label: 'Konsultacja lekarska', service: '', price: 'od 79 zł', priceName: 'Konsultacja lekarska (wizyta lekarska)', color: '#2F7D5A' },
@@ -126,6 +127,13 @@ export const SERVICES = {
   serce: { label: 'Nadciśnienie i serce', service: 'Nadciśnienie i serce', price: '', priceName: 'Nadciśnienie i serce', color: '#5F6B7A', outline: true },
   infekcje: { label: 'Infekcje i przeziębienia', service: 'Infekcje i przeziębienia', price: '', priceName: 'Infekcje i przeziębienia', color: '#5F6B7A', outline: true },
 };
+
+// Paleta kolorów do wyboru w panelu (kafelki i plakietki z ceną): kolory ze specyfikacji v1.1
+// + kilka odcieni pomocniczych. Czerwony (#C0392B) celowo poza paletą — tylko 112.
+export const PALETTE = [
+  '#2F7D5A', '#3558C9', '#D98A1F', '#B8468B', '#1B8FB5', '#E0702B', '#8E3F9E', '#44546A', '#7D8F2A',
+  '#6A4FD6', '#2F8478', '#5F6B7A', '#14937C', '#2E2787', '#1D1D1F', '#FFFFFF', '#FFF4D6', '#FDE7EF', '#E3F4EF', '#E6EEFF',
+];
 
 // Kolory stałe: czerwony — WYŁĄCZNIE alarm i 112; szary — informacje (cennik, kontakt…).
 export const ALARM_COLOR = '#C0392B';
@@ -247,7 +255,7 @@ export function resolveButton(entry, { withOverrides = true, noPrice = false } =
     const s = withOverrides ? serviceOf(b.svc) : SERVICES[b.svc];
     const label = customLabel || b.label || s.label;
     const price = b.price === false || noPrice ? '' : s.price;
-    return { id, label: price ? `${label} · ${price}` : label, url: form(s.service), color: s.color, outline: Boolean(b.outline ?? s.outline), tile: true, kind: 'service' };
+    return { id, label: price ? `${label} · ${price}` : label, url: form(s.service), color: s.color, priceColor: s.priceColor || '', outline: Boolean(b.outline ?? s.outline), tile: true, kind: 'service' };
   }
   if (b.ask) return { id, label: customLabel || b.label, ask: b.ask, color: INFO_COLOR, kind: 'info' };
   const url = b.page ? PAGES[b.page].url : b.url;

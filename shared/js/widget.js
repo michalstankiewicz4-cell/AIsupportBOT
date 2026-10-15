@@ -244,6 +244,14 @@ export function mountWidget(opts) {
     if (filled && contrastWithWhite(color) < 3) node.style.setProperty('--k-ink', '#1d1d1f');
   }
 
+  // Plakietka z ceną: kolor z panelu (napis biały albo ciemny — co czytelniejsze); brak = auto.
+  function paintPrice(node, color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color || '')) return node;
+    node.style.background = color;
+    node.style.color = contrastWithWhite(color) < 3 ? '#1d1d1f' : '#fff';
+    return node;
+  }
+
   // Jeden przycisk: link (https/tel) albo pytanie zadawane w czacie (l.ask).
   // Kafelek: nazwa usługi + cena w drugiej linii („e-Recepta online · od 59 zł”).
   function buttonNode(l, cls, tile, caseId) {
@@ -265,7 +273,7 @@ export function mountWidget(opts) {
     const [name, price] = String(l.label).split(' · ');
     if (tile) {
       node.append(el('span', 'tile-name', name));
-      if (price) node.append(el('span', 'tile-price', price));
+      if (price) node.append(paintPrice(el('span', 'tile-price', price), l.priceColor));
     } else {
       node.textContent = l.label;
     }

@@ -257,13 +257,14 @@ expect('nadpisanie tekstu działa (trained)', r.text.startsWith('Skóra → derm
 r = await respond(botEngine, 'qwerty zxcv');
 expect('nadpisanie „nie rozpoznano” działa', r.intent === 'fallback' && r.text === 'Nie wiem.', r);
 // Usługi i przyciski z panelu: cena, kolor i kolejność przycisków bez programisty.
-setPanelConfig({ services: { psychiatra: { price: '299 zł', color: '#123456' }, nieznana: { price: '1 zł' } }, buttons: { F: ['l4', 'xxx', 'cennik|Ceny'], ALARM: ['cennik'] } });
+setPanelConfig({ services: { psychiatra: { price: '299 zł', color: '#123456', priceColor: '#FFFFFF' }, nieznana: { price: '1 zł' } }, buttons: { F: ['l4', 'xxx', 'cennik|Ceny'], ALARM: ['cennik'] } });
 r = await respond(botEngine, 'ile kosztuje psychiatra');
-expect('panel: nowa cena i kolor usługi', r.text.includes('299 zł') && r.links[0].color === '#123456' && r.links[0].label.endsWith('299 zł'), r);
+expect('panel: nowa cena i kolor usługi', r.text.includes('299 zł') && r.links[0].color === '#123456' && r.links[0].priceColor === '#FFFFFF' && r.links[0].label.endsWith('299 zł'), r);
 r = await respond(botEngine, 'potrzebuję L4');
 expect('panel: własne przyciski (nieznane id odrzucone, własna etykieta)', r.links.map((l) => l.label).join() === 'L4 online · od 79 zł,Ceny', r.links);
 expect('panel: tylko znane usługi i przyciski', !sanitizeConfig({ services: { nieznana: { price: '1' } }, buttons: { ALARM: ['cennik'], J: ['l4'] } }).services.nieznana && !Object.keys(sanitizeConfig({ buttons: { ALARM: ['cennik'], J: ['l4'] } }).buttons).length);
 expect('panel: kolor tylko #rrggbb', !sanitizeConfig({ services: { l4: { color: 'red;background:url(x)' } } }).services.l4);
+expect('panel: kolor plakietki z ceną (auto albo #rrggbb)', sanitizeConfig({ services: { l4: { priceColor: '#fff4d6' } } }).services.l4.priceColor === '#FFF4D6' && !sanitizeConfig({ services: { l4: { priceColor: 'auto' } } }).services.l4);
 // Strona i wygląd, adresy zakładek, słowa kluczowe, przyciski dodatkowe, komunikaty — z panelu.
 {
   const { SITE, PAGES, activeNotices } = await import('../shared/js/knowledge.js');

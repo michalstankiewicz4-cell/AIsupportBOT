@@ -127,6 +127,8 @@ function cleanServices(input) {
     if (typeof v.priceName === 'string' && v.priceName.trim()) e.priceName = cleanText(v.priceName, 80);
     if (typeof v.service === 'string') e.service = cleanText(v.service, 80);
     if (HEX.test(v.color || '')) e.color = v.color.toUpperCase();
+    // Plakietka z ceną: kolor #rrggbb albo brak (= auto).
+    if (HEX.test(v.priceColor || '')) e.priceColor = v.priceColor.toUpperCase();
     if (typeof v.outline === 'boolean') e.outline = v.outline;
     if (Object.keys(e).length) out[id] = e;
   }

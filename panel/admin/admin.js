@@ -7,7 +7,7 @@ import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPan
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
-import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
 import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite } from '../../shared/js/widget.js';
@@ -866,7 +866,14 @@ function previewButton(entry) {
   node.style.setProperty('--k', b.color);
   if (b.tile && !b.outline && contrastWithWhite(b.color) < 3) node.style.setProperty('--k-ink', '#1d1d1f');
   node.append(el('span', 'pv-name', name));
-  if (price) node.append(el('span', 'pv-price', price));
+  if (price) {
+    const pr = el('span', 'pv-price', price);
+    if (b.priceColor) {
+      pr.style.background = b.priceColor;
+      pr.style.color = contrastWithWhite(b.priceColor) < 3 ? '#1d1d1f' : '#fff';
+    }
+    node.append(pr);
+  }
   return node;
 }
 
@@ -935,15 +942,58 @@ function renderServices() {
     });
     outline.append(ocb, el('span', '', 'sam obrys'), tip('Obrys oznacza wariant lub uzupełnienie tej samej grupy (np. Kontynuacja leczenia przy recepcie, Terapeuta przy psychologu).'));
     crow.append(color, hex, outline);
+    cf.append(swatches(svcValue(id, 'color'), (v) => setSvc(id, 'color', v)));
     const c = svcValue(id, 'color');
     const ratio = contrastWithWhite(c);
     if (/^#c0392b$/i.test(c)) crow.append(pill('czerwony jest tylko dla 112', 'warn'));
     else if (!ocb.checked && ratio < 4.5) crow.append(pill(`słaby kontrast z białym (${ratio.toFixed(1)}:1)${ratio < 3 ? ' — napis będzie ciemny' : ''}`, 'warn'));
     cf.append(crow);
     grid.append(cf);
+
+    // Kolor plakietki z ceną: auto (odcień koloru kafelka) albo z palety / własny.
+    const pf = el('div', 'field');
+    pf.append(labelSpan('Kolor plakietki z ceną', '„Auto” — półprzezroczysty odcień koloru kafelka (domyślnie). Możesz też wybrać kolor z palety albo własny, np. jasną plakietkę na ciemnym kafelku.'));
+    const pc = svcValue(id, 'priceColor') || '';
+    const prow = el('div', 'row');
+    const auto = el('button', `btn small${pc ? ' ghost' : ''}`, 'Auto');
+    auto.type = 'button';
+    auto.setAttribute('aria-pressed', String(!pc));
+    auto.addEventListener('click', () => {
+      setSvc(id, 'priceColor', '');
+      renderDesign();
+    });
+    const pcol = el('input');
+    pcol.type = 'color';
+    pcol.value = pc || '#ffffff';
+    pcol.title = 'Własny kolor plakietki';
+    pcol.addEventListener('change', () => {
+      setSvc(id, 'priceColor', pcol.value.toUpperCase());
+      renderDesign();
+    });
+    prow.append(auto, pcol, el('code', 'small', pc || 'auto'));
+    pf.append(prow, swatches(pc, (v) => setSvc(id, 'priceColor', v)));
+    grid.append(pf);
     card.append(head, grid);
     box.append(card);
   }
+}
+
+// Paleta kolorów: kliknięcie próbki ustawia kolor (zaznaczona = bieżący).
+function swatches(current, onPick) {
+  const row = el('div', 'swatches');
+  for (const c of PALETTE) {
+    const b = el('button', `swatch${String(current).toUpperCase() === c ? ' on' : ''}`);
+    b.type = 'button';
+    b.title = c;
+    b.setAttribute('aria-label', `Kolor ${c}`);
+    b.style.background = c;
+    b.addEventListener('click', () => {
+      onPick(c);
+      renderDesign();
+    });
+    row.append(b);
+  }
+  return row;
 }
 
 function renderCaseButtons() {

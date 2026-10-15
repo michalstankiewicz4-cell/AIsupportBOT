@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.1
+- Panel „Usługi i przyciski”: paleta kolorów kafelków oraz kolor plakietki z ceną (auto albo z palety / własny)
+
+### ai 1.10.1
+- Panel „Usługi i przyciski”: paleta kolorów kafelków oraz kolor plakietki z ceną (auto albo z palety / własny)
+
+### trained 1.9.1
+- Panel „Usługi i przyciski”: paleta kolorów kafelków oraz kolor plakietki z ceną (auto albo z palety / własny)
+
 ### bot 1.9.0
 - Panel: zakładki „Tematy” (słowa kluczowe z gwiazdką na końcu każdego słowa, przyciski dodatkowe, tester), „Komunikaty” (od–do) i „Strona i wygląd” (kontakt, imię konsultantki, napisy, kolor, logo, położenie, adresy zakładek); kontrola strony sprawdza bieżący telefon, godziny i ceny
 
