@@ -66,9 +66,9 @@ Skrypt konkretnego silnika — tryb pracy z panelu go nie zmienia (własne odpow
 
 ### Imię konsultantki i logo
 
-- Imię wirtualnej konsultantki („Ilona”) ustawia się w `shared/js/knowledge.js` → `SITE.assistant` (oraz `SITE.assistantWith` — forma „z Iloną”). Zmienia się wtedy wszędzie: w czacie i w prompcie AI.
+- Imię wirtualnej konsultantki („Ilona”), napisy, kolor, logo i miniaturę zmienisz w panelu: **„Strona i wygląd”** (wartości domyślne: `shared/js/knowledge.js` → `DEFAULT_SITE`). Prompt AI używa wartości domyślnych.
 - Konsultantka zawsze przedstawia się jako **wirtualna** — nie udaje człowieka (ważne także prawnie: pacjent musi wiedzieć, że rozmawia z AI).
-- Logo na ekranie powitalnym: `shared/img/logo.png`; miniatura przy imieniu konsultantki: `shared/img/avatar.png`.
+- Domyślne logo: `shared/img/logo.png`; domyślna miniatura: `shared/img/avatar.png` (własne wgrasz w panelu).
 
 ### Sterowanie z poziomu strony
 

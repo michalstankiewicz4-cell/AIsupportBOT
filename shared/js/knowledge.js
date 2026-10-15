@@ -1,22 +1,39 @@
 // Baza wiedzy o lekarzeiterapeuci.pl — jedno źródło prawdy dla
 // wszystkich trzech asystentów: usługi, ceny, linki, słowa kluczowe i przypadki A–M
-// ze specyfikacji czatu (v1.0, 14.10.2026). Teksty odpowiedzi są w shared/js/texts.js. Gdy zmieni się strona (zakładki, ceny, telefon,
-// usługi), poprawiaj tutaj, a nie w silnikach.
+// ze specyfikacji czatu (v1.1). Teksty odpowiedzi są w shared/js/texts.js.
+// Tu są WARTOŚCI DOMYŚLNE — większość da się zmienić w panelu sterowania (kontakt, wygląd, adresy
+// zakładek, usługi, przyciski, słowa kluczowe); panel nakłada zmiany przez applySettings().
 //
 // Słowa kluczowe piszemy BEZ polskich znaków i małymi literami
 // (patrz normalize() w shared/js/text.js). Gwiazdka "*" na końcu oznacza "początek słowa",
 // np. "alergi*" pasuje do "alergia", "alergii", "alergiczny".
 
-export const SITE = {
+// Dane serwisu i wygląd czatu — wartości domyślne (panel → „Strona i wygląd”).
+export const DEFAULT_SITE = Object.freeze({
   name: 'Lekarze i Terapeuci',
+  title: 'Lekarze i Terapeuci', // nazwa w nagłówku czatu i na ekranie powitalnym
   assistant: 'Ilona', // imię wirtualnej konsultantki widoczne w czacie i w prompcie AI
   assistantWith: 'Iloną', // to samo imię w narzędniku („rozmowa z Iloną”)
   base: 'https://lekarzeiterapeuci.pl',
   phone: '+48 881 238 227',
-  phoneHref: 'tel:+48881238227',
   email: 'kontakt@lekarzeiterapeuci.pl',
   hours: 'pon–pt 8:00–20:00, sob–niedz 9:00–18:00',
-};
+  introTitle: 'Dzień dobry! Proszę podać swoje imię.',
+  introLead: 'Proszę wpisać imię, aby rozpocząć rozmowę z {asystentka_z}, naszą wirtualną konsultantką.',
+  placeholder: 'Opisz własnymi słowami, w czym możemy pomóc',
+  accent: '#2e2787', // kolor przycisku czatu i dymków pacjenta
+  position: 'right', // 'right' | 'left' — strona ekranu
+  autoOpen: false, // czy czat otwiera się sam po wejściu na stronę
+  logo: '', // własne logo (obraz wgrany w panelu) — puste = shared/img/logo.png
+  avatar: '', // własna miniatura konsultantki — puste = shared/img/avatar.png
+});
+// Bieżące dane (domyślne + zmiany z panelu). phoneHref liczony z numeru.
+export const SITE = { ...DEFAULT_SITE, phoneHref: telHref(DEFAULT_SITE.phone) };
+
+function telHref(phone) {
+  const digits = String(phone || '').replace(/[^\d+]/g, '');
+  return digits ? `tel:${digits}` : '';
+}
 
 import { TEXTS } from './texts.js';
 
@@ -42,24 +59,37 @@ export const PAGES = {
   privacy: { label: 'Polityka prywatności', url: `${B}/polityka-prywatnosci` },
   phone: { label: `Zadzwoń: ${SITE.phone}`, url: SITE.phoneHref },
 };
+// Adresy domyślne (panel → „Strona i wygląd” → „Adresy zakładek” zmienia tylko adres, nie nazwę).
+export const DEFAULT_PAGES = Object.freeze(Object.fromEntries(Object.entries(PAGES).map(([k, v]) => [k, Object.freeze({ ...v })])));
 
 // Fakty ze strony kliniki, które asystentka podaje w odpowiedziach. Kontrola strony
 // (panel → „Kontrola strony”, npm run check-site) sprawdza, czy nadal są na stronie —
 // jeśli którego brakuje, prawdopodobnie zmienił się cennik / telefon / godziny i trzeba
 // poprawić odpowiedzi w tym pliku albo w panelu. Wzorce to wyrażenia regularne.
-export const SITE_FACTS = [
-  { label: 'Numer infolinii +48 881 238 227', url: B, pattern: '881[\\s-]*238[\\s-]*227' },
-  { label: 'E-mail kontakt@lekarzeiterapeuci.pl', url: B, pattern: 'kontakt@lekarzeiterapeuci\\.pl' },
-  { label: 'Godziny pon–pt 8:00–20:00', url: B, pattern: '8[:.]00\\s*[–-]\\s*20[:.]00' },
-  { label: 'Godziny sob–niedz 9:00–18:00', url: B, pattern: '9[:.]00\\s*[–-]\\s*18[:.]00' },
-  { label: 'Cena: e-recepta / kontynuacja od 59 zł', url: B, pattern: '59\\s*zł' },
-  { label: 'Cena: L4 / wizyta / wyniki / skierowanie od 79 zł', url: B, pattern: '79\\s*zł' },
-  { label: 'Cena: leczenie otyłości 129 zł', url: B, pattern: '129\\s*zł' },
-  { label: 'Cena: psycholog 169 zł', url: B, pattern: '169\\s*zł' },
-  { label: 'Cena: psychiatra 259 zł', url: B, pattern: '259\\s*zł' },
-  { label: 'Cena: tabletka „dzień po” od 45 zł', url: `${B}/dla-kobiet-i-mezczyzn`, pattern: '45\\s*zł' },
-  { label: 'Cena: TRT od 199 zł', url: `${B}/dla-kobiet-i-mezczyzn`, pattern: '199\\s*zł' },
-];
+// Fakty liczone z BIEŻĄCYCH ustawień (telefon, e-mail, godziny, ceny usług) — po zmianie w panelu
+// kontrola strony sprawdza już nowe wartości.
+export function siteFacts() {
+  const facts = [];
+  const digits = SITE.phone.replace(/\D/g, '').replace(/^48(?=\d{9}$)/, '');
+  if (digits.length >= 9) {
+    const d = digits.slice(-9);
+    facts.push({ label: `Numer infolinii ${SITE.phone}`, url: B, pattern: `${d.slice(0, 3)}[\\s-]*${d.slice(3, 6)}[\\s-]*${d.slice(6)}` });
+  }
+  if (SITE.email) facts.push({ label: `E-mail ${SITE.email}`, url: B, pattern: SITE.email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') });
+  for (const m of SITE.hours.matchAll(/(\d{1,2})[:.](\d{2})\s*[–-]\s*(\d{1,2})[:.](\d{2})/g)) {
+    facts.push({ label: `Godziny ${m[0]}`, url: B, pattern: `${m[1]}[:.]${m[2]}\\s*[–-]\\s*${m[3]}[:.]${m[4]}` });
+  }
+  const WOMEN_MEN = ['dzien_po', 'antykoncepcja', 'trt'];
+  const seen = new Set();
+  for (const id of Object.keys(SERVICES)) {
+    const s = serviceOf(id);
+    const n = String(s.price || '').match(/\d+/)?.[0];
+    if (!n || seen.has(n)) continue;
+    seen.add(n);
+    facts.push({ label: `Cena: ${s.label} ${s.price}`, url: WOMEN_MEN.includes(id) ? `${B}/dla-kobiet-i-mezczyzn` : B, pattern: `${n}\\s*zł` });
+  }
+  return facts;
+}
 
 
 // Zdanie zasady „najpierw lekarz” — jest już w tekstach C i D (texts.js); tu dla promptu AI i panelu.
@@ -360,9 +390,9 @@ export function setAnswerOverrides(map) {
   OVERRIDES = map && typeof map === 'object' ? map : {};
 }
 
-function fill(text, vars = {}) {
+export function fill(text, vars = {}) {
   return String(text).replace(/\{(\w+)\}/g, (m, k) => {
-    const v = { telefon: SITE.phone, godziny: SITE.hours, email: SITE.email, asystentka: SITE.assistant, ...vars }[k];
+    const v = { telefon: SITE.phone, godziny: SITE.hours, email: SITE.email, asystentka: SITE.assistant, asystentka_z: SITE.assistantWith, ...vars }[k];
     return v === undefined ? m : v;
   });
 }
@@ -474,4 +504,53 @@ export function knowledgeAsText() {
     lines.push(`- [${i.id}] ${a.text} Linki: ${links}`);
   }
   return lines.join('\n');
+}
+
+// =============================================================================
+// Ustawienia z panelu — jedno miejsce, które nakłada je na wiedzę asystentki.
+// Wywołują: panel/client.js (czat), panel/site-check.js (kontrola strony), panel admina (podgląd).
+// Każde wywołanie zaczyna od wartości domyślnych, więc usunięcie zmiany w panelu przywraca dokument.
+// =============================================================================
+
+// Domyślne słowa kluczowe i przyciski dodatkowe tematów (kopie, zanim panel coś zmieni).
+export const DEFAULT_KEYWORDS = Object.freeze(Object.fromEntries(INTENTS.map((i) => [i.id, Object.freeze([...i.keywords])])));
+export const DEFAULT_EXTRAS = Object.freeze(Object.fromEntries(INTENTS.map((i) => [i.id, Object.freeze([...(i.extras || [])])])));
+// Tematy, przy których panel pozwala zmieniać przyciski dodatkowe (specjalista, informacje).
+export const EXTRAS_CASES = ['C', 'D'];
+
+// Komunikaty okresowe (np. „24–26.12 infolinia nieczynna”) — widżet pokazuje aktywne w danym dniu.
+let NOTICES = [];
+export function activeNotices(date = new Date()) {
+  const day = date.toISOString().slice(0, 10);
+  return NOTICES.filter((n) => n.active !== false && (!n.from || n.from <= day) && (!n.to || day <= n.to));
+}
+
+/**
+ * Nakłada ustawienia z panelu (po sanitizeConfig) na wiedzę asystentki.
+ * @param {object} cfg  { overrides, services, buttons, site, pages, keywords, topics, notices }
+ */
+export function applySettings(cfg = {}) {
+  setAnswerOverrides(cfg.overrides);
+  setDesignOverrides({ services: cfg.services, buttons: cfg.buttons });
+
+  // Kontakt, nazwy i wygląd czatu.
+  Object.assign(SITE, DEFAULT_SITE, cfg.site || {});
+  SITE.phoneHref = telHref(SITE.phone);
+
+  // Adresy zakładek (nazwy zostają); numer infolinii w przycisku „Zadzwoń”.
+  for (const [k, def] of Object.entries(DEFAULT_PAGES)) PAGES[k] = { ...def, url: cfg.pages?.[k] || def.url };
+  PAGES.phone = { label: `Zadzwoń: ${SITE.phone}`, url: SITE.phoneHref };
+
+  // Słowa kluczowe: domyślne − usunięte + dodane.
+  for (const i of INTENTS) {
+    const k = cfg.keywords?.[i.id];
+    const removed = new Set(k?.remove || []);
+    i.keywords = [...new Set([...DEFAULT_KEYWORDS[i.id].filter((w) => !removed.has(w)), ...(k?.add || [])])];
+    const ex = cfg.topics?.[i.id]?.extras;
+    if (Array.isArray(ex)) i.extras = [...ex];
+    else if (DEFAULT_EXTRAS[i.id].length) i.extras = [...DEFAULT_EXTRAS[i.id]];
+    else delete i.extras;
+  }
+
+  NOTICES = Array.isArray(cfg.notices) ? cfg.notices : [];
 }

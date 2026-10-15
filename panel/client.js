@@ -11,7 +11,7 @@
 //   4. ustawienia domyślne (bot, rejestracja wyłączona).
 import { DEFAULT_CONFIG, sanitizeConfig, publicConfig, filterLogEntry, unwrapSettings } from './schema.js';
 import { normalize, containsAny } from '../shared/js/text.js';
-import { setAnswerOverrides, setDesignOverrides } from '../shared/js/knowledge.js';
+import { applySettings } from '../shared/js/knowledge.js';
 
 export const LOCAL_CONFIG_KEY = 'lt-panel:config';
 export const LOCAL_LOGS_KEY = 'lt-panel:logs';
@@ -28,8 +28,7 @@ let source = 'default';
 // Ustawia konfigurację (używane przy starcie, przez panel do testów i w testach Node).
 export function setPanelConfig(cfg) {
   config = publicConfig(cfg);
-  setAnswerOverrides(config.overrides);
-  setDesignOverrides({ services: config.services, buttons: config.buttons });
+  applySettings(config);
   return config;
 }
 

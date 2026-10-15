@@ -245,6 +245,18 @@
   text-align: center;
 }
 .notice a { color: var(--brand); font-weight: 600; text-decoration: none; }
+/* Komunikat okresowy z panelu (np. święta, przerwa w działaniu infolinii). */
+.announce {
+  align-self: stretch;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fff7e6;
+  border: 1px solid #f3d9a4;
+  color: #6b4a00;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.4;
+}
 
 .msg { display: flex; flex-direction: column; gap: 5px; max-width: 82%; }
 .msg.enter { animation: rise 0.2s ease-out; }

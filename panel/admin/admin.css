@@ -434,3 +434,15 @@ li.empty { padding: 10px 2px; }
 .btn-row select { flex: 1 1 260px; }
 .btn-row input { flex: 1 1 200px; }
 .warn-text { color: #b26b00; font-weight: 650; }
+
+/* ---------- Tematy, komunikaty, strona ---------- */
+.kw-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.kw { font: inherit; font-size: 12.5px; padding: 3px 9px; border-radius: 99px; border: 1px solid #d5d9e2; background: #f6f7fa; color: #2b3242; cursor: pointer; }
+.kw:hover { border-color: #b42318; color: #b42318; }
+.kw.removed { text-decoration: line-through; opacity: 0.55; }
+.kw.removed:hover { border-color: #14937c; color: #14937c; opacity: 1; }
+.kw.added { background: #e3f4ef; border-color: #9fd9c8; color: #0f5e4f; font-weight: 650; }
+.ex-item { display: inline-flex; align-items: center; gap: 4px; }
+.test-out { margin-top: 10px; }
+.img-preview { width: 64px; height: 64px; object-fit: contain; border: 1px solid #e1e4ea; border-radius: 12px; background: #fff; }
+.card h3 { margin: 0 0 4px; font-size: 16px; }

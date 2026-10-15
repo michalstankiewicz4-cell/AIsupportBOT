@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.0
+- Panel: zakładki „Tematy” (słowa kluczowe z gwiazdką na końcu każdego słowa, przyciski dodatkowe, tester), „Komunikaty” (od–do) i „Strona i wygląd” (kontakt, imię konsultantki, napisy, kolor, logo, położenie, adresy zakładek); kontrola strony sprawdza bieżący telefon, godziny i ceny
+
+### ai 1.10.0
+- Panel: zakładki „Tematy” (słowa kluczowe z gwiazdką na końcu każdego słowa, przyciski dodatkowe, tester), „Komunikaty” (od–do) i „Strona i wygląd” (kontakt, imię konsultantki, napisy, kolor, logo, położenie, adresy zakładek); kontrola strony sprawdza bieżący telefon, godziny i ceny
+
+### trained 1.9.0
+- Panel: zakładki „Tematy” (słowa kluczowe z gwiazdką na końcu każdego słowa, przyciski dodatkowe, tester), „Komunikaty” (od–do) i „Strona i wygląd” (kontakt, imię konsultantki, napisy, kolor, logo, położenie, adresy zakładek); kontrola strony sprawdza bieżący telefon, godziny i ceny
+
 ### bot 1.8.0
 - Specyfikacja czatu „Ilona” v1.1: przy A/B zielona odpowiedź u góry i czerwona karta 112 na dole, każda usługa w swoim kolorze, nowe zestawy przycisków (D, E, F, H, J, K, L, M), panel „Usługi i przyciski” (nazwy, ceny, kolory, obrys, kolejność przycisków; domyślnie z dokumentu)
 

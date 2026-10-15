@@ -7,7 +7,9 @@ import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPan
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
-import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides } from '../../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword } from '../schema.js';
+import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
 import { loadChain } from '../../shared/js/embed-core.js';
@@ -257,6 +259,9 @@ function changed() {
   $('#rules-count').textContent = state.draft.rules.length || '';
   $('#ovr-count').textContent = Object.keys(state.draft.overrides).length || '';
   $('#design-count').textContent = Object.keys(state.draft.services).length + Object.keys(state.draft.buttons).length || '';
+  $('#topics-count').textContent = new Set([...Object.keys(state.draft.keywords), ...Object.keys(state.draft.topics)]).size || '';
+  $('#notices-count').textContent = state.draft.notices.filter((n) => noticeState(n)[0] === 'widoczny teraz').length || '';
+  $('#sitecfg-count').textContent = Object.keys(state.draft.site).length + Object.keys(state.draft.pages).length || '';
 }
 
 $('#save').addEventListener('click', async () => {
@@ -380,6 +385,9 @@ function applyBotOnly() {
 function renderAll() {
   renderMode();
   renderDesign();
+  renderTopics();
+  renderNotices();
+  renderSiteCfg();
   renderLogging();
   renderRules();
   renderBuiltin();
@@ -1016,6 +1024,356 @@ function buttonName(id) {
   if (b.svc) return `Usługa: ${b.label || SERVICES[b.svc].label}${b.label ? ` (${SERVICES[b.svc].label})` : ''}`;
   if (b.ask) return `Pytanie w czacie: ${b.label}`;
   return `Link: ${b.label || id}`;
+}
+
+
+// =============================================================================
+// Strona i wygląd — kontakt, imię konsultantki, napisy, wygląd czatu, adresy zakładek.
+// W ustawieniach (site, pages) zapisujemy tylko zmiany względem wartości domyślnych.
+// =============================================================================
+
+const SITE_GROUPS = [
+  ['Kontakt', 'Trafia do odpowiedzi asystentki (np. „Kontakt”), do przycisku „Zadzwoń” i do kontroli strony.', [
+    ['phone', 'Telefon infolinii'],
+    ['email', 'E-mail'],
+    ['hours', 'Godziny infolinii', 'Format jak na stronie, np. „pon–pt 8:00–20:00, sob–niedz 9:00–18:00” — kontrola strony sprawdza godziny w tym formacie.'],
+  ]],
+  ['Konsultantka i napisy', 'Imię konsultantki zmienia się wszędzie: w nagłówku, w powitaniu i w odpowiedziach.', [
+    ['title', 'Nazwa w nagłówku czatu'],
+    ['assistant', 'Imię konsultantki'],
+    ['assistantWith', 'Imię w narzędniku („rozmowa z …”)'],
+    ['introTitle', 'Tytuł ekranu powitalnego'],
+    ['introLead', 'Tekst pod tytułem', '{asystentka_z} zostanie zastąpione imieniem w narzędniku (np. „Iloną”).'],
+    ['placeholder', 'Podpowiedź w polu wiadomości'],
+  ]],
+];
+
+function setSite(key, value) {
+  const def = DEFAULT_SITE[key];
+  if (value === '' || value === def || value === undefined || value === false) delete state.draft.site[key];
+  else state.draft.site[key] = value;
+  changed();
+}
+
+function renderSiteCfg() {
+  const box = $('#sitecfg-list');
+  box.textContent = '';
+  for (const [title, hint, fields] of SITE_GROUPS) {
+    const card = el('article', 'card');
+    card.append(el('h3', '', title), el('p', 'muted small', hint));
+    const grid = el('div', 'svc-grid');
+    for (const [key, label, tipText] of fields) {
+      const f = el('label', 'field');
+      const input = el('input');
+      input.type = 'text';
+      input.maxLength = SITE_FIELDS[key];
+      input.value = state.draft.site[key] || '';
+      input.placeholder = DEFAULT_SITE[key];
+      input.addEventListener('change', () => setSite(key, input.value.trim()));
+      f.append(labelSpan(label, tipText), input);
+      grid.append(f);
+    }
+    card.append(grid);
+    box.append(card);
+  }
+
+  // Wygląd okna czatu.
+  const look = el('article', 'card');
+  look.append(el('h3', '', 'Wygląd okna czatu'));
+  const g = el('div', 'svc-grid');
+  const cf = el('div', 'field');
+  cf.append(labelSpan('Kolor przewodni', 'Kolor przycisku czatu, przycisku „Wyślij” i dymków pacjenta.'));
+  const crow = el('div', 'row');
+  const color = el('input');
+  color.type = 'color';
+  color.value = state.draft.site.accent || DEFAULT_SITE.accent;
+  color.addEventListener('change', () => setSite('accent', color.value.toLowerCase()));
+  crow.append(color, el('code', 'small', color.value));
+  cf.append(crow);
+  const pf = el('label', 'field');
+  const pos = el('select');
+  pos.append(option('right', 'prawa strona ekranu'), option('left', 'lewa strona ekranu'));
+  pos.value = state.draft.site.position || 'right';
+  pos.addEventListener('change', () => setSite('position', pos.value));
+  pf.append(labelSpan('Położenie przycisku czatu', 'Lewa strona — gdy na stronie jest już inny czat w prawym rogu.'), pos);
+  const of = el('label', 'check');
+  const ocb = el('input');
+  ocb.type = 'checkbox';
+  ocb.checked = Boolean(state.draft.site.autoOpen);
+  ocb.addEventListener('change', () => setSite('autoOpen', ocb.checked));
+  of.append(ocb, el('span', '', 'Czat otwiera się sam po wejściu na stronę'));
+  g.append(cf, pf, of);
+  look.append(g);
+  // Obrazy: logo na ekranie powitalnym i miniatura przy imieniu.
+  const imgs = el('div', 'svc-grid');
+  for (const [key, label, def] of [['logo', 'Logo na ekranie powitalnym', '../../shared/img/logo.png'], ['avatar', 'Miniatura przy imieniu konsultantki', '../../shared/img/avatar.png']]) {
+    const f = el('div', 'field');
+    f.append(labelSpan(label, 'PNG, JPG lub WebP, do ok. 150 KB. Obraz zapisuje się w ustawieniach.'));
+    const img = el('img', 'img-preview');
+    img.src = state.draft.site[key] || def;
+    img.alt = '';
+    const file = el('input');
+    file.type = 'file';
+    file.accept = 'image/png,image/jpeg,image/webp';
+    file.addEventListener('change', () => {
+      const fl = file.files[0];
+      if (!fl) return;
+      if (!/^image\/(png|jpeg|webp)$/.test(fl.type)) return toast('Dozwolone są tylko obrazy PNG, JPG i WebP.', true);
+      const r = new FileReader();
+      r.onload = () => {
+        if (String(r.result).length > IMAGE_MAX_CHARS) return toast('Obraz jest za duży — zmniejsz go do ok. 150 KB.', true);
+        setSite(key, String(r.result));
+        renderSiteCfg();
+      };
+      r.readAsDataURL(fl);
+    });
+    const reset = el('button', 'btn ghost small', 'Przywróć domyślny');
+    reset.type = 'button';
+    reset.disabled = !state.draft.site[key];
+    reset.addEventListener('click', () => {
+      setSite(key, '');
+      renderSiteCfg();
+    });
+    const row = el('div', 'row');
+    row.append(img, file, reset);
+    f.append(row);
+    imgs.append(f);
+  }
+  look.append(imgs);
+  box.append(look);
+
+  // Adresy zakładek strony.
+  const pages = el('article', 'card');
+  pages.append(el('h3', '', 'Adresy zakładek strony'), el('p', 'muted small', 'Gdy na stronie kliniki zmieni się adres podstrony (kontrola strony pokaże zepsuty link), wpisz nowy adres. Tylko adresy https://.'));
+  const pg = el('div', 'svc-grid');
+  for (const [k, p] of Object.entries(DEFAULT_PAGES)) {
+    if (k === 'phone') continue;
+    const f = el('label', 'field');
+    const input = el('input');
+    input.type = 'url';
+    input.value = state.draft.pages[k] || '';
+    input.placeholder = p.url;
+    input.addEventListener('change', () => {
+      const v = input.value.trim();
+      if (!v || v === p.url) delete state.draft.pages[k];
+      else if (/^https:\/\/[^\s"'<>]+$/i.test(v)) state.draft.pages[k] = v;
+      else {
+        toast('Adres musi zaczynać się od https://', true);
+        input.value = state.draft.pages[k] || '';
+        return;
+      }
+      changed();
+    });
+    f.append(el('span', '', p.label), input);
+    pg.append(f);
+  }
+  pages.append(pg);
+  box.append(pages);
+}
+
+// =============================================================================
+// Komunikaty okresowe
+// =============================================================================
+
+$('#notice-add').addEventListener('click', () => {
+  state.draft.notices.push({ id: `n${Date.now().toString(36)}`, text: '', active: true });
+  renderNotices();
+});
+
+function noticeState(n) {
+  const day = new Date().toISOString().slice(0, 10);
+  if (n.active === false) return ['wyłączony', ''];
+  if (n.from && day < n.from) return ['zaplanowany', 'warn'];
+  if (n.to && day > n.to) return ['wygasł', ''];
+  return ['widoczny teraz', 'ok'];
+}
+
+function renderNotices() {
+  const box = $('#notices-list');
+  box.textContent = '';
+  if (!state.draft.notices.length) box.append(el('p', 'muted', 'Brak komunikatów. Kliknij „+ Dodaj komunikat”.'));
+  state.draft.notices.forEach((n, i) => {
+    const card = el('article', 'card');
+    const head = el('div', 'row');
+    const [label, kind] = noticeState(n);
+    head.append(el('strong', '', `Komunikat ${i + 1}`), pill(label, kind), el('span', 'spacer'));
+    const del = el('button', 'btn ghost small', 'Usuń');
+    del.type = 'button';
+    del.addEventListener('click', () => {
+      state.draft.notices.splice(i, 1);
+      renderNotices();
+      changed();
+    });
+    head.append(del);
+    const ta = textArea('Treść', n.text, (v) => {
+      n.text = v;
+      changed();
+    }, { rows: 2, max: 300, placeholder: 'np. 24–26.12 infolinia nieczynna — konsultacje online działają bez zmian.' });
+    const row = el('div', 'row');
+    for (const [k, l] of [['from', 'Od'], ['to', 'Do']]) {
+      const f = el('label', 'field');
+      const d = el('input');
+      d.type = 'date';
+      d.value = n[k] || '';
+      d.addEventListener('change', () => {
+        if (d.value) n[k] = d.value;
+        else delete n[k];
+        renderNotices();
+        changed();
+      });
+      f.append(el('span', '', l), d);
+      row.append(f);
+    }
+    const act = el('label', 'check');
+    const cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = n.active !== false;
+    cb.addEventListener('change', () => {
+      n.active = cb.checked;
+      renderNotices();
+      changed();
+    });
+    act.append(cb, el('span', '', 'włączony'));
+    row.append(act);
+    card.append(head, ta, row);
+    box.append(card);
+  });
+}
+
+// =============================================================================
+// Tematy — słowa kluczowe i przyciski dodatkowe
+// =============================================================================
+
+$('#topics-search').addEventListener('input', renderTopics);
+$('#topics-only').addEventListener('change', renderTopics);
+$('#topics-test-btn').addEventListener('click', runTopicsTest);
+$('#topics-test').addEventListener('keydown', (e) => e.key === 'Enter' && runTopicsTest());
+
+async function runTopicsTest() {
+  const q = $('#topics-test').value.trim();
+  const out = $('#topics-test-out');
+  out.textContent = '';
+  if (!q) return;
+  setPanelConfig(state.draft); // podgląd z niezapisanymi zmianami
+  const r = await respond(botEngine, q, [], {});
+  out.append(pill(CASE_LABELS[r.case] || r.case || '—'), el('strong', '', ` ${intentLabel(r.intent, state.draft.rules)}`));
+  out.append(el('p', 'small', r.text));
+  const pv = el('div', 'pv-row');
+  for (const l of r.links || []) {
+    const b = el('span', l.tile ? `pv-tile${l.outline ? ' outline' : ''}` : 'pv-link');
+    if (l.color) b.style.setProperty('--k', l.color);
+    b.append(el('span', 'pv-name', l.label));
+    pv.append(b);
+  }
+  out.append(pv);
+}
+
+function kwState(id) {
+  return state.draft.keywords[id] || { add: [], remove: [] };
+}
+function setKw(id, next) {
+  if (next.add.length || next.remove.length) state.draft.keywords[id] = next;
+  else delete state.draft.keywords[id];
+  renderTopics();
+  changed();
+}
+
+function renderTopics() {
+  const box = $('#topics-list');
+  box.textContent = '';
+  const q = normalize($('#topics-search').value);
+  const only = $('#topics-only').checked;
+  const order = ['I', 'J', 'C', 'F', 'E', 'G', 'H', 'K', 'D', 'M', 'L'];
+  const list = [...INTENTS].sort((a, b) => order.indexOf(a.case) - order.indexOf(b.case));
+  for (const intent of list) {
+    const id = intent.id;
+    const kw = kwState(id);
+    const isChanged = Boolean(state.draft.keywords[id] || state.draft.topics[id]);
+    const name = INTENT_LABELS[id] || id;
+    const all = [...DEFAULT_KEYWORDS[id], ...kw.add];
+    if (only && !isChanged) continue;
+    if (q && !normalize(`${name} ${id} ${all.join(' ')}`).includes(q)) continue;
+    const card = el('article', `card${isChanged ? ' changed' : ''}`);
+    const head = el('div', 'row');
+    head.append(pill(intent.case), el('strong', '', name), el('code', 'muted small', id), el('span', 'spacer'));
+    if (isChanged) {
+      const reset = el('button', 'btn ghost small', 'Przywróć domyślne');
+      reset.type = 'button';
+      reset.addEventListener('click', () => {
+        delete state.draft.keywords[id];
+        delete state.draft.topics[id];
+        renderTopics();
+        changed();
+      });
+      head.append(pill('zmieniony', 'ok'), reset);
+    }
+    const chips = el('div', 'kw-chips');
+    for (const w of DEFAULT_KEYWORDS[id]) {
+      const removed = kw.remove.includes(w);
+      const c = el('button', `kw${removed ? ' removed' : ''}`, w);
+      c.type = 'button';
+      c.title = removed ? 'Przywróć to słowo' : 'Usuń to słowo';
+      c.addEventListener('click', () => setKw(id, { add: kw.add, remove: removed ? kw.remove.filter((x) => x !== w) : [...kw.remove, w] }));
+      chips.append(c);
+    }
+    for (const w of kw.add) {
+      const c = el('button', 'kw added', w);
+      c.type = 'button';
+      c.title = 'Usuń dodane słowo';
+      c.addEventListener('click', () => setKw(id, { add: kw.add.filter((x) => x !== w), remove: kw.remove }));
+      chips.append(c);
+    }
+    const addRow = el('div', 'row');
+    const input = el('input');
+    input.type = 'text';
+    input.placeholder = 'Dodaj słowa — po przecinku, np. rw* kulszow*, ischias*  (gwiazdka = dowolna końcówka: rwa, rwę, rwy…)';
+    input.style.flex = '1';
+    const btn = el('button', 'btn ghost small', 'Dodaj');
+    btn.type = 'button';
+    const doAdd = () => {
+      const words = input.value.split(',').map(cleanKeyword).filter((w) => w && !all.includes(w));
+      if (words.length) setKw(id, { add: [...kw.add, ...words], remove: kw.remove });
+    };
+    btn.addEventListener('click', doAdd);
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && doAdd());
+    addRow.append(input, btn);
+    const details = el('details');
+    details.open = isChanged || Boolean(q);
+    details.append(el('summary', '', `${all.length - kw.remove.length} słów kluczowych${intent.extras || DEFAULT_EXTRAS[id].length ? ' · przyciski dodatkowe' : ''}`), chips, addRow);
+
+    // Przyciski dodatkowe (specjalista, informacje) — tylko C i D.
+    if (EXTRAS_CASES.includes(intent.case)) {
+      const ex = state.draft.topics[id]?.extras || [...DEFAULT_EXTRAS[id]];
+      const exBox = el('div', 'field');
+      exBox.append(labelSpan('Przyciski dodatkowe tego tematu', 'Pokazywane pod podstawowymi przyciskami odpowiedzi, np. „wysypka” → Dermatologia online.'));
+      const pv = el('div', 'pv-row');
+      const saveEx = (next) => {
+        if (JSON.stringify(next) === JSON.stringify(DEFAULT_EXTRAS[id])) delete state.draft.topics[id];
+        else state.draft.topics[id] = { extras: next };
+        renderTopics();
+        changed();
+      };
+      ex.forEach((b, i) => {
+        const wrap = el('span', 'ex-item');
+        wrap.append(previewButton(b));
+        const x = el('button', 'btn ghost small', '✕');
+        x.type = 'button';
+        x.title = 'Usuń';
+        x.addEventListener('click', () => saveEx(ex.filter((_, j) => j !== i)));
+        wrap.append(x);
+        pv.append(wrap);
+      });
+      const add = el('select');
+      add.append(option('', '+ Dodaj przycisk…'));
+      for (const c of Object.keys(BUTTONS)) if (!ex.includes(c)) add.append(option(c, buttonName(c)));
+      add.addEventListener('change', () => add.value && saveEx([...ex, add.value]));
+      exBox.append(pv, add);
+      details.append(exBox);
+    }
+    card.append(head, details);
+    box.append(card);
+  }
+  if (!box.children.length) box.append(el('p', 'muted center', 'Nic nie pasuje do wyszukiwania.'));
 }
 
 // =============================================================================
@@ -1665,7 +2023,7 @@ function renderSite() {
   // Fakty
   const facts = $('#site-facts');
   const fh = el('h3', '', 'Fakty ze strony');
-  fh.append(tip('Ceny, telefon i godziny, które asystentka podaje pacjentom. Lista jest w shared/js/knowledge.js (SITE_FACTS).'));
+  fh.append(tip('Ceny, telefon i godziny, które asystentka podaje pacjentom. Lista powstaje z bieżących ustawień: telefon, e-mail i godziny z zakładki „Strona i wygląd”, ceny z „Usługi i przyciski”.'));
   facts.append(fh);
   for (const f of r.facts) {
     const row = el('div', `fact ${f.state}`);

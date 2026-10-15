@@ -1,13 +1,13 @@
 // Kontrola strony kliniki — sprawdza, czy to, co mówi asystentka, nadal zgadza się ze stroną:
 //   1. linki w odpowiedziach: czy strona istnieje (błędy 404/500), czy nie przekierowuje
 //      gdzie indziej, czy istnieje sekcja z linku (np. #cennik),
-//   2. fakty: czy na stronie są nadal te same ceny, numer infolinii, godziny (SITE_FACTS),
+//   2. fakty: czy na stronie są nadal te same ceny, numer infolinii, godziny (siteFacts() — z ustawień panelu),
 //   3. zmiany: czy treść stron zmieniła się od poprzedniego sprawdzenia.
 //
 // Moduł używa tylko fetch(), więc działa wszędzie: w serwerze panelu (Cloudflare Worker,
 // codziennie automatycznie), w lokalnym serwerze panelu (npm run panel), w poleceniu
 // npm run check-site i w codziennym workflow GitHub Actions.
-import { PAGES, INTENTS, SITE, SITE_FACTS, defaultAnswer } from '../shared/js/knowledge.js';
+import { PAGES, INTENTS, SITE, siteFacts, defaultAnswer, applySettings, replyFor } from '../shared/js/knowledge.js';
 import { sanitizeConfig } from './schema.js';
 import { INTENT_LABELS } from './labels.js';
 import { TEXTS } from '../shared/js/texts.js';
@@ -21,6 +21,8 @@ const MIN_TEXT = 400; // mniej tekstu = strona prawdopodobnie generowana w przeg
 /** Zwraca [{ url, where: ['Zakładka: Cennik', 'Odpowiedź: L4', ...] }] — tylko adresy http(s). */
 export function collectLinks(config = {}) {
   const cfg = sanitizeConfig(config);
+  // Linki i fakty liczone z ustawień panelu (adresy zakładek, usługi, kontakt).
+  applySettings(cfg);
   const map = new Map();
   const add = (url, where) => {
     if (!/^https?:\/\//i.test(url || '')) return;
@@ -28,7 +30,7 @@ export function collectLinks(config = {}) {
     map.get(url).add(where);
   };
   for (const p of Object.values(PAGES)) add(p.url, `Zakładka: ${p.label}`);
-  for (const i of INTENTS) for (const l of i.answer.links || []) add(l.url, `Odpowiedź: ${INTENT_LABELS[i.id] || i.id}`);
+  for (const i of INTENTS) for (const l of replyFor(i.id).links || []) add(l.url, `Odpowiedź: ${INTENT_LABELS[i.id] || i.id}`);
   for (const l of defaultAnswer('L').links || []) add(l.url, 'Odpowiedź: gdy nie rozpozna pytania');
   for (const [id, o] of Object.entries(cfg.overrides)) {
     for (const l of o.links || []) add(l.url, `Zmieniona odpowiedź: ${TEXTS[id]?.label || INTENT_LABELS[id] || id}`);
@@ -138,7 +140,8 @@ async function pool(items, limit, fn) {
  */
 export async function checkSite({ config = {}, previous = null, fetchImpl = fetch, concurrency = 5, timeoutMs = 15000 } = {}) {
   const links = collectLinks(config);
-  const factPages = SITE_FACTS.map((f) => f.url);
+  const factList = siteFacts();
+  const factPages = factList.map((f) => f.url);
   const keys = [...new Set([...links.map((l) => pageKey(l.url)), ...factPages.map(pageKey)])];
   const toFetch = keys.slice(0, MAX_PAGES);
   const skipped = keys.slice(MAX_PAGES);
@@ -182,7 +185,7 @@ export async function checkSite({ config = {}, previous = null, fetchImpl = fetc
   });
 
   // 2. Fakty
-  const facts = SITE_FACTS.map((f) => {
+  const facts = factList.map((f) => {
     const p = pages[pageKey(f.url)];
     if (!p || p.error || p.status >= 400) return { label: f.label, url: f.url, state: 'unknown', note: 'Nie udało się pobrać strony.' };
     if (!p.readable) return { label: f.label, url: f.url, state: 'unknown', note: 'Strona jest generowana w przeglądarce — treści nie da się sprawdzić automatycznie.' };

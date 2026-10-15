@@ -31,7 +31,7 @@ export async function start(variant, script) {
     title: data.title,
     accent: data.accent,
     position: data.position,
-    open: data.open === 'true',
+    open: data.open ? data.open === 'true' : undefined, // brak atrybutu = ustawienie z panelu
   });
   // Udostępnia stronie małe API, np. LTChat.open() wywołane z przycisku.
   window.LTChat = widget;

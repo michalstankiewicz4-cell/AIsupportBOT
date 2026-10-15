@@ -3,7 +3,8 @@
 // (panel/admin/) i serwer panelu (panel/server/worker.js), więc zasady
 // są jednakowe wszędzie, a serwer i tak sprawdza wszystko ponownie.
 import { anonymize } from '../shared/js/privacy.js';
-import { SERVICES, BUTTONS } from '../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
+import { normalize } from '../shared/js/text.js';
 import { TEXTS } from '../shared/js/texts.js';
 
 // Poziomy rejestracji rozmów.
@@ -67,6 +68,13 @@ export const DEFAULT_CONFIG = Object.freeze({
   // tylko ZMIANY względem wartości domyślnych ze specyfikacji (shared/js/knowledge.js).
   services: {},
   buttons: {},
+  // Kontakt, nazwy i wygląd czatu; adresy zakładek; słowa kluczowe i przyciski dodatkowe tematów;
+  // komunikaty okresowe — też tylko zmiany względem wartości domyślnych.
+  site: {},
+  pages: {},
+  keywords: {},
+  topics: {},
+  notices: [],
   rules: [],
   overrides: {},
   updatedAt: null,
@@ -145,6 +153,94 @@ function cleanButtons(input) {
   return out;
 }
 
+// --- Strona i wygląd ---------------------------------------------------------------
+export const SITE_FIELDS = {
+  title: 60, assistant: 30, assistantWith: 30, phone: 30, email: 80, hours: 120,
+  introTitle: 120, introLead: 200, placeholder: 80,
+};
+// Obrazy (logo, miniatura) zapisujemy w ustawieniach jako data URL — tylko PNG/JPEG/WebP (bez SVG),
+// maks. ok. 150 KB, żeby plik ustawień i baza zostały małe.
+export const IMAGE_MAX_CHARS = 200000;
+const IMAGE_RE = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+
+function cleanSite(input) {
+  const src = input && typeof input === 'object' ? input : {};
+  const out = {};
+  for (const [k, max] of Object.entries(SITE_FIELDS)) {
+    if (typeof src[k] !== 'string') continue;
+    const v = cleanText(src[k], max);
+    if (v && v !== DEFAULT_SITE[k]) out[k] = v;
+  }
+  if (typeof src.email === 'string' && out.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out.email)) delete out.email;
+  if (HEX.test(src.accent || '') && src.accent.toLowerCase() !== DEFAULT_SITE.accent) out.accent = src.accent.toLowerCase();
+  if (src.position === 'left') out.position = 'left';
+  if (src.autoOpen === true) out.autoOpen = true;
+  for (const k of ['logo', 'avatar']) {
+    if (typeof src[k] === 'string' && src[k].length <= IMAGE_MAX_CHARS && IMAGE_RE.test(src[k])) out[k] = src[k];
+  }
+  return out;
+}
+
+// Adresy zakładek: tylko znane zakładki (bez telefonu) i tylko https.
+function cleanPages(input) {
+  const out = {};
+  for (const [k, url] of Object.entries(input && typeof input === 'object' ? input : {})) {
+    if (!DEFAULT_PAGES[k] || k === 'phone' || typeof url !== 'string') continue;
+    const u = url.trim().slice(0, 300);
+    if (/^https:\/\/[^\s"'<>]+$/i.test(u) && u !== DEFAULT_PAGES[k].url) out[k] = u;
+  }
+  return out;
+}
+
+// Słowa kluczowe tematów: dodane i usunięte (bez polskich znaków, małe litery, "*" = początek słowa).
+export function cleanKeyword(k) {
+  // Każde słowo osobno: normalizacja + zachowana gwiazdka na końcu słowa („rw* kulszow*”).
+  const words = String(k || '').trim().split(/\s+/).map((w) => {
+    const star = w.endsWith('*');
+    const n = normalize(star ? w.slice(0, -1) : w).replace(/\s+/g, '');
+    return n ? n + (star ? '*' : '') : '';
+  }).filter(Boolean);
+  const out = words.join(' ').slice(0, 60);
+  return out.replace(/\*/g, '').length >= 2 ? out : '';
+}
+function cleanKeywords(input) {
+  const out = {};
+  for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
+    if (!INTENT_BY_ID[id] || !v || typeof v !== 'object') continue;
+    const add = [...new Set((Array.isArray(v.add) ? v.add : []).map(cleanKeyword).filter(Boolean))].slice(0, 100);
+    const remove = [...new Set((Array.isArray(v.remove) ? v.remove : []).map(String).filter((w) => INTENT_BY_ID[id] && w))].slice(0, 200);
+    if (add.length || remove.length) out[id] = { add, remove };
+  }
+  return out;
+}
+
+// Przyciski dodatkowe tematów (np. „wysypka” → Dermatologia online) — tylko C i D.
+function cleanTopics(input) {
+  const out = {};
+  for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
+    const intent = INTENT_BY_ID[id];
+    if (!intent || !EXTRAS_CASES.includes(intent.case) || !Array.isArray(v?.extras)) continue;
+    out[id] = { extras: [...new Set(v.extras.map(String).filter((b) => BUTTONS[b]))].slice(0, 6) };
+  }
+  return out;
+}
+
+// Komunikaty okresowe: tekst + daty od–do (RRRR-MM-DD, obie opcjonalne).
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+function cleanNotices(input) {
+  return (Array.isArray(input) ? input : [])
+    .map((n, i) => {
+      const text = cleanText(n?.text, 300);
+      if (!text) return null;
+      const out = { id: cleanText(n.id, 30).replace(/[^\w-]/g, '') || `n${i + 1}`, text, active: n.active !== false };
+      if (DAY.test(n.from || '')) out.from = n.from;
+      if (DAY.test(n.to || '')) out.to = n.to;
+      return out;
+    })
+    .filter(Boolean)
+    .slice(0, 10);
+}
+
 // Zwraca poprawny obiekt ustawień — nieznane pola i błędne wartości są odrzucane.
 export function sanitizeConfig(input) {
   const src = input && typeof input === 'object' ? input : {};
@@ -188,6 +284,11 @@ export function sanitizeConfig(input) {
     safety: { supportLine: src.safety?.supportLine === true },
     services: cleanServices(src.services),
     buttons: cleanButtons(src.buttons),
+    site: cleanSite(src.site),
+    pages: cleanPages(src.pages),
+    keywords: cleanKeywords(src.keywords),
+    topics: cleanTopics(src.topics),
+    notices: cleanNotices(src.notices),
     rules,
     overrides,
     updatedAt: typeof src.updatedAt === 'string' ? src.updatedAt.slice(0, 40) : null,
@@ -214,7 +315,7 @@ export function unwrapSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('To nie jest plik ustawień (oczekiwano obiektu JSON).');
   const cfg = data.format === SETTINGS_FORMAT || data.config ? data.config : data;
   if (!cfg || typeof cfg !== 'object') throw new Error('W pliku brakuje ustawień.');
-  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons'];
+  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons', 'site', 'pages', 'keywords', 'topics', 'notices'];
   if (!known.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
   return sanitizeConfig(cfg);
 }

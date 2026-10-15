@@ -4,7 +4,7 @@
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
-import { SITE, textOf, replyFor } from './knowledge.js';
+import { SITE, textOf, replyFor, fill, activeNotices } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { getPanelConfig, logTurn, logClick, newSessionId } from '../../panel/client.js';
 import { isSafeUrl } from '../../panel/schema.js';
@@ -17,8 +17,11 @@ const ICON_CLOSE =
 const ICON_SEND =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6.5l5.5 5.5-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-const BOT_LABEL = SITE.assistant; // np. „Ilona”
-const AVATAR_URL = new URL('../img/avatar.png', import.meta.url).href;
+// Imię, obrazy i napisy pochodzą z SITE — domyślne wartości albo zmiany z panelu („Strona i wygląd”),
+// nałożone przez initPanel() przed zamontowaniem widżetu.
+const DEFAULT_AVATAR = new URL('../img/avatar.png', import.meta.url).href;
+const DEFAULT_LOGO = new URL('../img/logo.png', import.meta.url).href;
+const avatarUrl = () => SITE.avatar || DEFAULT_AVATAR;
 const NAME_MAX = 40;
 
 // Powitanie (przypadek M) z 6 szybkimi przyciskami — zanim pacjent cokolwiek napisze.
@@ -52,7 +55,12 @@ const DEGRADED_NOTE = {
  */
 export function mountWidget(opts) {
   const { engine } = opts;
-  const title = opts.title || 'Lekarze i Terapeuci';
+  const BOT_LABEL = SITE.assistant; // np. „Ilona”
+  // Atrybuty data-* na stronie mają pierwszeństwo przed ustawieniami z panelu.
+  const title = opts.title || SITE.title;
+  const accent = opts.accent || SITE.accent;
+  const position = opts.position || SITE.position;
+  if (opts.open === undefined) opts.open = SITE.autoOpen;
   const storeKey = opts.storeKey || `lt-chat:${engine.name}`;
   const state = loadState(storeKey) || { open: !!opts.open, name: '', startedAt: 0, session: '', consent: false, messages: [] };
   // Stan przebiegu rozmowy dla pipeline: tryb kryzysowy i licznik niezrozumiałych pytań.
@@ -69,8 +77,8 @@ export function mountWidget(opts) {
   css.href = opts.cssUrl;
   root.appendChild(css);
 
-  const wrap = el('div', `chat ${inline ? 'inline' : 'floating'} ${opts.position === 'left' ? 'left' : 'right'}`);
-  if (opts.accent) wrap.style.setProperty('--accent', opts.accent);
+  const wrap = el('div', `chat ${inline ? 'inline' : 'floating'} ${position === 'left' ? 'left' : 'right'}`);
+  if (accent) wrap.style.setProperty('--accent', accent);
   wrap.dataset.variant = engine.name;
   wrap.dataset.version = engine.version;
   root.appendChild(wrap);
@@ -100,8 +108,8 @@ export function mountWidget(opts) {
   if (!inline) introTop.append(closeBtn.cloneNode(true));
 
   const nameForm = el('form', 'intro-form');
-  const h = el('h2', 'intro-title', 'Dzień dobry! Proszę podać swoje imię.');
-  const lead = el('p', 'intro-lead', `Proszę wpisać imię, aby rozpocząć rozmowę z ${SITE.assistantWith}, naszą wirtualną konsultantką.`);
+  const h = el('h2', 'intro-title', fill(SITE.introTitle));
+  const lead = el('p', 'intro-lead', fill(SITE.introLead));
   const nameId = `lt-name-${engine.name}`;
   const label = el('label', 'intro-label', 'Imię');
   label.htmlFor = nameId;
@@ -139,7 +147,7 @@ export function mountWidget(opts) {
   // Logo kliniki w wolnym miejscu między nagłówkiem a formularzem.
   const introLogo = el('div', 'intro-logo');
   const logoImg = el('img');
-  logoImg.src = new URL('../img/logo.png', import.meta.url).href;
+  logoImg.src = SITE.logo || DEFAULT_LOGO;
   logoImg.alt = title;
   logoImg.decoding = 'async';
   introLogo.append(logoImg);
@@ -164,7 +172,7 @@ export function mountWidget(opts) {
   const input = el('textarea', 'input');
   input.rows = 1;
   input.maxLength = 500;
-  input.placeholder = UI_TEXTS.placeholder;
+  input.placeholder = SITE.placeholder || UI_TEXTS.placeholder;
   input.setAttribute('aria-label', 'Twoja wiadomość');
   const send = el('button', 'send');
   send.type = 'submit';
@@ -188,6 +196,8 @@ export function mountWidget(opts) {
     tel.href = SITE.phoneHref;
     notice.append(tel);
     log.append(notice);
+    // Komunikaty okresowe z panelu (np. „24–26.12 infolinia nieczynna”) — tylko w swoim terminie.
+    for (const n of activeNotices()) log.append(el('div', 'announce', n.text));
   }
 
   function renderMessage(msg, animate = true) {
@@ -439,7 +449,7 @@ function whoRow(name, withAvatar) {
   const row = el('div', 'who');
   if (withAvatar) {
     const img = el('img', 'who-avatar');
-    img.src = AVATAR_URL;
+    img.src = avatarUrl();
     img.alt = '';
     row.append(img);
   }

@@ -23,6 +23,9 @@ Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http
 - **Własne odpowiedzi** — fraza → Twoja odpowiedź; z testerem „co odpowie asystentka”.
 - **Odpowiedzi wbudowane** — zmiana tekstów gotowych odpowiedzi (przypadki A–M) bez programowania.
 - **Usługi i przyciski** — nazwy, ceny, kolory usług i przyciski pod każdą odpowiedzią (domyślnie ze specyfikacji v1.1).
+- **Tematy** — słowa kluczowe tematów (dodawanie, usuwanie, tester) i przyciski dodatkowe przy dolegliwościach.
+- **Komunikaty** — informacje z datą od–do (np. przerwa świąteczna), same się pokazują i znikają.
+- **Strona i wygląd** — telefon, e-mail, godziny, imię konsultantki, napisy, kolor, logo, położenie czatu, adresy zakładek.
 - **Nauka** — przypisywanie nierozpoznanych pytań do tematów (model podpowiada), test „przed / po”, trafność, „Zapisz i naucz model” z automatyczną wersją.
 - **Rozmowy** — statystyki, pytania bez odpowiedzi, eksport CSV i eksport do treningu.
 - **Kontrola strony** — czy linki z odpowiedzi działają, czy ceny/telefon/godziny są aktualne, co się zmieniło na stronie (także automatycznie codziennie, z e-mailem przy problemie).

@@ -6,10 +6,10 @@ Gdy pomysł zostanie zrobiony: zmień `[ ]` na `[x]`, dopisz wersję (np. „bot
 
 ## Bot
 
-- [ ] **Tolerancja literówek** — „dermatolok”, „zwolninie” też zadziałają (dziś bot ich nie łapie).
+- [x] **Tolerancja literówek** — „dermatolok”, „zwolninie” też zadziałają (dziś bot ich nie łapie).
 - [ ] **Pytanie doprecyzowujące zamiast „nie wiem”** — przy „boli mnie” przyciski: „Głowa / Brzuch / Gardło”. Kandydatów już mamy, tylko ich nie pokazujemy.
 - [ ] **Pamięć tematu** — pacjent pisze o L4, potem „a ile to kosztuje?” → cena L4, a nie cały cennik.
-- [ ] **Słowa kluczowe edytowane w panelu** — dopisujesz synonim do tematu bez programowania; nasz model może się wtedy douczyć w przeglądarce (trening trwa ułamek sekundy).
+- [x] **Słowa kluczowe edytowane w panelu** — dopisujesz synonim do tematu bez programowania; nasz model może się wtedy douczyć w przeglądarce (trening trwa ułamek sekundy). *Zrobione (bot 1.9.0): zakładka „Tematy”; nasz model uczy się w zakładce „Nauka”.*
 - [ ] **„Czy infolinia jest teraz czynna?”** — odpowiedź zależna od godziny, po godzinach formularz „oddzwonimy”.
 - [ ] **Przekazanie do człowieka** — przycisk „Porozmawiaj z konsultantem” (obecny czat na żywo albo telefon).
 - [ ] **👍/👎 pod odpowiedzią** — w panelu najgorzej oceniane odpowiedzi.
@@ -30,11 +30,11 @@ Gdy pomysł zostanie zrobiony: zmień `[ ]` na `[x]`, dopisz wersję (np. „bot
 
 ### Codzienna praca
 
-- [ ] **„Wygląd i teksty” bez kodu** — telefon, godziny, e-mail, imię konsultantki, powitanie, przyciski szybkich pytań, kolory, ceny do kontroli strony (dziś część wymaga edycji `knowledge.js`).
-- [ ] **Komunikat w czacie z datą od–do** — np. „24–26.12 infolinia nieczynna”; pojawia się i znika sam.
+- [x] **„Wygląd i teksty” bez kodu** — telefon, godziny, e-mail, imię konsultantki, powitanie, przyciski szybkich pytań, kolory, ceny do kontroli strony. *Zrobione (bot 1.9.0): zakładki „Strona i wygląd”, „Usługi i przyciski”, „Odpowiedzi wbudowane”.*
+- [x] **Komunikat w czacie z datą od–do** — np. „24–26.12 infolinia nieczynna”; pojawia się i znika sam. *Zrobione (bot 1.9.0): zakładka „Komunikaty”.*
 - [ ] **Odpowiedzi czasowe** — własna odpowiedź ważna tylko w danym okresie (święta, promocja).
 - [ ] **Podgląd czatu na żywo w panelu** — okno czatu obok edycji, od razu z niezapisanymi zmianami.
-- [ ] **Słowa kluczowe bota i przykłady modelu edytowane w panelu** — z treningiem modelu w przeglądarce.
+- [x] **Słowa kluczowe bota i przykłady modelu edytowane w panelu** — z treningiem modelu w przeglądarce. *Zrobione: „Tematy” i „Nauka”.*
 
 ### Kontrola jakości
 

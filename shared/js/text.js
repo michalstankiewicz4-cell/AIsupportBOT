@@ -119,7 +119,7 @@ function wordMatches(token, word, prefix, fuzzy) {
  * true, jeśli fraza (np. "nie moge oddychac", "dermatolog*") występuje w znormalizowanym tekście.
  * Frazy wielowyrazowe dopasowujemy słowo po słowie, każde z tolerancją literówki.
  * @param {string} normText  tekst po normalize()
- * @param {string} phrase    fraza bez polskich znaków; "*" na końcu = początek słowa; "=" na początku = bez literówek
+ * @param {string} phrase    fraza bez polskich znaków; "*" na końcu słowa = początek słowa; "=" na początku = bez literówek
  */
 export function matchesPhrase(normText, phrase, { fuzzy = true } = {}) {
   const words = (Array.isArray(normText) ? normText : normText.split(' ')).filter(Boolean);
@@ -128,13 +128,12 @@ export function matchesPhrase(normText, phrase, { fuzzy = true } = {}) {
     phrase = phrase.slice(1);
     fuzzy = false;
   }
-  const prefix = phrase.endsWith('*');
-  const parts = (prefix ? phrase.slice(0, -1) : phrase).split(' ').filter(Boolean);
-  if (!parts.length) return false;
+  // "*" może stać na końcu każdego słowa frazy: „rw* kulszow*” = „rwa kulszowa”, „rwę kulszową”…
+  const parts = phrase.split(' ').filter(Boolean).map((w) => (w.endsWith('*') ? [w.slice(0, -1), true] : [w, false]));
+  if (!parts.length || parts.some(([w]) => !w)) return false;
   outer: for (let i = 0; i + parts.length <= words.length; i++) {
     for (let j = 0; j < parts.length; j++) {
-      const last = j === parts.length - 1;
-      if (!wordMatches(words[i + j], parts[j], prefix && last, fuzzy)) continue outer;
+      if (!wordMatches(words[i + j], parts[j][0], parts[j][1], fuzzy)) continue outer;
     }
     return true;
   }

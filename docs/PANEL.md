@@ -225,6 +225,32 @@ Wartości domyślne pochodzą ze specyfikacji czatu v1.1 (`shared/js/knowledge.j
 
 > Kontrola strony sprawdza ceny wpisane w `SITE_FACTS` (domyślne). Po zmianie ceny w panelu sprawdź, czy zgadza się ze stroną.
 
+### Tematy i słowa kluczowe
+
+Zakładka **„Tematy”** pokazuje każdy temat (np. „Inny specjalista”, „L4”) z jego słowami kluczowymi:
+
+- kliknięcie słowa je **usuwa** (przekreślone — kliknij ponownie, żeby przywrócić), pole „Dodaj słowa” **dopisuje** nowe (po przecinku);
+- słowa wpisuj z polskimi znakami albo bez — asystentka je ujednolica; **gwiazdka na końcu słowa** oznacza dowolną końcówkę: `rw* kulszow*` rozpozna „rwa kulszowa”, „rwę kulszową”, „rwy kulszowej”;
+- „Sprawdź pytanie” pokazuje odpowiedź bota z niezapisanymi zmianami;
+- przy dolegliwościach (D) i zdrowiu psychicznym (C) można zmienić **przyciski dodatkowe** tematu (np. „wysypka” → Dermatologia online).
+
+Zmiany słów działają w bocie od razu po zapisaniu; nasz model (trained) uczy się ich dopiero po „Zapisz i naucz model” w zakładce „Nauka”. **Słowa alarmowe (112, kryzys) są celowo poza panelem** — zmienia je programista w `shared/js/safety.js` po zatwierdzeniu przez lekarza.
+
+### Komunikaty
+
+Zakładka **„Komunikaty”**: krótka informacja z datą od–do (np. „24–26.12 infolinia nieczynna”), pokazywana na górze rozmowy tylko w swoim terminie (puste daty = bez ograniczeń). Status przy komunikacie: „widoczny teraz”, „zaplanowany”, „wygasł”, „wyłączony”.
+
+### Strona i wygląd
+
+Zakładka **„Strona i wygląd”**:
+
+- **Kontakt** — telefon, e-mail, godziny infolinii: trafiają do odpowiedzi (np. „Kontakt”), do przycisku „Zadzwoń” i do **kontroli strony** (sprawdza nowe wartości; ceny — z „Usługi i przyciski”).
+- **Konsultantka i napisy** — nazwa w nagłówku, imię konsultantki (także w narzędniku), tytuł i tekst ekranu powitalnego, podpowiedź w polu wiadomości.
+- **Wygląd okna czatu** — kolor przewodni, strona ekranu, automatyczne otwieranie, własne **logo** i **miniatura** konsultantki (PNG/JPG/WebP do ok. 150 KB, zapisywane w ustawieniach).
+- **Adresy zakładek strony** — gdy na stronie kliniki zmieni się adres podstrony (np. cennik), wpisz nowy (tylko `https://`).
+
+Puste pole = wartość domyślna. Atrybuty `data-title`, `data-accent`, `data-position`, `data-open` w skrypcie na stronie kliniki mają pierwszeństwo przed tymi ustawieniami.
+
 ## 9. Nauka naszego modelu
 
 Zakładka **„Nauka”** zastępuje ręczną edycję `trained/data/training.json` i polecenie `npm run train`.

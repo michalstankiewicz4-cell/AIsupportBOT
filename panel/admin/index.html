@@ -85,6 +85,9 @@
       <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
       <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
       <button role="tab" data-tab="design">Usługi i przyciski <span class="count" id="design-count"></span></button>
+      <button role="tab" data-tab="topics">Tematy <span class="count" id="topics-count"></span></button>
+      <button role="tab" data-tab="notices">Komunikaty <span class="count" id="notices-count"></span></button>
+      <button role="tab" data-tab="sitecfg">Strona i wygląd <span class="count" id="sitecfg-count"></span></button>
       <button role="tab" data-tab="learn">Nauka <span class="count warn" id="learn-count"></span></button>
       <button role="tab" data-tab="logs">Rozmowy</button>
       <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
@@ -157,6 +160,43 @@
           </aside>
           <div id="rule-editor" class="editor"></div>
         </div>
+      </section>
+
+      <!-- Tematy i słowa kluczowe -->
+      <section class="tab" id="tab-topics" hidden>
+        <div class="intro">
+          <h2>Tematy i słowa kluczowe <span class="tip" tabindex="0" data-tip="Słowa wpisuj bez polskich znaków albo z nimi — asystentka i tak je ujednolica. Gwiazdka na końcu słowa (np. „kregoslup*”, „rw* kulszow*”) oznacza „słowo zaczynające się od…” — dzięki niej asystentka rozumie odmianę: rwa, rwę, rwy.">?</span></h2>
+          <p>Po jakich słowach asystentka rozpoznaje temat (np. dopisz „rwa kulszowa” do dolegliwości albo „zwolnienie na dziecko” do L4) i jakie przyciski dodatkowe pokazuje przy dolegliwościach (np. „wysypka” → Dermatologia online). Słowa alarmowe (112, kryzys) są celowo poza panelem — zmienia je programista po zatwierdzeniu przez lekarza.</p>
+        </div>
+        <div class="panel-box">
+          <h3>Sprawdź pytanie <span class="tip" tabindex="0" data-tip="Pokazuje, jak asystentka (bot) odpowie z Twoimi niezapisanymi zmianami.">?</span></h3>
+          <div class="row"><input id="topics-test" type="text" placeholder="np. mam rwę kulszową" style="flex:1"><button id="topics-test-btn" class="btn" type="button">Sprawdź</button></div>
+          <div id="topics-test-out" class="test-out"></div>
+        </div>
+        <div class="list-head wide">
+          <input id="topics-search" type="search" placeholder="Szukaj tematu lub słowa…">
+          <label class="check"><input id="topics-only" type="checkbox"> tylko zmienione</label>
+        </div>
+        <div id="topics-list"></div>
+      </section>
+
+      <!-- Komunikaty okresowe -->
+      <section class="tab" id="tab-notices" hidden>
+        <div class="intro">
+          <h2>Komunikaty w czacie <span class="tip" tabindex="0" data-tip="Komunikat pokazuje się na górze rozmowy tylko między datą „od” a „do” (włącznie). Puste daty = bez ograniczenia.">?</span></h2>
+          <p>Krótka informacja z datą od–do, np. „24–26.12 infolinia nieczynna” albo „W listopadzie e-recepta taniej”. Pojawia się i znika sama.</p>
+        </div>
+        <div id="notices-list"></div>
+        <button id="notice-add" class="btn" type="button">+ Dodaj komunikat</button>
+      </section>
+
+      <!-- Strona i wygląd -->
+      <section class="tab" id="tab-sitecfg" hidden>
+        <div class="intro">
+          <h2>Strona i wygląd <span class="tip" tabindex="0" data-tip="Puste pole = wartość domyślna. Atrybuty data-title, data-accent, data-position i data-open w skrypcie na stronie kliniki mają pierwszeństwo przed tymi ustawieniami.">?</span></h2>
+          <p>Dane kontaktowe, imię konsultantki, napisy, wygląd okna czatu i adresy zakładek strony. Telefon, e-mail i godziny trafiają do odpowiedzi asystentki i do kontroli strony.</p>
+        </div>
+        <div id="sitecfg-list"></div>
       </section>
 
       <!-- Usługi i przyciski -->

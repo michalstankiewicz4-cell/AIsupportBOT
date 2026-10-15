@@ -8,7 +8,7 @@ import { botEngine } from '../bot/bot-engine.js';
 import { decide } from '../trained/trained-engine.js';
 import { createAiEngine } from '../ai/ai-engine.js';
 import { buildSystemPrompt } from '../ai/server/prompt.js';
-import { INTENTS, PAGES, SITE_FACTS } from '../shared/js/knowledge.js';
+import { INTENTS, PAGES, siteFacts } from '../shared/js/knowledge.js';
 import { setPanelConfig, matchRule } from '../panel/client.js';
 import { sanitizeConfig, filterLogEntry, DEFAULT_CONFIG, wrapSettings, unwrapSettings } from '../panel/schema.js';
 import { initPanel, getPanelConfig, panelStatus } from '../panel/client.js';
@@ -264,6 +264,32 @@ r = await respond(botEngine, 'potrzebuję L4');
 expect('panel: własne przyciski (nieznane id odrzucone, własna etykieta)', r.links.map((l) => l.label).join() === 'L4 online · od 79 zł,Ceny', r.links);
 expect('panel: tylko znane usługi i przyciski', !sanitizeConfig({ services: { nieznana: { price: '1' } }, buttons: { ALARM: ['cennik'], J: ['l4'] } }).services.nieznana && !Object.keys(sanitizeConfig({ buttons: { ALARM: ['cennik'], J: ['l4'] } }).buttons).length);
 expect('panel: kolor tylko #rrggbb', !sanitizeConfig({ services: { l4: { color: 'red;background:url(x)' } } }).services.l4);
+// Strona i wygląd, adresy zakładek, słowa kluczowe, przyciski dodatkowe, komunikaty — z panelu.
+{
+  const { SITE, PAGES, activeNotices } = await import('../shared/js/knowledge.js');
+  setPanelConfig({
+    site: { phone: '+48 600 100 200', hours: 'pon–pt 7:00–21:00', assistant: 'Ola', email: 'zly-adres' },
+    pages: { pricing: 'https://lekarzeiterapeuci.pl/cennik', terms: 'javascript:alert(1)' },
+    keywords: { inny_specjalista: { add: ['rw* kulszow*'] }, skora: { remove: ['wysypk*'] } },
+    topics: { inny_specjalista: { extras: ['dermatologia'] }, l4: { extras: ['trt'] } },
+    notices: [{ text: 'Teraz', from: '2000-01-01', to: '2999-12-31' }, { text: 'Kiedyś', from: '2999-01-01' }, { text: 'Wyłączony', active: false }],
+  });
+  r = await respond(botEngine, 'numer telefonu');
+  expect('panel: nowy telefon i godziny w odpowiedzi', r.text.includes('+48 600 100 200') && r.text.includes('7:00–21:00') && SITE.phoneHref === 'tel:+48600100200', r.text);
+  expect('panel: imię konsultantki, zły e-mail odrzucony', SITE.assistant === 'Ola' && SITE.email === 'kontakt@lekarzeiterapeuci.pl');
+  expect('panel: adres zakładki (tylko https)', PAGES.pricing.url === 'https://lekarzeiterapeuci.pl/cennik' && PAGES.terms.url.endsWith('/warunki-umowy'));
+  r = await respond(botEngine, 'mam rwę kulszową');
+  expect('panel: dodane słowo z gwiazdkami („rw* kulszow*”) + przycisk dodatkowy', r.intent === 'inny_specjalista' && r.links.some((l) => l.id === 'dermatologia'), r);
+  r = await respond(botEngine, 'mam wysypkę');
+  expect('panel: usunięte słowo przestaje działać', r.intent !== 'skora', r.intent);
+  expect('panel: przyciski dodatkowe tylko dla C i D', !sanitizeConfig({ topics: { l4: { extras: ['trt'] } } }).topics.l4);
+  expect('panel: komunikaty tylko w swoim terminie', activeNotices().map((n) => n.text).join() === 'Teraz', activeNotices());
+  const { siteFacts } = await import('../shared/js/knowledge.js');
+  expect('kontrola strony sprawdza nowy telefon i godziny', siteFacts().some((f) => f.pattern.startsWith('600')) && siteFacts().some((f) => f.label.includes('7:00–21:00')));
+  expect('panel: obraz tylko PNG/JPEG/WebP', !sanitizeConfig({ site: { logo: 'data:image/svg+xml;base64,PHN2Zz4=' } }).site.logo && sanitizeConfig({ site: { logo: 'data:image/png;base64,iVBORw0KGgo=' } }).site.logo);
+  setPanelConfig(DEFAULT_CONFIG);
+  expect('panel: powrót do wartości domyślnych', SITE.phone === '+48 881 238 227' && SITE.assistant === 'Ilona' && PAGES.pricing.url.endsWith('/#cennik') && !activeNotices().length);
+}
 setPanelConfig(DEFAULT_CONFIG);
 r = await respond(botEngine, 'mam wysypkę');
 expect('powrót do tekstu domyślnego', !r.text.startsWith('Skóra →'), r.text);
@@ -355,7 +381,7 @@ const links = collectLinks({ rules: [{ phrases: ['x'], text: 'y', links: [{ labe
 expect('kontrola: zbiera linki z odpowiedzi i reguł', links.length > 20 && links.find((l) => l.url.endsWith('/#kontakt')).where.some((w) => w.startsWith('Własna')), links.length);
 const first = await checkSite({ fetchImpl: fakeFetch('good') });
 expect('kontrola: wszystko OK na dobrej stronie', first.ok && first.summary.errors === 0 && first.summary.factsMissing === 0, first.summary);
-expect('kontrola: wszystkie fakty sprawdzone', first.facts.length === SITE_FACTS.length && first.facts.every((f) => f.state === 'ok'), first.facts);
+expect('kontrola: wszystkie fakty sprawdzone', first.facts.length === siteFacts().length && first.facts.every((f) => f.state === 'ok'), first.facts);
 const second = await checkSite({ fetchImpl: fakeFetch('changed'), previous: first });
 expect('kontrola: wykrywa link 404', second.links.some((l) => l.url.includes('/conditions/migrena') && l.level === 'error'), second.summary);
 expect('kontrola: wykrywa brak sekcji #cennik', second.links.some((l) => l.url.endsWith('#cennik') && l.level === 'warn'));
