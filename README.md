@@ -16,14 +16,14 @@ Możliwy jest też **wariant 4 — własny model na serwerze z GPU** (dane pacje
 
 ## Panel sterowania
 
-Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`); na publicznej stronie jest wyłącznie **podgląd demo**. Ustawienia mogą być w **bazie** (serwer panelu, z rejestrem rozmów) albo w **pliku** `panel/settings.json` (bez serwera — wgrywasz plik na hosting). **Eksport / Import** ustawień do pliku JSON — kopia zapasowa i ręczna podmiana. Na start pracujemy na **bocie** — przełącznik **„Tylko bot”** (domyślnie włączony) przysłania napisem *SOON* opcje AI, naszego modelu i kombinacji. Zakładki:
+Pełny panel działa **tylko na Twoim komputerze** (`npm run panel`, adres `http://localhost:5050/panel/admin/`); na publicznej stronie jest wyłącznie **podgląd demo**. Ustawienia mogą być w **bazie** (serwer panelu, z rejestrem rozmów) albo w **pliku** `panel/settings.json` (bez serwera — wgrywasz plik na hosting). **Eksport / Import** ustawień do pliku JSON — kopia zapasowa i ręczna podmiana. Na start pracujemy na **bocie** — przełącznik **„Tylko bot”** (domyślnie włączony) przysłania napisem *SOON* opcje AI, naszego modelu i kombinacji; **„Dev reset”** czyści pamięć przeglądarki i przywraca ustawienia domyślne (do testów). Z prawej strony — **podgląd czatu** z niezapisanymi zmianami. Zakładki (w kolorowych grupach: Działanie · Odpowiedzi · Wygląd i usługi · Analiza):
 
-- **Tryb pracy** — bot / nasz model / AI albo ich kolejność (domyślnie: bot).
+- **Tryb pracy** — bot / nasz model / AI albo ich kolejność (domyślnie: bot); telefon wsparcia i tryb kryzysowy po komunikacie B (domyślnie: bez powtarzania).
 - **Rejestracja rozmów** — 4 poziomy: wyłączona, statystyki, treść pytań za zgodą, pełne rozmowy za zgodą.
 - **Własne odpowiedzi** — fraza → Twoja odpowiedź; z testerem „co odpowie asystentka”.
 - **Odpowiedzi wbudowane** — zmiana tekstów gotowych odpowiedzi (przypadki A–M) bez programowania.
-- **Usługi i przyciski** — nazwy, ceny, kolory usług i przyciski pod każdą odpowiedzią (domyślnie ze specyfikacji v1.1).
-- **Tematy** — słowa kluczowe tematów (dodawanie, usuwanie, tester) i przyciski dodatkowe przy dolegliwościach.
+- **Usługi i przyciski** — nazwy, ceny, kolory usług i przyciski pod każdą odpowiedzią (domyślnie ze specyfikacji v1.1) oraz wygląd kafelków (wysokość, wyśrodkowanie, czcionka, marginesy, kolejność).
+- **Tematy** — słowa kluczowe tematów (dodawanie, usuwanie, tester), przyciski dodatkowe przy dolegliwościach i **słowa alarmowe** A/B (112).
 - **Komunikaty** — informacje z datą od–do (np. przerwa świąteczna), same się pokazują i znikają.
 - **Strona i wygląd** — telefon, e-mail, godziny, imię konsultantki, napisy, kolor, logo, położenie czatu, adresy zakładek.
 - **Nauka** — przypisywanie nierozpoznanych pytań do tematów (model podpowiada), test „przed / po”, trafność, „Zapisz i naucz model” z automatyczną wersją.
@@ -113,7 +113,7 @@ npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 
 ## Zasady, których pilnujemy
 
-1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, zatrucie) i myśli samobójcze wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu pokazuje czerwoną kartę z przyciskiem 112 oraz drugi komunikat (przy kryzysie: krótki i ciepły, z psychiatrą i psychologiem). Tego nie da się wyłączyć ani nadpisać z panelu.
+1. **Bezpieczeństwo ponad wszystko.** Objawy stanu nagłego (ból w klatce, duszność, udar, utrata przytomności, zatrucie) i myśli samobójcze wykrywa `shared/js/safety.js` — regułami, nigdy modelem — i od razu pokazuje czerwoną kartę z przyciskiem 112 oraz drugi komunikat (przy kryzysie: krótki i ciepły, z psychiatrą i psychologiem). Samego alarmu nie da się wyłączyć ani nadpisać z panelu — w zakładce „Tematy” można tylko dopisać albo wyłączyć pojedyncze słowa alarmowe (za zgodą lekarza).
 2. **Żadnych opinii medycznych.** Bez diagnoz, dawkowania, interpretacji wyników. Każda dolegliwość → konsultacja lekarska (kafelki: konsultacja lekarska, recepta, konsultacja ogólna).
 3. **Jedno źródło wiedzy.** Teksty — `shared/js/texts.js`, usługi, ceny i słowa kluczowe — `shared/js/knowledge.js`; zmiany tekstów bez programowania — w panelu sterowania.
 4. **Prywatność.** Imię pacjenta nie opuszcza przeglądarki. Rejestracja rozmów jest domyślnie wyłączona; treść pytań zapisujemy tylko za zgodą i po anonimizacji.

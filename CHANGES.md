@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.5
+- Dokumentacja: instrukcja obsługi i README uzupełnione o nowe zakładki i ustawienia
+
+### ai 1.11.5
+- Dokumentacja: instrukcja obsługi i README uzupełnione o nowe zakładki i ustawienia
+
+### trained 1.10.5
+- Dokumentacja: instrukcja obsługi i README uzupełnione o nowe zakładki i ustawienia
+
 ### bot 1.10.4
 - Bot: „dzieci” nie jest już brane za „dzięki”; „czy przyjmujecie dzieci” → konsultacja (pediatra)
 

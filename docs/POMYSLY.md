@@ -1,6 +1,6 @@
 # Pomysły na rozwój (backlog)
 
-Lista pomysłów do dalszej pracy — **nic z tej listy nie jest jeszcze zrobione**. Na start pracujemy na bocie regułowym (patrz przełącznik „Tylko bot”, [SOON.md](SOON.md)), więc sekcja „Bot” i część panelu to najbliższe kandydatki.
+Lista pomysłów do dalszej pracy — zrobione są oznaczone `[x]` (z wersją). Na start pracujemy na bocie regułowym (patrz przełącznik „Tylko bot”, [SOON.md](SOON.md)), więc sekcja „Bot” i część panelu to najbliższe kandydatki.
 
 Gdy pomysł zostanie zrobiony: zmień `[ ]` na `[x]`, dopisz wersję (np. „bot 1.7.0”) i opisz zmianę w `CHANGES.md`.
 
@@ -33,7 +33,7 @@ Gdy pomysł zostanie zrobiony: zmień `[ ]` na `[x]`, dopisz wersję (np. „bot
 - [x] **„Wygląd i teksty” bez kodu** — telefon, godziny, e-mail, imię konsultantki, powitanie, przyciski szybkich pytań, kolory, ceny do kontroli strony. *Zrobione (bot 1.9.0): zakładki „Strona i wygląd”, „Usługi i przyciski”, „Odpowiedzi wbudowane”.*
 - [x] **Komunikat w czacie z datą od–do** — np. „24–26.12 infolinia nieczynna”; pojawia się i znika sam. *Zrobione (bot 1.9.0): zakładka „Komunikaty”.*
 - [ ] **Odpowiedzi czasowe** — własna odpowiedź ważna tylko w danym okresie (święta, promocja).
-- [ ] **Podgląd czatu na żywo w panelu** — okno czatu obok edycji, od razu z niezapisanymi zmianami.
+- [x] **Podgląd czatu na żywo w panelu** — okno czatu obok edycji, od razu z niezapisanymi zmianami. *Zrobione (bot 1.9.x): podgląd z prawej strony panelu, przycisk „Podgląd czatu”.*
 - [x] **Słowa kluczowe bota i przykłady modelu edytowane w panelu** — z treningiem modelu w przeglądarce. *Zrobione: „Tematy” i „Nauka”.*
 
 ### Kontrola jakości
