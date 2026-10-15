@@ -49,6 +49,17 @@ Czat bierze ustawienia z pierwszego dostępnego źródła: serwer panelu (gdy po
 
 ---
 
+### Zakładki w grupach
+
+Zakładki są pogrupowane i pokolorowane (ten sam kolor ma pasek przy tytule otwartej zakładki):
+
+| Grupa | Kolor | Zakładki |
+|---|---|---|
+| **Działanie** — jak czat pracuje | indygo | Tryb pracy · Rejestracja rozmów · Nauka |
+| **Odpowiedzi** — co czat mówi | zielony | Własne odpowiedzi · Odpowiedzi wbudowane · Tematy (z słowami alarmowymi) · Komunikaty |
+| **Wygląd i usługi** — jak czat wygląda | różowy | Usługi i przyciski · Strona i wygląd |
+| **Analiza** — co się dzieje | złoty | Rozmowy · Kontrola strony |
+
 ## 2. Uruchomienie panelu na komputerze
 
 Wymagany Node.js **22.13+** ([nodejs.org](https://nodejs.org), wersja LTS).

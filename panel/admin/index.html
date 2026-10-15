@@ -81,22 +81,43 @@
       </div>
     </header>
 
+    <!-- Zakładki w grupach (kolor grupy: --g). Kolejność: działanie → odpowiedzi → wygląd → analiza. -->
     <nav class="tabs" role="tablist">
-      <button role="tab" data-tab="mode" aria-selected="true">Tryb pracy</button>
-      <button role="tab" data-tab="logging">Rejestracja rozmów</button>
-      <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
-      <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
-      <button role="tab" data-tab="design">Usługi i przyciski <span class="count" id="design-count"></span></button>
-      <button role="tab" data-tab="topics">Tematy <span class="count" id="topics-count"></span></button>
-      <button role="tab" data-tab="notices">Komunikaty <span class="count" id="notices-count"></span></button>
-      <button role="tab" data-tab="sitecfg">Strona i wygląd <span class="count" id="sitecfg-count"></span></button>
-      <button role="tab" data-tab="learn">Nauka <span class="count warn" id="learn-count"></span></button>
-      <button role="tab" data-tab="logs">Rozmowy</button>
-      <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
+      <div class="tab-group g-act" role="presentation">
+        <span class="tab-group-label">Działanie</span>
+        <div class="tab-group-tabs" role="presentation">
+          <button role="tab" data-tab="mode" aria-selected="true">Tryb pracy</button>
+          <button role="tab" data-tab="logging">Rejestracja rozmów</button>
+          <button role="tab" data-tab="learn">Nauka <span class="count warn" id="learn-count"></span></button>
+        </div>
+      </div>
+      <div class="tab-group g-ans" role="presentation">
+        <span class="tab-group-label">Odpowiedzi</span>
+        <div class="tab-group-tabs" role="presentation">
+          <button role="tab" data-tab="rules">Własne odpowiedzi <span class="count" id="rules-count"></span></button>
+          <button role="tab" data-tab="builtin">Odpowiedzi wbudowane <span class="count" id="ovr-count"></span></button>
+          <button role="tab" data-tab="topics">Tematy <span class="count" id="topics-count"></span></button>
+          <button role="tab" data-tab="notices">Komunikaty <span class="count" id="notices-count"></span></button>
+        </div>
+      </div>
+      <div class="tab-group g-look" role="presentation">
+        <span class="tab-group-label">Wygląd i usługi</span>
+        <div class="tab-group-tabs" role="presentation">
+          <button role="tab" data-tab="design">Usługi i przyciski <span class="count" id="design-count"></span></button>
+          <button role="tab" data-tab="sitecfg">Strona i wygląd <span class="count" id="sitecfg-count"></span></button>
+        </div>
+      </div>
+      <div class="tab-group g-stats" role="presentation">
+        <span class="tab-group-label">Analiza</span>
+        <div class="tab-group-tabs" role="presentation">
+          <button role="tab" data-tab="logs">Rozmowy</button>
+          <button role="tab" data-tab="site">Kontrola strony <span class="count warn" id="site-count"></span></button>
+        </div>
+      </div>
     </nav>
 
     <div class="workspace">
-    <main>
+    <main class="g-act">
       <!-- Tryb pracy -->
       <section class="tab" id="tab-mode">
         <div class="intro">

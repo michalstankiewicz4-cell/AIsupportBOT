@@ -127,17 +127,27 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
 
 .tabs {
   display: flex;
-  gap: 4px;
-  padding: 0 24px;
+  gap: 10px;
+  padding: 8px 24px 0;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
 }
+/* Grupy zakładek — każda ma swój kolor (--g) i jasne tło (--g-soft). */
+.tab-group { --g: #4f46e5; --g-soft: #eef0fe; display: flex; flex-direction: column; flex: none; border-radius: 10px 10px 0 0; background: var(--g-soft); padding: 0 4px; }
+.g-act { --g: #4f46e5; --g-soft: #eef0fe; }   /* działanie: tryb, rejestracja, nauka */
+.g-ans { --g: #0f7f6b; --g-soft: #e6f5f1; }   /* odpowiedzi: reguły, teksty, tematy, komunikaty */
+.g-look { --g: #b8468b; --g-soft: #fbedf5; }  /* wygląd i usługi: kafelki, kolory, strona */
+.g-stats { --g: #8a6a12; --g-soft: #fbf4e2; } /* analiza: rozmowy, kontrola strony */
+/* Tytuł otwartej zakładki z paskiem w kolorze jej grupy (klasa grupy na <main>). */
+main[class*="g-"] .tab > .intro h2 { border-left: 4px solid var(--g); padding-left: 10px; }
+.tab-group-label { font-size: 10.5px; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; color: var(--g); padding: 6px 10px 0; }
+.tab-group-tabs { display: flex; gap: 2px; }
 .tabs button {
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  padding: 12px 14px;
+  padding: 8px 12px 10px;
   border: 0;
   border-bottom: 3px solid transparent;
   background: none;
@@ -145,7 +155,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--accent); box-sha
   cursor: pointer;
   white-space: nowrap;
 }
-.tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs button:hover { color: var(--g); }
+.tabs button[aria-selected="true"] { color: var(--g); border-bottom-color: var(--g); }
 .count { font-size: 11.5px; background: var(--accent-soft); color: var(--accent); padding: 1px 7px; border-radius: 99px; margin-left: 4px; }
 .count:empty { display: none; }
 

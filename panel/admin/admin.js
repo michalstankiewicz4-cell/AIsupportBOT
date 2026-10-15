@@ -345,6 +345,10 @@ document.querySelectorAll('[role="tab"]').forEach((tab) =>
 function selectTab(name) {
   state.tab = name;
   document.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t.dataset.tab === name)));
+  // Kolor grupy zakładki (działanie / odpowiedzi / wygląd / analiza) także na tytule sekcji.
+  const group = [...(document.querySelector(`[data-tab="${name}"]`)?.closest('.tab-group')?.classList || [])].find((c) => c.startsWith('g-'));
+  const main = document.querySelector('.workspace > main');
+  if (main) main.className = group || '';
   document.querySelectorAll('.tab').forEach((s) => (s.hidden = s.id !== `tab-${name}`));
   if (name === 'logs') loadLogs();
   if (name === 'site') renderSite();
