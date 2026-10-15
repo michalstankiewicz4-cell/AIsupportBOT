@@ -481,6 +481,8 @@ export function applyTileStyle(node, t) {
   node.classList.toggle('tiles-fit', Boolean(t.fit));
   node.classList.toggle('tiles-nobreak', Boolean(t.nobreak));
   node.classList.toggle('tiles-autow', Boolean(t.autoWidth));
+  node.classList.toggle('tiles-center', Boolean(t.center));
+  node.style.setProperty('--tile-fs', `${t.fontSize || 13.5}px`);
   node.classList.toggle('tiles-pack', Boolean(t.pack) && !t.autoWidth);
 }
 
@@ -508,11 +510,14 @@ export function layoutTiles(container, t) {
 export function fitTileText(root) {
   for (const name of root.querySelectorAll('.tile-name, .pv-name')) {
     name.style.fontSize = '';
+    name.style.overflowWrap = '';
     let size = parseFloat(getComputedStyle(name).fontSize) || 13.5;
-    while (name.scrollWidth > name.clientWidth + 0.5 && size > 11) {
+    while (name.scrollWidth > name.clientWidth + 0.5 && size > 10) {
       size -= 0.5;
       name.style.fontSize = `${size}px`;
     }
+    // Gdy nawet najmniejszy napis się nie mieści — łamiemy wyraz, żeby nic nie wyszło poza kafelek.
+    if (name.scrollWidth > name.clientWidth + 0.5) name.style.overflowWrap = 'anywhere';
   }
 }
 

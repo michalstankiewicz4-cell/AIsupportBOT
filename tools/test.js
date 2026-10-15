@@ -275,6 +275,8 @@ expect('panel: kafelki — domyślnie bez zmian', JSON.stringify(sanitizeConfig(
   expect('kafelki: kolejność od najtańszej (bez ceny na końcu)', orderTiles(ts, 'cheap').map((x) => x.label[0]).join('') === 'DACB');
   expect('kafelki: od najdroższej / najpierw z ceną / domyślna', orderTiles(ts, 'expensive').map((x) => x.label[0]).join('') === 'CADB' && orderTiles(ts, 'priced').map((x) => x.label[0]).join('') === 'ACDB' && orderTiles(ts, 'default') === ts);
   expect('kafelki: zła kolejność odrzucona', !sanitizeConfig({ tiles: { order: 'xxx' } }).tiles.order && sanitizeConfig({ tiles: { order: 'cheap' } }).tiles.order === 'cheap');
+  const tf = sanitizeConfig({ tiles: { center: true, fontSize: 99 } }).tiles;
+  expect('panel: kafelki — wyśrodkowanie i czcionka (10–20 px)', tf.center && tf.fontSize === 20 && sanitizeConfig({ tiles: { fontSize: 11.3 } }).tiles.fontSize === 11.5 && !('fontSize' in sanitizeConfig({ tiles: { fontSize: 13.5 } }).tiles), tf);
   const tv = sanitizeConfig({ tiles: { sym: 'vertical', padding: { t: 6, b: 18, l: 2, r: 30 } } }).tiles;
   expect('panel: kafelki — symetria pionowa (dół = góra)', tv.padding.b === 6 && tv.padding.l === 2 && tv.padding.r === 24, tv);
 }

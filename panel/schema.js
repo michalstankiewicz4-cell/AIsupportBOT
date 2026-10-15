@@ -158,6 +158,8 @@ function cleanButtons(input) {
 
 // --- Wygląd kafelków ----------------------------------------------------------------
 export const TILE_PADDING_MAX = 24;
+export const TILE_FONT_MIN = 10;
+export const TILE_FONT_MAX = 20;
 export const TILE_SYMS = ['none', 'vertical', 'horizontal', 'both'];
 // Zapisuje tylko zmiany; symetria jest wymuszana także w danych (góra = dół itd.).
 export function cleanTiles(input) {
@@ -167,6 +169,9 @@ export function cleanTiles(input) {
   if (src.nobreak === true) out.nobreak = true;
   if (src.pack === true) out.pack = true;
   if (src.autoWidth === true) out.autoWidth = true;
+  if (src.center === true) out.center = true;
+  const fs = Math.round(Number(src.fontSize) * 2) / 2;
+  if (Number.isFinite(fs) && fs !== DEFAULT_TILES.fontSize) out.fontSize = Math.min(TILE_FONT_MAX, Math.max(TILE_FONT_MIN, fs));
   if (TILE_ORDERS.includes(src.order) && src.order !== 'default') out.order = src.order;
   const sym = TILE_SYMS.includes(src.sym) ? src.sym : 'none';
   if (sym !== 'none') out.sym = sym;

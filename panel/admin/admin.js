@@ -8,7 +8,7 @@ import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered 
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
-import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX } from '../schema.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite, applyTileStyle, layoutTiles, mountWidget } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
@@ -1086,6 +1086,7 @@ function renderTilesCfg() {
   };
   form.append(
     toggle('fit', 'Dopasuj wysokość do zawartości', 'Kafelek bez ceny albo z krótkim tekstem jest niższy — czat zajmuje mniej miejsca w pionie. Wyłączone: wszystkie kafelki w rzędzie mają równą wysokość.'),
+    toggle('center', 'Wyśrodkuj zawartość kafelka', 'Nazwa usługi i cena są na środku kafelka — w poziomie i w pionie. Wyłączone: do lewej, od góry.'),
     toggle('pack', 'Równe odstępy w pionie', 'Kafelki są dosunięte do siebie w kolumnach — odstęp między nimi w pionie jest zawsze taki sam, bez pustych miejsc pod niższymi kafelkami. Najlepiej razem z „Dopasuj wysokość do zawartości”. Nie działa razem z „szerokością dopasowaną do tekstu” (tam odstępy są równe same z siebie).'),
     toggle('autoWidth', 'Szerokość dopasowana do tekstu', 'Kafelek jest tak szeroki jak jego napis — krótkie usługi („L4 online”) zajmują mniej miejsca i więcej mieści się w jednym rzędzie. Wyłączone: 3 równe kolumny.'),
     toggle('nobreak', 'Bez przenoszenia pojedynczych liter', 'Wyraz nie jest łamany w środku (np. „lekarsk-a”) — przechodzi w całości do nowej linii, a linie są wyrównane. Gdy najdłuższy wyraz się nie mieści, napis robi się odrobinę mniejszy.'),
@@ -1097,6 +1098,24 @@ function renderTilesCfg() {
   sym.value = t.sym;
   sym.addEventListener('change', () => setTiles({ ...t, sym: sym.value }));
   symF.append(labelSpan('Symetria marginesów', 'Przy symetrii zmiana jednego suwaka ustawia też przeciwny (pionowa: góra i dół; pozioma: lewo i prawo; pełna: wszystkie cztery).'), sym);
+  // Wielkość czcionki na kafelkach.
+  const fsF = el('label', 'field');
+  const fs = el('input');
+  fs.type = 'range';
+  fs.min = String(TILE_FONT_MIN);
+  fs.max = String(TILE_FONT_MAX);
+  fs.step = '0.5';
+  fs.value = String(t.fontSize);
+  const fsVal = el('code', 'small', `${t.fontSize} px`);
+  fs.addEventListener('input', () => {
+    fsVal.textContent = `${fs.value} px`;
+    applyPreview({ ...t, fontSize: Number(fs.value) });
+  });
+  fs.addEventListener('change', () => setTiles({ ...t, fontSize: Number(fs.value) }));
+  const fsLab = labelSpan('Wielkość czcionki ', `Wielkość nazwy usługi na kafelku (${TILE_FONT_MIN}–${TILE_FONT_MAX} px, domyślnie ${DEFAULT_TILES.fontSize} px). Cena jest proporcjonalnie mniejsza.`);
+  fsLab.append(fsVal);
+  fsF.append(fsLab, fs);
+  form.append(fsF);
   form.append(symF);
   // Kolejność kafelków.
   const ordF = el('label', 'field');

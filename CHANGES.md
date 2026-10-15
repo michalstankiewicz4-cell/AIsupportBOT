@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.7
+- Panel: wyśrodkowanie zawartości kafelka i wielkość czcionki; napis nie wychodzi już poza kafelek przy małych marginesach
+
+### ai 1.10.7
+- Panel: wyśrodkowanie zawartości kafelka i wielkość czcionki; napis nie wychodzi już poza kafelek przy małych marginesach
+
+### trained 1.9.7
+- Panel: wyśrodkowanie zawartości kafelka i wielkość czcionki; napis nie wychodzi już poza kafelek przy małych marginesach
+
 ### bot 1.9.6
 - Panel: podgląd czatu na żywo z prawej strony (bieżące, także niezapisane ustawienia; przełącznik „Podgląd czatu”); widżet nie przewija strony przy ustawianiu kursora
 
