@@ -25,7 +25,7 @@ export function collectLinks(config = {}) {
   applySettings(cfg);
   const map = new Map();
   const add = (url, where) => {
-    if (!/^https?:\/\//i.test(url || '')) return;
+    if (!/^https?:\/\//i.test(url || '') || !isPublicUrl(url)) return;
     if (!map.has(url)) map.set(url, new Set());
     map.get(url).add(where);
   };
@@ -37,6 +37,26 @@ export function collectLinks(config = {}) {
   }
   for (const r of cfg.rules) for (const l of r.links) add(l.url, `Własna odpowiedź: ${r.name || r.phrases[0]}`);
   return [...map].map(([url, where]) => ({ url, where: [...where] }));
+}
+
+// Tylko adresy publiczne: bez localhost, adresów IP sieci lokalnej i nazw jednoczłonowych.
+// Kontrola strony działa też na komputerze administratora (npm run panel) — podrzucony plik
+// ustawień nie może jej użyć do „skanowania” routera czy innych urządzeń w sieci domowej.
+export function isPublicUrl(url) {
+  let h;
+  try {
+    h = new URL(url).hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  } catch {
+    return false;
+  }
+  if (!h.includes('.') || h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal')) return false;
+  if (h.includes(':')) return false; // IPv6 — strony kliniki nie podają adresów IP
+  const ip = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
+  if (ip) {
+    const [a, b] = [Number(ip[1]), Number(ip[2])];
+    if (a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)) return false;
+  }
+  return true;
 }
 
 // Adres strony bez parametrów i kotwicy — kilka linków do tej samej strony pobieramy raz.
@@ -55,7 +75,11 @@ export function htmlToText(html) {
     .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/&(#x?[0-9a-f]+|\w+);/gi, (m, e) => {
-      if (e[0] === '#') return String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10));
+      if (e[0] === '#') {
+        const cp = e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10);
+        // Błędny kod znaku (np. &#99999999;) nie może przerwać całej kontroli.
+        return Number.isInteger(cp) && cp >= 0 && cp <= 0x10ffff ? String.fromCodePoint(cp) : ' ';
+      }
       return ENTITIES[e.toLowerCase()] ?? m;
     })
     .replace(/[\s ]+/g, ' ')

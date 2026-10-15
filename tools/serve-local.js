@@ -151,6 +151,9 @@ async function handleSettings(req, res) {
 
 const server = createServer(async (req, res) => {
   try {
+    // Każde zapytanie (także o zwykłe pliki) musi mieć lokalny nagłówek Host — inaczej obca strona
+    // mogłaby przez „DNS rebinding” odczytać pliki z tego komputera (np. settings.json, kopie zapasowe).
+    if (!isLocalRequest(req, false)) return send(res, 403, 'Forbidden');
     const url = new URL(req.url, `http://${HOST}`);
     if (url.pathname === '/api/site-check' && req.method === 'POST') return await handleSiteCheck(req, res);
     if (url.pathname === '/api/settings') return await handleSettings(req, res);

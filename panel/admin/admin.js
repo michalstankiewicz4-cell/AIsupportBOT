@@ -722,7 +722,7 @@ function renderRuleEditor() {
       id: 'rule-phrases',
       rows: 4,
       placeholder: 'np.\nsobot*\nw weekend\ngodziny otwarcia',
-      hint: 'Jedna fraza w wierszu. Wystarczy, że pytanie pacjenta ją zawiera. Polskie znaki i wielkość liter nie mają znaczenia. Gwiazdka na końcu = dowolna końcówka (sobot* → sobota, sobotę).',
+      hint: 'Jedna fraza w wierszu, co najmniej 3 znaki (krótsze, np. „a”, pasowałyby do prawie każdego pytania i są pomijane). Wystarczy, że pytanie pacjenta ją zawiera. Polskie znaki i wielkość liter nie mają znaczenia. Gwiazdka na końcu = dowolna końcówka (sobot* → sobota, sobotę).',
     },
   );
   const text = textArea('Odpowiedź asystentki', rule.text, (v) => ((rule.text = v), update()), {
@@ -2555,8 +2555,11 @@ function truncate(s, n) {
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
 
+// Komórka CSV. Tekst zaczynający się od = + - @ (albo tabulatora) Excel potraktowałby jako formułę
+// (np. link do obcej strony) — poprzedzamy go apostrofem, żeby był zwykłym tekstem.
 function csvCell(v) {
-  const s = String(v ?? '');
+  let s = String(v ?? '');
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
   return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

@@ -348,6 +348,17 @@ export function mountWidget(opts) {
     if (!message || busy || !state.name) return;
     busy = true;
     send.disabled = true;
+    try {
+      await askInner(message);
+    } finally {
+      // Nawet po nieoczekiwanym błędzie czat nie zostaje zablokowany.
+      busy = false;
+      send.disabled = false;
+    }
+    input.focus({ preventScroll: true });
+  }
+
+  async function askInner(message) {
     log.querySelectorAll('.chips').forEach((c) => c.remove());
 
     const userMsg = { role: 'user', text: message };
@@ -392,10 +403,6 @@ export function mountWidget(opts) {
 
     // Rejestr rozmów (zakres zależy od poziomu z panelu i zgody pacjenta; imię nigdy nie jest wysyłane).
     logTurn({ session: state.session, consent: state.consent, variant: engine.name, version: engine.version, question: message, reply });
-
-    busy = false;
-    send.disabled = false;
-    input.focus({ preventScroll: true });
   }
 
   function setOpen(open) {
@@ -413,6 +420,7 @@ export function mountWidget(opts) {
   });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    if (busy) return; // asystentka jeszcze odpowiada — wpisany tekst zostaje w polu
     const v = input.value;
     input.value = '';
     autoGrow();
@@ -558,7 +566,8 @@ function appendLinkified(parent, text) {
   for (const part of parts) {
     let url = null;
     try {
-      if (/^https?:\/\//.test(part) && new URL(part).hostname.endsWith(host)) url = part.replace(/[.,;]+$/, '');
+      const h = /^https:\/\//.test(part) ? new URL(part).hostname : '';
+      if (h && (h === host || h.endsWith(`.${host}`))) url = part.replace(/[.,;]+$/, '');
     } catch { /* to nie jest adres */ }
     if (url) {
       const a = el('a', 'inline-link', url.replace(/^https?:\/\/(www\.)?/, ''));

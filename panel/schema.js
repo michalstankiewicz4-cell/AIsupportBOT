@@ -109,7 +109,7 @@ export const DEFAULT_CONFIG = Object.freeze({
 
 // Bezpieczne adresy linków: tylko https, http, tel i mailto (żadnego javascript:).
 export function isSafeUrl(url) {
-  return /^(https?:\/\/|tel:|mailto:)/i.test(String(url || '').trim());
+  return /^(https:\/\/|tel:|mailto:)/i.test(String(url || '').trim());
 }
 
 function cleanText(value, max) {
@@ -125,9 +125,10 @@ function cleanLinks(links) {
 }
 
 function cleanRule(rule, index) {
+  // Fraza krótsza niż 3 znaki (np. „a”, „w”) pasowałaby do prawie każdego pytania — odrzucamy ją.
   const phrases = (Array.isArray(rule?.phrases) ? rule.phrases : [])
     .map((p) => cleanText(p, LIMITS.phraseLength))
-    .filter(Boolean)
+    .filter((p) => normalize(p.replace(/\*/g, '')).replace(/\s+/g, '').length >= 3)
     .slice(0, LIMITS.phrasesPerRule);
   const text = cleanText(rule?.text, LIMITS.textLength);
   if (!phrases.length || !text) return null;
@@ -142,12 +143,14 @@ function cleanRule(rule, index) {
 }
 
 const HEX = /^#[0-9a-f]{6}$/i;
+// Czy klucz naprawdę jest w słowniku (a nie np. „constructor” czy „toString” z prototypu obiektu).
+const has = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
 
 // Zmiany usług: tylko znane usługi i poprawne wartości; pole pominięte = wartość domyślna.
 function cleanServices(input) {
   const out = {};
   for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
-    if (!SERVICES[id] || !v || typeof v !== 'object') continue;
+    if (!has(SERVICES, id) || !v || typeof v !== 'object') continue;
     const e = {};
     if (typeof v.label === 'string' && v.label.trim()) e.label = cleanText(v.label, 60);
     if (typeof v.price === 'string') e.price = cleanText(v.price, 20);
@@ -167,12 +170,12 @@ function cleanButtons(input) {
   const out = {};
   for (const [key, list] of Object.entries(input && typeof input === 'object' ? input : {})) {
     // J (cena rozpoznanej usługi) jest budowane automatycznie; teksty alarmowe (A, B) — bez zmian.
-    if (!TEXTS[key] || key === 'J' || TEXTS[key].locked || !Array.isArray(list)) continue;
+    if (!has(TEXTS, key) || key === 'J' || TEXTS[key].locked || !Array.isArray(list)) continue;
     out[key] = list
       .map((x) => String(x || ''))
       .map((x) => {
         const [id, label] = x.split('|');
-        if (!BUTTONS[id]) return null;
+        if (!has(BUTTONS, id)) return null;
         const l = label ? cleanText(label, 60).replace(/\|/g, '') : '';
         return l ? `${id}|${l}` : id;
       })
@@ -249,7 +252,7 @@ function cleanSite(input) {
 function cleanPages(input) {
   const out = {};
   for (const [k, url] of Object.entries(input && typeof input === 'object' ? input : {})) {
-    if (!DEFAULT_PAGES[k] || k === 'phone' || typeof url !== 'string') continue;
+    if (!has(DEFAULT_PAGES, k) || k === 'phone' || typeof url !== 'string') continue;
     const u = url.trim().slice(0, 300);
     if (/^https:\/\/[^\s"'<>]+$/i.test(u) && u !== DEFAULT_PAGES[k].url) out[k] = u;
   }
@@ -270,7 +273,7 @@ export function cleanKeyword(k) {
 function cleanKeywords(input) {
   const out = {};
   for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
-    if (!INTENT_BY_ID[id] || !v || typeof v !== 'object') continue;
+    if (!has(INTENT_BY_ID, id) || !v || typeof v !== 'object') continue;
     const add = [...new Set((Array.isArray(v.add) ? v.add : []).map(cleanKeyword).filter(Boolean))].slice(0, 100);
     const remove = [...new Set((Array.isArray(v.remove) ? v.remove : []).map(String).filter((w) => INTENT_BY_ID[id] && w))].slice(0, 200);
     if (add.length || remove.length) out[id] = { add, remove };
@@ -303,9 +306,9 @@ function cleanAlarms(input) {
 function cleanTopics(input) {
   const out = {};
   for (const [id, v] of Object.entries(input && typeof input === 'object' ? input : {})) {
-    const intent = INTENT_BY_ID[id];
+    const intent = has(INTENT_BY_ID, id) ? INTENT_BY_ID[id] : null;
     if (!intent || !EXTRAS_CASES.includes(intent.case) || !Array.isArray(v?.extras)) continue;
-    out[id] = { extras: [...new Set(v.extras.map(String).filter((b) => BUTTONS[b]))].slice(0, 6) };
+    out[id] = { extras: [...new Set(v.extras.map(String).filter((b) => has(BUTTONS, b)))].slice(0, 6) };
   }
   return out;
 }
@@ -347,7 +350,7 @@ export function sanitizeConfig(input) {
   for (const [id, o] of Object.entries(src.overrides && typeof src.overrides === 'object' ? src.overrides : {})) {
     const key = cleanText(id, 40).replace(/[^\w-]/g, '');
     const text = cleanText(o?.text, LIMITS.textLength);
-    if (!key || !text) continue;
+    if (!key || !text || !has(TEXTS, key)) continue;
     const entry = { text };
     if (Array.isArray(o?.links)) entry.links = cleanLinks(o.links);
     overrides[key] = entry;

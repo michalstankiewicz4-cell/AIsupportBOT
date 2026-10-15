@@ -86,7 +86,7 @@ Zakładki są w czterech kolorowych grupach (ten sam kolor ma pasek przy tytule 
 ### Asystentka nie umie odpowiedzieć na pytanie (np. „czy macie parking?”)
 
 1. **Własne odpowiedzi** → **+ Nowa**.
-2. **Frazy** — po jednej w wierszu, krótko: `parking`, `gdzie zaparkować`.
+2. **Frazy** — po jednej w wierszu, krótko (min. 3 znaki): `parking`, `gdzie zaparkować`.
 3. **Odpowiedź asystentki** — np. „Konsultacje odbywają się online (telefon lub wideo), więc nie trzeba przyjeżdżać do placówki.”
 4. (Opcjonalnie) **Przyciski z linkami**: `Jak to działa? | https://lekarzeiterapeuci.pl/jak-to-dziala`
 5. W polu **Sprawdź odpowiedź** wpisz pytanie tak, jak napisałby pacjent → **Sprawdź**. Powinna pojawić się Twoja odpowiedź z etykietą „Własna odpowiedź”.

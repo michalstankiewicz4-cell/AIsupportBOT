@@ -245,7 +245,7 @@ for (const q of ['wziąłem za dużo narkotyków', 'przećpałem', 'za dużo dop
     notices: [{ id: 'n1', text: 'Test', from: '2026-12-24', to: '2026-12-26', active: true }],
     tiles: { fit: true, centerH: true, singleFit: false, fontSize: 12, padding: { t: 3, r: 3, b: 3, l: 3 } },
     rules: [{ id: 'r1', phrases: ['parking'], text: 'Parking jest.', active: true }],
-    overrides: { cennik: { text: 'Nowy cennik.' } },
+    overrides: { F: { text: 'Nowy tekst L4.' } },
   };
   const a = sanitizeConfig(full);
   const b = unwrapSettings(JSON.parse(JSON.stringify(wrapSettings(a))));
@@ -464,7 +464,7 @@ if (sqliteOk) {
   expect('serwer: domyślne ustawienia', (await call('GET', '/config')).data.engine.chain.join() === 'bot');
   expect('serwer: admin bez hasła = 401', (await call('GET', '/admin/config')).status === 401);
   expect('serwer: złe hasło = 401', (await call('GET', '/admin/config', { pw: 'zle' })).status === 401);
-  const put = await call('PUT', '/admin/config', { pw: 'tajne', body: { engine: { chain: ['trained', 'ai'] }, logging: { level: 2 }, rules: [{ phrases: ['x'], text: 'y', active: false }] } });
+  const put = await call('PUT', '/admin/config', { pw: 'tajne', body: { engine: { chain: ['trained', 'ai'] }, logging: { level: 2 }, rules: [{ phrases: ['xyz'], text: 'y', active: false }] } });
   expect('serwer: zapis ustawień', put.status === 200 && put.data.engine.chain.join() === 'trained,ai', put);
   expect('serwer: wyłączone reguły niepubliczne', (await call('GET', '/config')).data.rules.length === 0);
   expect('serwer: zapis rozmowy', (await call('POST', '/log', { body: { intent: 'skora', consent: true, question: 'tel 600123456' } })).status === 204);
@@ -476,6 +476,8 @@ if (sqliteOk) {
   env.ADMIN_IPS = '';
   for (let i = 0; i < 11; i++) await call('GET', '/admin/config', { pw: 'zle', ip: '2.2.2.2' });
   expect('serwer: blokada po 10 błędnych hasłach', (await call('GET', '/admin/config', { pw: 'tajne', ip: '2.2.2.2' })).status === 429);
+  (await import('../panel/server/worker.js'))._resetForTests(); // nowa instancja Workera
+  expect('serwer: blokada zapisana w bazie (działa w każdej instancji)', (await call('GET', '/admin/config', { pw: 'tajne', ip: '2.2.2.2' })).status === 429);
   env.DB._raw.prepare('UPDATE logs SET ts = ?').run(Date.now() - 400 * 86400000);
   await worker.scheduled({}, { ...env, DB: env.DB }, { waitUntil: () => {} });
   expect('serwer: stare wpisy usuwane automatycznie', (await call('GET', '/admin/logs', { pw: 'tajne', ip: '3.3.3.3' })).data.logs.length === 0);
@@ -495,7 +497,7 @@ const fakeFetch = (variant) => async (url) => {
   if (u.pathname === '/conditions/migrena' && variant === 'changed') return new Response('Not found', { status: 404, headers: { 'content-type': 'text/html' } });
   return html(`<html><body>${'<p>Podstrona.</p>'.repeat(60)}</body></html>`);
 };
-const links = collectLinks({ rules: [{ phrases: ['x'], text: 'y', links: [{ label: 'Kontakt', url: 'https://lekarzeiterapeuci.pl/#kontakt' }] }] });
+const links = collectLinks({ rules: [{ phrases: ['xyz'], text: 'y', links: [{ label: 'Kontakt', url: 'https://lekarzeiterapeuci.pl/#kontakt' }] }] });
 expect('kontrola: zbiera linki z odpowiedzi i reguł', links.length > 20 && links.find((l) => l.url.endsWith('/#kontakt')).where.some((w) => w.startsWith('Własna')), links.length);
 const first = await checkSite({ fetchImpl: fakeFetch('good') });
 expect('kontrola: wszystko OK na dobrej stronie', first.ok && first.summary.errors === 0 && first.summary.factsMissing === 0, first.summary);
@@ -616,6 +618,73 @@ function countExamplesQuick(d) {
     const model = JSON.parse(readFileSync(modelFile, 'utf8'));
     expect('nauka/serwer: nowy model zapisany', model.type === 'multinomial-naive-bayes' && model.vocabulary.length > 500);
     expect('nauka/serwer: kopia poprzednich danych', readdirSync(join(dir, 'backups')).some((f) => f.startsWith('training-')));
+  } finally {
+    child.kill();
+  }
+}
+
+// Poprawki z audytu (15.10.2026).
+{
+  // Frazy alarmowe: brakujące sytuacje nagłe i kryzysowe.
+  const { checkSafety } = await import('../shared/js/safety.js');
+  for (const q of ['nie mogę złapać tchu', 'dziecko się dusi', 'krwawię mocno', 'wzięłam 20 tabletek', 'boli mnie serce i drętwieje ręka', 'twarz mi opadła',
+    'wypadek samochodowy', 'spadłem z wysokości', 'puchnie mi twarz', 'wysoka gorączka u niemowlęcia']) {
+    expect(`audyt: A — ${q}`, checkSafety(q)?.case === 'A', checkSafety(q)?.case);
+  }
+  for (const q of ['zrobię sobie krzywdę', 'nie widzę sensu życia', 'mam ochotę skoczyć z okna', 'chcę ze sobą skończyć', 'lepiej by było gdybym umarł', 'żegnajcie wszyscy', 'chcę się pociąć']) {
+    expect(`audyt: B — ${q}`, checkSafety(q)?.case === 'B', checkSafety(q)?.case);
+  }
+  for (const q of ['potrącono mi pieniądze z konta', 'nie mogę umówić wizyty', 'zatrudnienie dla lekarzy', 'wezmę 2 tabletki', 'czy mogę wziąć 1 tabletkę', 'chcę umówić dziecko']) {
+    expect(`audyt: bez fałszywego alarmu — ${q}`, !checkSafety(q), checkSafety(q)?.case);
+  }
+  // Walidacja: klucze z prototypu obiektu („constructor”, „toString”) odrzucone, odpowiedź działa.
+  const bad = sanitizeConfig(JSON.parse('{"buttons":{"F":["constructor","toString","l4"],"constructor":["cennik"]},"services":{"constructor":{"price":"1"}},"keywords":{"constructor":{"add":["xx"]}},"pages":{"toString":"https://a.pl"},"overrides":{"constructor":{"text":"x"}},"topics":{"constructor":{"extras":["cennik"]}}}'));
+  expect('audyt: walidacja — tylko znane klucze', JSON.stringify(bad.buttons) === '{"F":["l4"]}' && !Object.keys(bad.services).length && !Object.keys(bad.keywords).length && !Object.keys(bad.pages).length && !Object.keys(bad.overrides).length && !Object.keys(bad.topics).length, bad);
+  setPanelConfig(bad);
+  r = await respond(botEngine, 'potrzebuję L4', [], {});
+  expect('audyt: odpowiedź działa mimo złych ustawień', r.intent === 'l4', r.intent);
+  setPanelConfig(DEFAULT_CONFIG);
+  // Własne odpowiedzi: fraza krótsza niż 3 znaki odrzucona.
+  const rules = sanitizeConfig({ rules: [{ phrases: ['a', 'w*', 'parking'], text: 'P' }, { phrases: ['x'], text: 'Y' }] }).rules;
+  expect('audyt: frazy min. 3 znaki', rules.length === 1 && rules[0].phrases.join() === 'parking', rules);
+  // Linki: tylko https (oraz tel:, mailto:).
+  const links = sanitizeConfig({ rules: [{ phrases: ['parking'], text: 'P', links: [{ label: 'A', url: 'http://x.pl' }, { label: 'B', url: 'https://x.pl' }, { label: 'C', url: 'tel:123' }] }] }).rules[0].links;
+  expect('audyt: linki tylko https/tel/mailto', links.map((l) => l.label).join() === 'B,C', links);
+  // Komunikaty: data lokalna, nie UTC.
+  const { applySettings, activeNotices } = await import('../shared/js/knowledge.js');
+  applySettings({ notices: [{ id: 'x', text: 'Święta', from: '2026-12-24', to: '2026-12-26', active: true }] });
+  const local = (y, m, d, h) => new Date(y, m - 1, d, h, 30);
+  expect('audyt: komunikat od północy czasu lokalnego', activeNotices(local(2026, 12, 24, 0)).length === 1 && activeNotices(local(2026, 12, 27, 0)).length === 0 && activeNotices(local(2026, 12, 23, 23)).length === 0);
+  applySettings({});
+  // Kontrola strony: błędny kod znaku nie przerywa kontroli; tylko adresy publiczne.
+  const { htmlToText, isPublicUrl } = await import('../panel/site-check.js');
+  expect('audyt: błędny kod znaku HTML', htmlToText('a &#99999999; b &#x41;').includes('A'));
+  expect('audyt: kontrola strony — tylko adresy publiczne',
+    ['https://lekarzeiterapeuci.pl/x', 'https://example.com'].every(isPublicUrl) &&
+    !['http://localhost:5050', 'http://127.0.0.1/', 'http://192.168.1.1/', 'http://10.0.0.1', 'http://172.16.5.4', 'http://router', 'http://[::1]/', 'http://nas.local/'].some(isPublicUrl));
+  const ssrf = collectLinks({ rules: [{ phrases: ['router'], text: 'R', links: [{ label: 'R', url: 'https://192.168.1.1/admin' }] }] });
+  expect('audyt: link do sieci lokalnej pominięty w kontroli', !ssrf.some((l) => l.url.includes('192.168')));
+}
+// CSV: komórki zaczynające się od =, +, -, @ nie są formułami (kod panelu — sprawdzamy funkcję w pliku).
+{
+  const src = readFileSync(new URL('../panel/admin/admin.js', import.meta.url), 'utf8');
+  const fn = new Function(`${src.match(/function csvCell\(v\) \{[\s\S]*?\n\}/)[0]}; return csvCell;`)();
+  expect('audyt: CSV bez formuł', fn('=HYPERLINK("x")') === `"'=HYPERLINK(""x"")"` && fn('+48 600') === "'+48 600" && fn('@a') === "'@a" && fn('zwykły') === 'zwykły');
+}
+// Serwer lokalny: obcy nagłówek Host (DNS rebinding) — odmowa także dla zwykłych plików.
+{
+  const port = 5100 + Math.floor(Math.random() * 800);
+  const child = spawn(process.execPath, [new URL('./serve-local.js', import.meta.url).pathname, String(port)], { stdio: 'ignore' });
+  try {
+    const { request } = await import('node:http');
+    const get = (host) => new Promise((ok) => {
+      const req = request({ host: '127.0.0.1', port, path: '/panel/settings.json', headers: { Host: host } }, (res) => { res.resume(); ok(res.statusCode); });
+      req.on('error', () => ok(0));
+      req.end();
+    });
+    for (let i = 0; i < 40 && (await get(`127.0.0.1:${port}`)) === 0; i++) await new Promise((res) => setTimeout(res, 100));
+    expect('audyt: serwer lokalny — plik dla lokalnego hosta', (await get(`127.0.0.1:${port}`)) === 200);
+    expect('audyt: serwer lokalny — obcy host odrzucony', (await get('zla-strona.pl')) === 403);
   } finally {
     child.kill();
   }

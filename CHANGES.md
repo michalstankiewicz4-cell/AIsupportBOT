@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.7
+- Poprawki z audytu bezpieczeństwa: frazy alarmowe, CSV bez formuł, limit rejestru i blokada haseł w bazie, walidacja kluczy, komunikaty w czasie lokalnym, kontrola strony, serwer lokalny, linki https, frazy min. 3 znaki, widżet
+
+### ai 1.11.7
+- Poprawki z audytu bezpieczeństwa: frazy alarmowe, CSV bez formuł, limit rejestru i blokada haseł w bazie, walidacja kluczy, komunikaty w czasie lokalnym, kontrola strony, serwer lokalny, linki https, frazy min. 3 znaki, widżet
+
+### trained 1.10.7
+- Poprawki z audytu bezpieczeństwa: frazy alarmowe, CSV bez formuł, limit rejestru i blokada haseł w bazie, walidacja kluczy, komunikaty w czasie lokalnym, kontrola strony, serwer lokalny, linki https, frazy min. 3 znaki, widżet
+
 ### bot 1.10.6
 - Bot: poprawki po rozmowie testowej — fałszywy alarm „nie mogę umówić”, {imie}, kontakt z człowiekiem, pytania o lekarzy
 

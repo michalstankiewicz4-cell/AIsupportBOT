@@ -248,6 +248,8 @@ export function caseButtons(key, { withOverrides = true } = {}) {
 
 /** Zamienia wpis katalogu ("id" albo "id|etykieta") na przycisk dla widżetu. */
 export function resolveButton(entry, { withOverrides = true, noPrice = false } = {}) {
+  // Tylko przyciski z katalogu (nie np. „constructor” z prototypu obiektu).
+  if (!Object.prototype.hasOwnProperty.call(BUTTONS, String(entry || '').split('|')[0])) return null;
   const [id, customLabel] = String(entry).split('|');
   const b = BUTTONS[id];
   if (!b) return null;
@@ -567,7 +569,10 @@ export function orderTiles(tiles, order = TILES.order) {
 // Komunikaty okresowe (np. „24–26.12 infolinia nieczynna”) — widżet pokazuje aktywne w danym dniu.
 let NOTICES = [];
 export function activeNotices(date = new Date()) {
-  const day = date.toISOString().slice(0, 10);
+  // Data lokalna przeglądarki (w Polsce czas polski) — toISOString() dałoby datę UTC,
+  // przez co komunikat „24–26.12” pojawiałby się i znikał o 1–2 godziny za późno.
+  const pad = (n) => String(n).padStart(2, '0');
+  const day = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
   return NOTICES.filter((n) => n.active !== false && (!n.from || n.from <= day) && (!n.to || day <= n.to));
 }
 

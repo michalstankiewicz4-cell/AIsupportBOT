@@ -9,7 +9,7 @@
 //   - opcjonalnie tylko z wybranych adresów IP (ADMIN_IPS) — dla innych zwraca 404,
 //     jakby nie istniała,
 //   - przeglądarka może ją wywołać tylko z panelu uruchomionego lokalnie (ADMIN_ORIGINS),
-//   - po 10 błędnych hasłach z jednego IP blokada na 15 minut.
+//   - po 10 błędnych hasłach z jednego IP blokada na 15 minut (licznik w bazie — wspólny dla wszystkich instancji).
 // Na produkcji zalecamy dodatkowo Cloudflare Access na ścieżce /admin/* (patrz docs/PANEL.md).
 //
 // Codziennie (cron) serwer usuwa stare wpisy rejestru i sprawdza stronę kliniki
@@ -31,9 +31,11 @@ const ADMIN_FAIL_LIMIT = 10; // błędnych haseł w oknie czasowym
 const ADMIN_FAIL_WINDOW = 15 * 60 * 1000;
 const DEFAULT_ADMIN_ORIGINS = 'http://localhost:5050,http://127.0.0.1:5050';
 const LOGS_MAX_ROWS = 5000;
+// Górny limit wpisów w rejestrze — chroni bazę przed zasypaniem fałszywymi wpisami
+// (nagłówek Origin da się podrobić spoza przeglądarki). Po przekroczeniu nowe wpisy są pomijane.
+const LOGS_HARD_CAP = 200_000;
 
 const logHits = new Map();
-const adminFails = new Map();
 let schemaReady = false;
 
 export default {
@@ -76,6 +78,7 @@ export default {
   async scheduled(_event, env, ctx) {
     await ensureSchema(env.DB);
     await purgeOld(env.DB);
+    await env.DB.prepare('DELETE FROM admin_fails WHERE since < ?').bind(Date.now() - ADMIN_FAIL_WINDOW).run();
     const run = runSiteCheck(env.DB).catch((err) => console.error('site-check', err));
     if (ctx?.waitUntil) ctx.waitUntil(run);
     else await run;
@@ -93,12 +96,12 @@ async function handleAdmin(request, env, url, path, ip) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
   if (!env.ADMIN_PASSWORD) return new Response('Not found', { status: 404 });
 
-  if (isBlocked(ip)) return json({ error: 'too_many_attempts' }, 429, cors);
+  if (await isBlocked(env.DB, ip)) return json({ error: 'too_many_attempts' }, 429, cors);
   if (!(await passwordOk(request, env.ADMIN_PASSWORD))) {
-    registerFail(ip);
+    await registerFail(env.DB, ip);
     return json({ error: 'unauthorized' }, 401, cors);
   }
-  adminFails.delete(ip);
+  await env.DB.prepare('DELETE FROM admin_fails WHERE ip = ?').bind(ip).run();
 
   if (path === '/admin/config' && request.method === 'GET') {
     return json(await readConfig(env.DB), 200, cors);
@@ -156,14 +159,21 @@ async function passwordOk(request, expected) {
   return diff === 0;
 }
 
-function isBlocked(ip) {
-  const f = adminFails.get(ip);
+// Licznik błędnych haseł w bazie D1 — działa tak samo we wszystkich instancjach Workera
+// (licznik w pamięci zerowałby się przy każdej nowej instancji).
+async function isBlocked(db, ip) {
+  const f = await db.prepare('SELECT count, since FROM admin_fails WHERE ip = ?').bind(ip).first();
   return Boolean(f && f.count >= ADMIN_FAIL_LIMIT && Date.now() - f.since < ADMIN_FAIL_WINDOW);
 }
-function registerFail(ip) {
-  const f = adminFails.get(ip);
-  if (!f || Date.now() - f.since > ADMIN_FAIL_WINDOW) adminFails.set(ip, { count: 1, since: Date.now() });
-  else f.count++;
+async function registerFail(db, ip) {
+  const now = Date.now();
+  await db
+    .prepare(
+      'INSERT INTO admin_fails (ip, count, since) VALUES (?, 1, ?) ON CONFLICT(ip) DO UPDATE SET ' +
+        'count = CASE WHEN ? - since > ? THEN 1 ELSE count + 1 END, since = CASE WHEN ? - since > ? THEN ? ELSE since END',
+    )
+    .bind(ip, now, now, ADMIN_FAIL_WINDOW, now, ADMIN_FAIL_WINDOW, now)
+    .run();
 }
 
 // --- Baza danych ------------------------------------------------------------------
@@ -177,6 +187,7 @@ async function ensureSchema(db) {
     )
     .run();
   await db.prepare('CREATE INDEX IF NOT EXISTS logs_ts ON logs(ts)').run();
+  await db.prepare('CREATE TABLE IF NOT EXISTS admin_fails (ip TEXT PRIMARY KEY, count INTEGER NOT NULL, since INTEGER NOT NULL)').run();
   // Kolumny dodane później (specyfikacja czatu, pkt 8.13): przypadek A–M i kliknięty przycisk.
   for (const col of ['case_id TEXT', 'button TEXT']) {
     try {
@@ -228,9 +239,13 @@ async function writeConfig(db, cfg) {
 }
 
 async function insertLog(db, e) {
+  // Wpis trafia do bazy tylko, gdy rejestr nie przekroczył górnego limitu (LOGS_HARD_CAP).
   await db
-    .prepare('INSERT INTO logs (ts, session, variant, version, intent, case_id, button, source, degraded, consent, question, answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-    .bind(Date.now(), e.session, e.variant, e.version, e.intent, e.case || '', e.button || '', e.source, e.degraded, e.consent ? 1 : 0, e.question, e.answer)
+    .prepare(
+      'INSERT INTO logs (ts, session, variant, version, intent, case_id, button, source, degraded, consent, question, answer) ' +
+        'SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? WHERE (SELECT COUNT(*) FROM logs) < ?',
+    )
+    .bind(Date.now(), e.session, e.variant, e.version, e.intent, e.case || '', e.button || '', e.source, e.degraded, e.consent ? 1 : 0, e.question, e.answer, LOGS_HARD_CAP)
     .run();
 }
 
@@ -310,5 +325,4 @@ function json(obj, status, headers = {}) {
 export function _resetForTests() {
   schemaReady = false;
   logHits.clear();
-  adminFails.clear();
 }

@@ -125,7 +125,9 @@ W panelu: **Serwer panelu** → adres Workera + hasło → **Połącz**. Hasło 
 | Pełny panel tylko lokalnie (`127.0.0.1`); publicznie wyłącznie podgląd demo | Nikt z internetu nie zaloguje się do serwera ani nie zapisze ustawień |
 | Zapis pliku ustawień tylko z lokalnego panelu (sprawdzany Host i Origin) | Żadna inna strona otwarta w przeglądarce nie zmieni `panel/settings.json` |
 | Hasło (`ADMIN_PASSWORD`), porównywane w stałym czasie | Bez hasła nie da się odczytać ani zmienić ustawień czy rozmów |
-| Blokada po 10 błędnych hasłach (15 min) | Chroni przed zgadywaniem hasła |
+| Blokada po 10 błędnych hasłach (15 min), licznik w bazie | Chroni przed zgadywaniem hasła — we wszystkich instancjach serwera |
+| Górny limit rejestru: 200 000 wpisów | Zasypanie rejestru fałszywymi wpisami nie zapełni bazy |
+| Reguła WAF w Cloudflare (zalecana): Security → WAF → Rate limiting rules — `/log` np. 30/min z IP, `/admin/*` np. 20/min | Nagłówek Origin da się podrobić spoza przeglądarki, a limit w kodzie liczy każda instancja osobno |
 | `ADMIN_ORIGINS` (domyślnie tylko `localhost:5050`) | Przeglądarka pozwoli wywołać część administracyjną tylko z lokalnego panelu |
 | **`ADMIN_IPS`** (opcjonalne) | Część administracyjna istnieje tylko dla Twojego adresu IP — dla innych zwraca 404, jakby jej nie było |
 | Cloudflare Access (opcjonalne, zalecane) | Logowanie e-mailem / Google przed dostępem do `/admin/*` |
