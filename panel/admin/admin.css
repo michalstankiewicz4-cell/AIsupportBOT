@@ -468,8 +468,9 @@ li.empty { padding: 10px 2px; }
 .tile-preview .pv-tile { min-width: 0; max-width: none; min-height: 70px; justify-content: space-between; padding: var(--tile-pad, 5px); border-radius: 14px; }
 .tile-preview .pv-name { max-width: 100%; font-size: var(--tile-fs, 13.5px); overflow-wrap: anywhere; }
 .tile-preview .pv-price { font-size: calc(var(--tile-fs, 13.5px) * 0.85); }
-.tile-preview.tiles-center .pv-tile { align-items: center; justify-content: center; text-align: center; }
-.tile-preview.tiles-center .pv-price { align-self: center; }
+.tile-preview.tiles-center-h .pv-tile { align-items: center; text-align: center; }
+.tile-preview.tiles-center-h .pv-price { align-self: center; }
+.tile-preview.tiles-center-v .pv-tile { justify-content: center; }
 .tile-preview.tiles-fit { align-items: start; }
 .tile-preview.tiles-fit .pv-tile { min-height: 0; justify-content: flex-start; }
 .tile-preview.tiles-nobreak .pv-name { overflow-wrap: normal; word-break: normal; text-wrap: balance; }

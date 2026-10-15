@@ -366,9 +366,10 @@
 .tiles-autow .tile { flex: 0 1 auto; max-width: 100%; }
 /* Przełącznik „równe odstępy w pionie” (klasę „packed” ustawia layoutTiles po pomiarze). */
 .tiles.packed { grid-auto-rows: 1px; row-gap: 0; align-items: start; }
-/* Przełącznik „wyśrodkuj zawartość”: napis i cena na środku kafelka (w poziomie i w pionie). */
-.tiles-center .tile { align-items: center; justify-content: center; text-align: center; }
-.tiles-center .tile-price { align-self: center; }
+/* Przełączniki „wyśrodkuj w poziomie” / „wyśrodkuj w pionie” — niezależne. */
+.tiles-center-h .tile { align-items: center; text-align: center; }
+.tiles-center-h .tile-price { align-self: center; }
+.tiles-center-v .tile { justify-content: center; }
 
 /* Stały dopisek „W nagłym zagrożeniu życia dzwoń 112 lub 999.” */
 .sos { margin: 0; padding: 0 14px 12px; background: var(--surface); font-size: 12.5px; font-weight: 650; color: #8e2418; text-align: center; }

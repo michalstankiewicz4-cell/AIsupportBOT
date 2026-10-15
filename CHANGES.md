@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.8
+- Panel: wyśrodkowanie kafelków osobno w poziomie i w pionie
+
+### ai 1.10.8
+- Panel: wyśrodkowanie kafelków osobno w poziomie i w pionie
+
+### trained 1.9.8
+- Panel: wyśrodkowanie kafelków osobno w poziomie i w pionie
+
 ### bot 1.9.7
 - Panel: wyśrodkowanie zawartości kafelka i wielkość czcionki; napis nie wychodzi już poza kafelek przy małych marginesach
 

@@ -169,7 +169,9 @@ export function cleanTiles(input) {
   if (src.nobreak === true) out.nobreak = true;
   if (src.pack === true) out.pack = true;
   if (src.autoWidth === true) out.autoWidth = true;
-  if (src.center === true) out.center = true;
+  // Wyśrodkowanie w poziomie i w pionie osobno (stare „center” = oba).
+  if (src.centerH === true || src.center === true) out.centerH = true;
+  if (src.centerV === true || src.center === true) out.centerV = true;
   const fs = Math.round(Number(src.fontSize) * 2) / 2;
   if (Number.isFinite(fs) && fs !== DEFAULT_TILES.fontSize) out.fontSize = Math.min(TILE_FONT_MAX, Math.max(TILE_FONT_MIN, fs));
   if (TILE_ORDERS.includes(src.order) && src.order !== 'default') out.order = src.order;

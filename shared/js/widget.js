@@ -481,7 +481,8 @@ export function applyTileStyle(node, t) {
   node.classList.toggle('tiles-fit', Boolean(t.fit));
   node.classList.toggle('tiles-nobreak', Boolean(t.nobreak));
   node.classList.toggle('tiles-autow', Boolean(t.autoWidth));
-  node.classList.toggle('tiles-center', Boolean(t.center));
+  node.classList.toggle('tiles-center-h', Boolean(t.centerH));
+  node.classList.toggle('tiles-center-v', Boolean(t.centerV));
   node.style.setProperty('--tile-fs', `${t.fontSize || 13.5}px`);
   node.classList.toggle('tiles-pack', Boolean(t.pack) && !t.autoWidth);
 }

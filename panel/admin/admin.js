@@ -1086,7 +1086,8 @@ function renderTilesCfg() {
   };
   form.append(
     toggle('fit', 'Dopasuj wysokość do zawartości', 'Kafelek bez ceny albo z krótkim tekstem jest niższy — czat zajmuje mniej miejsca w pionie. Wyłączone: wszystkie kafelki w rzędzie mają równą wysokość.'),
-    toggle('center', 'Wyśrodkuj zawartość kafelka', 'Nazwa usługi i cena są na środku kafelka — w poziomie i w pionie. Wyłączone: do lewej, od góry.'),
+    toggle('centerH', 'Wyśrodkuj w poziomie', 'Nazwa usługi i cena na środku szerokości kafelka. Wyłączone: do lewej.'),
+    toggle('centerV', 'Wyśrodkuj w pionie', 'Nazwa usługi i cena na środku wysokości kafelka (widać, gdy kafelek jest wyższy niż jego treść). Wyłączone: nazwa u góry, cena na dole.'),
     toggle('pack', 'Równe odstępy w pionie', 'Kafelki są dosunięte do siebie w kolumnach — odstęp między nimi w pionie jest zawsze taki sam, bez pustych miejsc pod niższymi kafelkami. Najlepiej razem z „Dopasuj wysokość do zawartości”. Nie działa razem z „szerokością dopasowaną do tekstu” (tam odstępy są równe same z siebie).'),
     toggle('autoWidth', 'Szerokość dopasowana do tekstu', 'Kafelek jest tak szeroki jak jego napis — krótkie usługi („L4 online”) zajmują mniej miejsca i więcej mieści się w jednym rzędzie. Wyłączone: 3 równe kolumny.'),
     toggle('nobreak', 'Bez przenoszenia pojedynczych liter', 'Wyraz nie jest łamany w środku (np. „lekarsk-a”) — przechodzi w całości do nowej linii, a linie są wyrównane. Gdy najdłuższy wyraz się nie mieści, napis robi się odrobinę mniejszy.'),
