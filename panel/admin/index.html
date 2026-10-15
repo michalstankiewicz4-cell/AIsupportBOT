@@ -127,7 +127,8 @@
             </select>
           </label>
           <label class="field crisis-field"><span>Ile razy najwyżej powtórzyć komunikat B</span>
-            <select id="crisis-limit"></select>
+            <input id="crisis-limit" type="number" min="0" max="50" step="1" inputmode="numeric" style="max-width:120px">
+            <span class="muted small" style="font-weight:400">0 = bez limitu, do końca rozmowy (domyślnie). Po tylu powtórzeniach czat wraca do zwykłych odpowiedzi.</span>
           </label>
           <label class="check"><input id="crisis-end-topic" type="checkbox"> Konkretne pytanie (np. o receptę, L4, cennik) kończy tryb kryzysowy</label>
           <p class="muted small">Komunikat B pojawia się zawsze, gdy wiadomość sama zawiera frazę kryzysową — te ustawienia dotyczą tylko kolejnych wiadomości.</p>

@@ -191,7 +191,7 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
 // Panel: ustawienia trybu kryzysowego (safety.crisisFollowup / crisisLimit / crisisEndOnTopic).
 {
   const cfg = sanitizeConfig({ safety: { crisisFollowup: 'xx', crisisLimit: 99, crisisEndOnTopic: 'tak' } });
-  expect('tryb kryzysowy: walidacja', cfg.safety.crisisFollowup === 'all' && cfg.safety.crisisLimit === 10 && cfg.safety.crisisEndOnTopic === false, cfg.safety);
+  expect('tryb kryzysowy: walidacja', cfg.safety.crisisFollowup === 'all' && cfg.safety.crisisLimit === 50 && cfg.safety.crisisEndOnTopic === false, cfg.safety);
   const run = async (safety, msgs) => {
     setPanelConfig(sanitizeConfig({ safety }));
     const flow = {};

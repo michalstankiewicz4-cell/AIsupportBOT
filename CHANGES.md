@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.10
+- Panel: limit powtórzeń komunikatu B wpisywany jako liczba (0–50)
+
+### ai 1.10.10
+- Panel: limit powtórzeń komunikatu B wpisywany jako liczba (0–50)
+
+### trained 1.9.10
+- Panel: limit powtórzeń komunikatu B wpisywany jako liczba (0–50)
+
 ### bot 1.9.9
 - Panel: ustawienia trybu kryzysowego po komunikacie B
 

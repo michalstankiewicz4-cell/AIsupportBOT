@@ -60,7 +60,7 @@ export const LIMITS = {
 
 // Tryb kryzysowy: 'all' — niejasne i spoza tematu, 'unclear' — tylko niejasne, 'off' — wyłączony.
 export const CRISIS_FOLLOWUPS = ['all', 'unclear', 'off'];
-export const CRISIS_LIMIT_MAX = 10;
+export const CRISIS_LIMIT_MAX = 50;
 
 function cleanSafety(src) {
   const s = src && typeof src === 'object' ? src : {};

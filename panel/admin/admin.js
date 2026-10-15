@@ -8,7 +8,7 @@ import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered 
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
 import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
-import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX } from '../schema.js';
+import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX, TILE_FONT_MIN, TILE_FONT_MAX, CRISIS_LIMIT_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite, applyTileStyle, layoutTiles, mountWidget } from '../../shared/js/widget.js';
 import { respond } from '../../shared/js/pipeline.js';
@@ -545,12 +545,8 @@ $('#support-line').addEventListener('change', (e) => {
 function renderCrisisCfg() {
   const s = state.draft.safety || {};
   const limitSel = $('#crisis-limit');
-  if (!limitSel.options.length) {
-    limitSel.append(new Option('Bez limitu — do końca rozmowy (domyślnie)', '0'));
-    for (let n = 1; n <= 10; n++) limitSel.append(new Option(`${n} ${n === 1 ? 'raz' : 'razy'}, potem zwykłe odpowiedzi`, String(n)));
-  }
   $('#crisis-followup').value = s.crisisFollowup || 'all';
-  limitSel.value = String(s.crisisLimit || 0);
+  if (document.activeElement !== limitSel) limitSel.value = String(s.crisisLimit || 0);
   $('#crisis-end-topic').checked = Boolean(s.crisisEndOnTopic);
   const off = (s.crisisFollowup || 'all') === 'off';
   limitSel.disabled = off;
@@ -563,7 +559,13 @@ function setSafety(patch) {
   changed();
 }
 $('#crisis-followup').addEventListener('change', (e) => setSafety({ crisisFollowup: e.target.value }));
-$('#crisis-limit').addEventListener('change', (e) => setSafety({ crisisLimit: Number(e.target.value) }));
+// Liczba wpisywana ręcznie: 0–50, puste lub błędne = 0 (bez limitu).
+function crisisLimitValue(v) {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(CRISIS_LIMIT_MAX, Math.max(0, n)) : 0;
+}
+$('#crisis-limit').addEventListener('input', (e) => setSafety({ crisisLimit: crisisLimitValue(e.target.value) }));
+$('#crisis-limit').addEventListener('change', (e) => { e.target.value = String(crisisLimitValue(e.target.value)); });
 $('#crisis-end-topic').addEventListener('change', (e) => setSafety({ crisisEndOnTopic: e.target.checked }));
 
 // =============================================================================
