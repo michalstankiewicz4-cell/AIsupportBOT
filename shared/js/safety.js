@@ -25,15 +25,16 @@ export const EMERGENCY = [
   'bol w klatce', 'bolu w klatce', 'boli w klatce', 'boli mnie w klatce', 'bola mnie w klatce', 'w klatce piersiowej boli', 'klatka piersiowa boli', 'klatke piersiowa boli', 'bol klatki', 'bola mnie klatka', 'boli mnie klatka', 'ucisk w klatce', 'kluje w klatce', 'piecze w klatce', 'zawal*',
   // duszność
   'dusze sie', 'dusi mnie', 'nie moge oddychac', 'nie mam czym oddychac', 'brak tchu', 'brakuje mi tchu', 'nie moge zlapac oddechu', 'dusznosc*', 'dusznosci',
-  // udar
-  'udar*', 'opadniety kacik', 'opadl kacik', 'opada kacik', 'kacik ust', 'belkocze', 'belkotliw*', 'niedowlad*', 'nie czuje reki', 'nie czuje nogi', 'zaburzenia mowy', 'nie moge mowic',
+  // udar („=nie moge mowic” — bez literówek, bo „nie mogę umówić” to nie objaw udaru)
+  'udar*', 'opadniety kacik', 'opadl kacik', 'opada kacik', 'kacik ust', 'belkocze', 'belkotliw*', 'niedowlad*', 'nie czuje reki', 'nie czuje nogi', 'zaburzenia mowy', '=nie moge mowic',
   // utrata przytomności, drgawki
   'stracil przytomnosc', 'stracila przytomnosc', 'stracilem przytomnosc', 'stracilam przytomnosc', 'utrata przytomnosci', 'nieprzytomn*', 'zemdlal*', 'omdlen*', 'mdleje',
   'drgawk*', 'atak padaczki',
   // krwawienie
   'silne krwawienie', 'mocno krwawi', 'krwotok*', 'wymiotuje krwia', 'kaszle krwia',
   // zatrucie / przedawkowanie
-  'przedawkow*', 'zatrucie', 'zatrul*', 'zatruci*', 'czadem', '=polknal*', '=polknel*', 'za duzo tabletek', 'za duzo lekow', 'za duzo leku', 'za duzo pigulek',
+  // „=” przy zatrul*/zatruci* — bez literówek, bo „zatrudnienie” to nie zatrucie
+  'przedawkow*', 'zatrucie', '=zatrul*', '=zatruci*', 'czadem', '=polknal*', '=polknel*', 'za duzo tabletek', 'za duzo lekow', 'za duzo leku', 'za duzo pigulek',
   'za duzo narkotyk*', 'za duzo dopalacz*', 'za duzo amfetamin*', 'za duzo kokain*', 'za duzo heroin*', 'za duzo alkoholu i tabletek', 'za duzo alkoholu i lekow', 'przecpal*',
   // ciężka reakcja alergiczna
   'obrzek gardla', 'obrzek jezyka', 'puchnie gardlo', 'puchnie jezyk', 'spuchl jezyk', 'spuchlo gardlo', 'wstrzas anafilakt*', 'anafilaks*',

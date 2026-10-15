@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.10.6
+- Bot: poprawki po rozmowie testowej — fałszywy alarm „nie mogę umówić”, {imie}, kontakt z człowiekiem, pytania o lekarzy
+
+### ai 1.11.6
+- Bot: poprawki po rozmowie testowej — fałszywy alarm „nie mogę umówić”, {imie}, kontakt z człowiekiem, pytania o lekarzy
+
+### trained 1.10.6
+- Bot: poprawki po rozmowie testowej — fałszywy alarm „nie mogę umówić”, {imie}, kontakt z człowiekiem, pytania o lekarzy
+
 ### bot 1.10.5
 - Dokumentacja: instrukcja obsługi i README uzupełnione o nowe zakładki i ustawienia
 

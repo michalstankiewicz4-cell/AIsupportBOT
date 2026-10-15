@@ -360,9 +360,14 @@ export const INTENTS = [
   { id: 'jak_dziala', case: 'K', text: 'K',
     keywords: ['jak to dziala', 'jak dziala', 'jak wyglada', 'przebieg*', 'wideo', 'oddzwani*', 'ile trwa', 'bezpieczn*', 'legaln*'] },
   { id: 'jaki_specjalista', case: 'K', text: 'K_SPECJALISTA',
-    keywords: ['jakiego lekarza', 'jaki lekarz', 'jaki specjalist*', 'jakiego specjalist*', 'do kogo', 'ktory lekarz', 'ktorego lekarza', 'specjalist*', 'lekarz rodzinny', 'internist*'] },
+    keywords: ['jakiego lekarza', 'jaki lekarz', 'jaki specjalist*', 'jakiego specjalist*', 'do kogo', 'ktory lekarz', 'ktorego lekarza', 'specjalist*', 'lekarz rodzinny', 'internist*',
+      // pytania o lekarzy (nie o objawy) — wcześniej trafiały do „zdrowie” przez „lekarz*”
+      'ilu lekarzy', 'ilu jest lekarzy', 'ilu macie lekarzy', 'dostepn* lekarz*', 'lekarze dostepni', 'jacy lekarze', 'jakich lekarzy', 'jakich macie lekarzy', 'kim sa lekarze', 'lista lekarzy'] },
   { id: 'kontakt', case: 'K', text: 'K_KONTAKT',
-    keywords: ['kontakt*', 'telefon*', 'infolini*', 'numer', 'mail*', 'email', 'godzin*', 'otwar*', 'czynne', 'zadzwon*', 'adres', 'napisz do nas'] },
+    keywords: ['kontakt*', 'telefon*', 'infolini*', 'numer', 'mail*', 'email', 'godzin*', 'otwar*', 'czynne', 'zadzwon*', 'adres', 'napisz do nas',
+      // rozmowa z człowiekiem / problem z połączeniem
+      'polacz*', 'przedstawiciel*', 'konsultant*', 'obslug*', 'czlowiek*', 'zywa osoba', 'zywym czlowiekiem', 'pracownik*',
+      'z kims', 'ktos pracuje', 'jest tu ktos', 'jest ktos', 'ktos jest', 'ktos odpisze', 'ktos odpowie', 'porozmawiac z kims', 'rozmawiac z kims'] },
   { id: 'dla_lekarzy', case: 'K', text: 'K_DLA_LEKARZY',
     keywords: ['praca', 'pracy', 'zatrudn*', 'wspolprac*', 'jestem lekarzem', 'dla lekarzy', 'rekrutac*'] },
   { id: 'konto', case: 'K', text: 'K_KONTO',

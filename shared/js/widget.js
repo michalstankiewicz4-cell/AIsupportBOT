@@ -362,6 +362,7 @@ export function mountWidget(opts) {
       .map((m) => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
 
     const started = Date.now();
+    state.flow.name = state.name || ''; // do {imie} w odpowiedziach (np. powitanie po „halo”)
     const reply = await respond(engine, message, history, state.flow);
     // Krótkie minimalne opóźnienie, żeby natychmiastowe odpowiedzi bota nie były zbyt nagłe.
     // Karta alarmowa — bez opóźnienia.

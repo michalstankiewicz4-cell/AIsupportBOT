@@ -22,6 +22,17 @@ import { DEFAULT_SAFETY } from '../../panel/schema.js';
 const UNCLEAR = (r) => r.case === 'L' || r.intent === 'fallback' || r.intent === 'offtopic';
 
 export async function respond(engine, rawMessage, history = [], session = {}) {
+  const reply = await respondInner(engine, rawMessage, history, session);
+  // {imie} w tekście (np. powitanie M po „halo” w trakcie rozmowy) — imię z ekranu powitalnego
+  // (session.name, ustawia widżet) albo nic. Nigdy nie zostawiamy znacznika w odpowiedzi.
+  if (reply?.text?.includes('{imie}')) {
+    const name = String(session.name || '').trim();
+    return { ...reply, text: reply.text.replaceAll('{imie}', name ? `, ${name}` : '') };
+  }
+  return reply;
+}
+
+async function respondInner(engine, rawMessage, history, session) {
   const message = cleanInput(rawMessage);
   if (!message) return { ...FALLBACK_REPLY, intent: 'empty', source: 'engine' };
 

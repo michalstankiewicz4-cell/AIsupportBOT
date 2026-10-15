@@ -195,6 +195,23 @@ for (const [q, want] of [['czy przyjmujecie dzieci', 'inny_specjalista'], ['dzi�
   const r = await respond(botEngine, q, [], {});
   expect(`temat: ${q}`, r.intent === want, r.intent);
 }
+// Rozmowa testowa klientki (15.10): kontakt z człowiekiem, pytania o lekarzy, fałszywe alarmy, {imie}.
+for (const [q, want] of [
+  ['Czy moge się połączyć z przedtawicielem', 'kontakt'], ['Czy mogę się połączyć z kimś z obsługi', 'kontakt'],
+  ['Czy tu ktoś pracuje', 'kontakt'], ['Halo jest tu ktoś ?', 'kontakt'], ['Nie mogę się połączyć', 'kontakt'],
+  ['Ilu jest lekarzy', 'jaki_specjalista'], ['Czy są dostępni lekarze', 'jaki_specjalista'],
+  ['Nie mogę umówić wizyty', 'umow'], ['zatrudnienie dla lekarzy', 'dla_lekarzy'],
+]) {
+  const r = await respond(botEngine, q, [], {});
+  expect(`rozmowa klientki: ${q}`, r.intent === want, `${r.case}/${r.intent}`);
+}
+{
+  const r1 = await respond(botEngine, 'halo', [], { name: 'Anna' });
+  const r2 = await respond(botEngine, 'cześć', [], {});
+  expect('{imie} uzupełnione albo usunięte', r1.text.startsWith('Dzień dobry, Anna!') && r2.text.startsWith('Dzień dobry!') && !/\{imie\}/.test(r1.text + r2.text), [r1.text.slice(0, 30), r2.text.slice(0, 30)]);
+  const r3 = await respond(botEngine, 'nie mogę mówić, mam opadnięty kącik ust', [], {});
+  expect('udar nadal wykrywany', r3.case === 'A', r3.intent);
+}
 // Nowe frazy A: przedawkowanie narkotyków / dopalaczy.
 for (const q of ['wziąłem za dużo narkotyków', 'przećpałem', 'za dużo dopalaczy']) {
   const r = await respond(botEngine, q, [], {});
