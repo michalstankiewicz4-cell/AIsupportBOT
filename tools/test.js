@@ -188,6 +188,30 @@ for (const [nr, msg, expCase, check] of ACCEPTANCE) {
   if (pass) accOk++;
   else { failed++; console.log('  ✗ [spec 12] tryb kryzysowy', r); }
 }
+// Panel: ustawienia trybu kryzysowego (safety.crisisFollowup / crisisLimit / crisisEndOnTopic).
+{
+  const cfg = sanitizeConfig({ safety: { crisisFollowup: 'xx', crisisLimit: 99, crisisEndOnTopic: 'tak' } });
+  expect('tryb kryzysowy: walidacja', cfg.safety.crisisFollowup === 'all' && cfg.safety.crisisLimit === 10 && cfg.safety.crisisEndOnTopic === false, cfg.safety);
+  const run = async (safety, msgs) => {
+    setPanelConfig(sanitizeConfig({ safety }));
+    const flow = {};
+    await respond(botEngine, 'nie chcę żyć', [], flow);
+    const out = [];
+    for (const m of msgs) out.push((await respond(botEngine, m, [], flow)).intent);
+    setPanelConfig(sanitizeConfig({}));
+    return out;
+  };
+  let o = await run({}, ['jaka jest pogoda', 'nie wiem']);
+  expect('tryb kryzysowy domyślnie: pogoda → B', o[0] === 'crisis-followup' && o[1] === 'crisis-followup', o);
+  o = await run({ crisisFollowup: 'unclear' }, ['jaka jest pogoda', 'nie wiem']);
+  expect('tryb kryzysowy „tylko niejasne”: pogoda → zwykła odpowiedź', o[0] === 'offtopic' && o[1] === 'crisis-followup', o);
+  o = await run({ crisisFollowup: 'off' }, ['nie wiem']);
+  expect('tryb kryzysowy wyłączony', o[0] !== 'crisis-followup', o);
+  o = await run({ crisisLimit: 1 }, ['nie wiem', 'nie wiem']);
+  expect('tryb kryzysowy: limit 1', o[0] === 'crisis-followup' && o[1] !== 'crisis-followup', o);
+  o = await run({ crisisEndOnTopic: true }, ['ile kosztuje e-recepta', 'nie wiem']);
+  expect('tryb kryzysowy: konkretne pytanie kończy', o[0] !== 'crisis-followup' && o[1] !== 'crisis-followup', o);
+}
 // 8.19: po dwóch niezrozumiałych wiadomościach z rzędu — „Napisz do nas”.
 {
   const flow = {};

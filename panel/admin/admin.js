@@ -532,6 +532,7 @@ function renderMode() {
   if (!cs.done) notes.push(cs.hint);
   $('#chain-note').textContent = notes.join(' ');
   $('#support-line').checked = Boolean(state.draft.safety?.supportLine);
+  renderCrisisCfg();
   applyBotOnly();
 }
 
@@ -539,6 +540,31 @@ $('#support-line').addEventListener('change', (e) => {
   state.draft.safety = { ...(state.draft.safety || {}), supportLine: e.target.checked };
   changed();
 });
+
+// Tryb kryzysowy po B — co powtarza komunikat B, ile razy, czy konkretne pytanie go kończy.
+function renderCrisisCfg() {
+  const s = state.draft.safety || {};
+  const limitSel = $('#crisis-limit');
+  if (!limitSel.options.length) {
+    limitSel.append(new Option('Bez limitu — do końca rozmowy (domyślnie)', '0'));
+    for (let n = 1; n <= 10; n++) limitSel.append(new Option(`${n} ${n === 1 ? 'raz' : 'razy'}, potem zwykłe odpowiedzi`, String(n)));
+  }
+  $('#crisis-followup').value = s.crisisFollowup || 'all';
+  limitSel.value = String(s.crisisLimit || 0);
+  $('#crisis-end-topic').checked = Boolean(s.crisisEndOnTopic);
+  const off = (s.crisisFollowup || 'all') === 'off';
+  limitSel.disabled = off;
+  $('#crisis-end-topic').disabled = off;
+}
+
+function setSafety(patch) {
+  state.draft.safety = { ...(state.draft.safety || {}), ...patch };
+  renderCrisisCfg();
+  changed();
+}
+$('#crisis-followup').addEventListener('change', (e) => setSafety({ crisisFollowup: e.target.value }));
+$('#crisis-limit').addEventListener('change', (e) => setSafety({ crisisLimit: Number(e.target.value) }));
+$('#crisis-end-topic').addEventListener('change', (e) => setSafety({ crisisEndOnTopic: e.target.checked }));
 
 // =============================================================================
 // 2. Rejestracja rozmów

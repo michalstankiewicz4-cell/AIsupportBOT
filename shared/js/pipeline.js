@@ -3,6 +3,7 @@
 //   2. A / B — stan nagły / kryzys (shared/js/safety.js) — zawsze pierwsze, na każdej wiadomości,
 //      nie da się ich wyłączyć z panelu
 //   3. tryb kryzysowy sesji — po B wiadomości bez konkretnej intencji dostają ponownie komunikat B
+//      (co dokładnie, ile razy i kiedy się kończy — ustawienia z panelu, funkcja crisisFollowup)
 //   4. własne odpowiedzi na frazy z panelu sterowania
 //   5. engine.ask() — bot, trained, ai albo ich kombinacja (router); kolejność przypadków C–L w silniku
 //   6. po dwóch niezrozumiałych wiadomościach z rzędu — przycisk „Napisz do nas”
@@ -25,7 +26,7 @@ export async function respond(engine, rawMessage, history = [], session = {}) {
 
   const urgent = checkSafety(message, { supportLine: getPanelConfig().safety?.supportLine });
   if (urgent) {
-    if (urgent.case === 'B') session.crisis = true;
+    if (urgent.case === 'B') { session.crisis = true; session.crisisRepeats = 0; }
     session.unclear = 0;
     return { ...urgent, source: 'safety' };
   }
@@ -46,11 +47,11 @@ export async function respond(engine, rawMessage, history = [], session = {}) {
     reply = { ...FALLBACK_REPLY, intent: 'error', source: 'engine' };
   }
 
+  if (session.crisis && crisisFollowup(reply, session)) {
+    return { ...alarmReply('B', { supportLine: getPanelConfig().safety?.supportLine }), intent: 'crisis-followup', source: 'safety' };
+  }
+
   if (UNCLEAR(reply)) {
-    // Tryb kryzysowy: zamiast „Nie jestem pewna…” ponownie odpowiedź B (góra) + czerwona karta (dół).
-    if (session.crisis) {
-      return { ...alarmReply('B', { supportLine: getPanelConfig().safety?.supportLine }), intent: 'crisis-followup', source: 'safety' };
-    }
     session.unclear = (session.unclear || 0) + 1;
     // Po dwóch niezrozumiałych wiadomościach z rzędu — przekazanie do człowieka.
     if (session.unclear >= 2 && !reply.links.some((l) => l.label === UI_TEXTS.writeToUs)) {
@@ -62,3 +63,24 @@ export async function respond(engine, rawMessage, history = [], session = {}) {
   return reply;
 }
 
+// Tryb kryzysowy (po B): czy zamiast tej odpowiedzi pokazać ponownie B (góra) + czerwoną kartę (dół)?
+// Ustawienia z panelu (zakładka „Tryb pracy”, safety):
+//   crisisFollowup  'all' — niejasne i spoza tematu (domyślnie, specyfikacja sekcja 11),
+//                   'unclear' — tylko niejasne („nie wiem”); pytanie spoza tematu dostaje zwykłą odpowiedź,
+//                   'off' — tryb wyłączony,
+//   crisisLimit     ile razy powtórzyć B; 0 = do końca rozmowy,
+//   crisisEndOnTopic  konkretne pytanie (np. o receptę) kończy tryb kryzysowy.
+function crisisFollowup(reply, session) {
+  const cfg = getPanelConfig().safety || {};
+  const mode = cfg.crisisFollowup || 'all';
+  if (mode === 'off') { session.crisis = false; return false; }
+  if (!UNCLEAR(reply)) {
+    if (cfg.crisisEndOnTopic) session.crisis = false;
+    return false;
+  }
+  if (mode === 'unclear' && reply.intent === 'offtopic') return false;
+  const limit = Number(cfg.crisisLimit) || 0;
+  if (limit > 0 && (session.crisisRepeats || 0) >= limit) { session.crisis = false; return false; }
+  session.crisisRepeats = (session.crisisRepeats || 0) + 1;
+  return true;
+}

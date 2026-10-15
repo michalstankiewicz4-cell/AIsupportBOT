@@ -213,6 +213,11 @@ Wszystkie teksty asystentki są w jednym pliku — `shared/js/texts.js` — i od
 - Jeden tekst może obsługiwać kilka tematów (np. `D` — skóra, alergie, kręgosłup…); kafelki pod odpowiedzią zależą od tematu.
 - **Teksty alarmowe (A, B) są zablokowane** — zmienia je programista w `texts.js` po zatwierdzeniu przez lekarza kierującego serwisem.
 - Opcjonalna linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — przełącznik w zakładce „Tryb pracy” (domyślnie wyłączony, decyzja właściciela).
+- Tryb kryzysowy po komunikacie B — w zakładce „Tryb pracy”:
+  - **Kiedy powtarzać komunikat B**: niejasne wiadomości i pytania spoza tematu (domyślnie, jak w specyfikacji), tylko niejasne („nie wiem”, „nic” — pytanie np. o pogodę dostaje zwykłą odpowiedź) albo nigdy.
+  - **Ile razy najwyżej**: bez limitu (domyślnie, do końca rozmowy) albo 1–10 razy, potem zwykłe odpowiedzi.
+  - **Konkretne pytanie kończy tryb kryzysowy** (np. o receptę, L4, cennik) — domyślnie wyłączone.
+  - Wiadomość, która sama zawiera frazę kryzysową, zawsze dostaje komunikat B — ustawienia dotyczą tylko kolejnych wiadomości.
 
 ### Usługi i przyciski (osobna zakładka)
 

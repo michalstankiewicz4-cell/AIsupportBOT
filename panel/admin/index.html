@@ -117,6 +117,21 @@
           <label class="check"><input id="support-line" type="checkbox"> Dodaj linię z bezpłatnym telefonem wsparcia: „116 123 (dorośli) lub 116 111 (dzieci i młodzież)”</label>
           <p class="muted small">Rekomendacja ze specyfikacji — dla osób, które nie są w bezpośrednim niebezpieczeństwie. Przed włączeniem sprawdź godziny działania numerów.</p>
         </div>
+        <div class="panel-box">
+          <h3>Tryb kryzysowy po komunikacie B <span class="tip" tabindex="0" data-tip="Specyfikacja czatu, sekcja 11: po komunikacie B kolejne wiadomości bez konkretnej intencji dostają ponownie komunikat B i czerwoną kartę 112. Domyślne ustawienia są zgodne ze specyfikacją.">?</span></h3>
+          <label class="field crisis-field"><span>Kiedy powtarzać komunikat B</span>
+            <select id="crisis-followup">
+              <option value="all">Niejasne wiadomości i pytania spoza tematu (domyślnie, jak w specyfikacji)</option>
+              <option value="unclear">Tylko niejasne wiadomości („nie wiem”, „nic”) — pytanie np. o pogodę dostaje zwykłą odpowiedź</option>
+              <option value="off">Nigdy — tryb kryzysowy wyłączony</option>
+            </select>
+          </label>
+          <label class="field crisis-field"><span>Ile razy najwyżej powtórzyć komunikat B</span>
+            <select id="crisis-limit"></select>
+          </label>
+          <label class="check"><input id="crisis-end-topic" type="checkbox"> Konkretne pytanie (np. o receptę, L4, cennik) kończy tryb kryzysowy</label>
+          <p class="muted small">Komunikat B pojawia się zawsze, gdy wiadomość sama zawiera frazę kryzysową — te ustawienia dotyczą tylko kolejnych wiadomości.</p>
+        </div>
       </section>
 
       <!-- Rejestracja -->

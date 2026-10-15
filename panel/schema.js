@@ -58,12 +58,30 @@ export const LIMITS = {
   retentionMax: 365,
 };
 
+// Tryb kryzysowy: 'all' — niejasne i spoza tematu, 'unclear' — tylko niejasne, 'off' — wyłączony.
+export const CRISIS_FOLLOWUPS = ['all', 'unclear', 'off'];
+export const CRISIS_LIMIT_MAX = 10;
+
+function cleanSafety(src) {
+  const s = src && typeof src === 'object' ? src : {};
+  const limit = Math.round(Number(s.crisisLimit));
+  return {
+    supportLine: s.supportLine === true,
+    crisisFollowup: CRISIS_FOLLOWUPS.includes(s.crisisFollowup) ? s.crisisFollowup : 'all',
+    crisisLimit: Number.isFinite(limit) ? Math.min(CRISIS_LIMIT_MAX, Math.max(0, limit)) : 0,
+    crisisEndOnTopic: s.crisisEndOnTopic === true,
+  };
+}
+
 export const DEFAULT_CONFIG = Object.freeze({
   engine: { chain: ['bot'] },
   logging: { level: 0, retentionDays: 90 },
   // Linia z telefonem wsparcia (116 123 / 116 111) w komunikacie B — decyzja właściciela,
   // domyślnie wyłączona (specyfikacja czatu, sekcja 11 pkt 1).
-  safety: { supportLine: false },
+  // Tryb kryzysowy po B (shared/js/pipeline.js): co dostaje ponownie komunikat B, ile razy
+  // i czy konkretne pytanie go kończy. Domyślnie jak w specyfikacji (sekcja 11): każda
+  // niezrozumiała wiadomość, do końca rozmowy.
+  safety: { supportLine: false, crisisFollowup: 'all', crisisLimit: 0, crisisEndOnTopic: false },
   // Usługi (nazwa, cena, kolor, obrys, nazwa w formularzu) i przyciski pod odpowiedziami —
   // tylko ZMIANY względem wartości domyślnych ze specyfikacji (shared/js/knowledge.js).
   services: {},
@@ -317,7 +335,7 @@ export function sanitizeConfig(input) {
         ? Math.min(LIMITS.retentionMax, Math.max(LIMITS.retentionMin, days))
         : DEFAULT_CONFIG.logging.retentionDays,
     },
-    safety: { supportLine: src.safety?.supportLine === true },
+    safety: cleanSafety(src.safety),
     services: cleanServices(src.services),
     buttons: cleanButtons(src.buttons),
     site: cleanSite(src.site),

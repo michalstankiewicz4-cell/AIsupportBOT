@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.9
+- Panel: ustawienia trybu kryzysowego po komunikacie B
+
+### ai 1.10.9
+- Panel: ustawienia trybu kryzysowego po komunikacie B
+
+### trained 1.9.9
+- Panel: ustawienia trybu kryzysowego po komunikacie B
+
 ### bot 1.9.8
 - Panel: wyśrodkowanie kafelków osobno w poziomie i w pionie
 
