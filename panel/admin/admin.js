@@ -197,6 +197,7 @@ async function connect(api) {
   // Czat w tej przeglądarce (np. podgląd czatów) korzysta z tego samego źródła.
   localStorage.setItem(SOURCE_KEY, JSON.stringify({ remote: 'server', file: 'file', local: 'local' }[api.kind]));
   renderAll();
+  applyPendingReset();
   setPreviewOn(previewOn);
   loadLogs();
   loadSiteCheck();
@@ -2510,6 +2511,64 @@ function toast(message, isError = false) {
 // =============================================================================
 // Start
 // =============================================================================
+
+// =============================================================================
+// Dev reset — czyści pamięć przeglądarki i przywraca ustawienia domyślne
+// =============================================================================
+// Usuwa tylko klucze czatu i panelu (prefiks „lt-”) — inne strony w tej samej domenie
+// (np. github.io) zachowują swoje dane. Logowanie (tryb, adres serwera, hasło do zamknięcia
+// karty) zostaje, żeby po odświeżeniu wrócić od razu do panelu.
+// Ustawienia: tryb lokalny — zapisywane od razu jako domyślne; serwer i plik — domyślne
+// trafiają do edycji jako „Niezapisane zmiany” (zapis na serwerze / w pliku dopiero po
+// „Zapisz zmiany”, „Cofnij” przywraca poprzednie).
+const DEV_RESET_PENDING = 'lt-admin:reset-pending';
+const DEV_RESET_KEEP = new Set([MODE_KEY, ENDPOINT_KEY, PASSWORD_KEY]);
+
+function clearChatStorage(store) {
+  try {
+    const keys = [];
+    for (let i = 0; i < store.length; i++) {
+      const k = store.key(i);
+      if (k && k.startsWith('lt-') && !DEV_RESET_KEEP.has(k)) keys.push(k);
+    }
+    keys.forEach((k) => store.removeItem(k));
+    return keys.length;
+  } catch {
+    return 0;
+  }
+}
+
+$('#dev-reset').addEventListener('click', async () => {
+  const kind = state.api?.kind;
+  const where = kind === 'remote'
+    ? '\n\nUstawienia na serwerze NIE zmienią się od razu: domyślne pojawią się jako niezapisane zmiany — zapiszesz je przyciskiem „Zapisz zmiany” albo odrzucisz „Cofnij”.'
+    : kind === 'file'
+      ? '\n\nPlik panel/settings.json NIE zmieni się od razu: domyślne pojawią się jako niezapisane zmiany.'
+      : '';
+  const msg = 'Dev reset:\n• wyczyści pamięć przeglądarki (historie czatów, rozmowy zapisane lokalnie, ustawienia trybu lokalnego, preferencje panelu, wynik kontroli strony),\n• przywróci ustawienia domyślne.'
+    + where + '\n\nTej operacji nie da się cofnąć. Kontynuować?';
+  if (!confirm(msg)) return;
+  destroyPreview();
+  clearChatStorage(localStorage);
+  clearChatStorage(sessionStorage);
+  if (kind === 'local') {
+    try { await state.api.putConfig(sanitizeConfig(DEFAULT_CONFIG)); } catch { /* pomijamy */ }
+  } else if (kind) {
+    sessionStorage.setItem(DEV_RESET_PENDING, '1');
+  }
+  state.saved = state.draft; // bez pytania „niezapisane zmiany” przy odświeżeniu
+  location.reload();
+});
+
+// Po odświeżeniu (serwer / plik): domyślne ustawienia jako niezapisane zmiany.
+function applyPendingReset() {
+  if (sessionStorage.getItem(DEV_RESET_PENDING) !== '1') return;
+  sessionStorage.removeItem(DEV_RESET_PENDING);
+  state.draft = structuredClone(sanitizeConfig(DEFAULT_CONFIG));
+  renderAll();
+  changed();
+  toast('Dev reset: pamięć przeglądarki wyczyszczona, ustawienia domyślne czekają na „Zapisz zmiany”.');
+}
 
 (async function init() {
   const mode = localStorage.getItem(MODE_KEY);

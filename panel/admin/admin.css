@@ -481,3 +481,7 @@ li.empty { padding: 10px 2px; }
 .tile-preview.tiles-autow .pv-tile { flex: 0 1 auto; max-width: 100%; }
 .tile-preview.packed { grid-auto-rows: 1px; row-gap: 0; align-items: start; }
 .crisis-field { margin: 10px 0; }
+
+/* Dev reset — narzędzie deweloperskie w górnym pasku. */
+.top-actions .dev-reset { color: #b42318; border-color: #f3c3bd; }
+.top-actions .dev-reset:hover { background: #fdecea; }

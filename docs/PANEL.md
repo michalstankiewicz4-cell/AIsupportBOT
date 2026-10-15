@@ -170,6 +170,15 @@ Tryb dotyczy uniwersalnego `embed.js`. Skrypty `bot/embed.js`, `ai/embed.js`, `t
 
 ---
 
+
+### Dev reset (górny pasek)
+
+Przycisk **„Dev reset”** obok „Tylko bot” — narzędzie deweloperskie do testów od zera. Po potwierdzeniu:
+
+- czyści pamięć przeglądarki: historie czatów, rozmowy zapisane w trybie lokalnym, ustawienia trybu lokalnego, preferencje panelu (np. „Tylko bot”, podgląd czatu), wynik kontroli strony — tylko klucze czatu i panelu (`lt-…`), dane innych stron w tej samej domenie zostają;
+- przywraca ustawienia domyślne: w trybie lokalnym od razu, przy serwerze i pliku `panel/settings.json` jako **niezapisane zmiany** (zapis przyciskiem „Zapisz zmiany”, „Cofnij” odrzuca);
+- logowanie zostaje — po odświeżeniu wracasz od razu do panelu.
+
 ## 6. Rejestracja rozmów i RODO
 
 | Poziom | Co zapisujemy | Czego wymaga |

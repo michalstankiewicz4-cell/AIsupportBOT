@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.11
+- Panel: przycisk Dev reset — czyszczenie pamięci przeglądarki i ustawienia domyślne
+
+### ai 1.10.11
+- Panel: przycisk Dev reset — czyszczenie pamięci przeglądarki i ustawienia domyślne
+
+### trained 1.9.11
+- Panel: przycisk Dev reset — czyszczenie pamięci przeglądarki i ustawienia domyślne
+
 ### bot 1.9.10
 - Panel: limit powtórzeń komunikatu B wpisywany jako liczba (0–50)
 
