@@ -10,7 +10,7 @@ import { createAiEngine } from '../ai/ai-engine.js';
 import { buildSystemPrompt } from '../ai/server/prompt.js';
 import { INTENTS, PAGES, siteFacts } from '../shared/js/knowledge.js';
 import { setPanelConfig, matchRule } from '../panel/client.js';
-import { sanitizeConfig, filterLogEntry, DEFAULT_CONFIG, wrapSettings, unwrapSettings } from '../panel/schema.js';
+import { sanitizeConfig, filterLogEntry, DEFAULT_CONFIG, wrapSettings, unwrapSettings, SETTINGS_KEYS } from '../panel/schema.js';
 import { initPanel, getPanelConfig, panelStatus } from '../panel/client.js';
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync, readdirSync } from 'node:fs';
@@ -210,6 +210,30 @@ for (const q of ['wziąłem za dużo narkotyków', 'przećpałem', 'za dużo dop
   setPanelConfig(sanitizeConfig({}));
   r = await respond(botEngine, 'chyba mam zawał', [], {});
   expect('alarmy: domyślne wracają', r.case === 'A', r.intent);
+}
+// Eksport / import: każde pole ustawień przechodzi w obie strony bez strat.
+{
+  const full = {
+    engine: { chain: ['trained', 'bot'] }, logging: { level: 2, retentionDays: 30 },
+    safety: { supportLine: true, crisisFollowup: 'unclear', crisisLimit: 3, crisisEndOnTopic: false },
+    alarms: { A: { add: ['cpalem cala noc'], remove: ['zawal*'] } },
+    services: { recepta: { price: 'od 49 zł', color: '#123456' } }, buttons: { K: ['cennik'] },
+    site: { phone: '+48 111 222 333' }, pages: { contact: 'https://example.com/kontakt' },
+    keywords: { l4: { add: ['zwolnienie na dziecko'], remove: [] } }, topics: { zdrowie: { extras: ['cennik'] } },
+    notices: [{ id: 'n1', text: 'Test', from: '2026-12-24', to: '2026-12-26', active: true }],
+    tiles: { fit: true, centerH: true, singleFit: false, fontSize: 12, padding: { t: 3, r: 3, b: 3, l: 3 } },
+    rules: [{ id: 'r1', phrases: ['parking'], text: 'Parking jest.', active: true }],
+    overrides: { cennik: { text: 'Nowy cennik.' } },
+  };
+  const a = sanitizeConfig(full);
+  const b = unwrapSettings(JSON.parse(JSON.stringify(wrapSettings(a))));
+  expect('eksport/import: pełne ustawienia bez strat', JSON.stringify(a) === JSON.stringify(b));
+  const missing = SETTINGS_KEYS.filter((k) => !(k in full));
+  expect('eksport/import: test obejmuje każde pole ustawień (dopisz nowe pole do „full”)', missing.length === 0, missing);
+  const empty = SETTINGS_KEYS.filter((k) => JSON.stringify(a[k]) === JSON.stringify(sanitizeConfig({})[k]));
+  expect('eksport/import: każde pole w teście ma wartość inną niż domyślna', empty.length === 0, empty);
+  const unknown = SETTINGS_KEYS.filter((k) => { try { unwrapSettings({ [k]: a[k] }); return false; } catch { return true; } });
+  expect('eksport/import: plik z jednym dowolnym polem jest rozpoznany', unknown.length === 0, unknown);
 }
 // Panel: ustawienia trybu kryzysowego (safety.crisisFollowup / crisisLimit / crisisEndOnTopic).
 {

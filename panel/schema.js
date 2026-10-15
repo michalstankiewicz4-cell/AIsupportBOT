@@ -386,6 +386,9 @@ export function sanitizeConfig(input) {
 // Ten sam format ma plik z eksportu w panelu i plik panel/settings.json, który czyta
 // czat — wyeksportowany plik można więc po prostu podmienić ręcznie.
 export const SETTINGS_FORMAT = 'lt-asystent-ustawienia';
+// Pola ustawień rozpoznawane przy imporcie — liczone z DEFAULT_CONFIG, więc nowe pole
+// dodane do ustawień domyślnych od razu jest tu uwzględnione.
+export const SETTINGS_KEYS = Object.keys(DEFAULT_CONFIG).filter((k) => k !== 'updatedAt');
 
 export function wrapSettings(config) {
   return {
@@ -402,8 +405,7 @@ export function unwrapSettings(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('To nie jest plik ustawień (oczekiwano obiektu JSON).');
   const cfg = data.format === SETTINGS_FORMAT || data.config ? data.config : data;
   if (!cfg || typeof cfg !== 'object') throw new Error('W pliku brakuje ustawień.');
-  const known = ['engine', 'logging', 'rules', 'overrides', 'services', 'buttons', 'site', 'pages', 'keywords', 'topics', 'notices', 'tiles'];
-  if (!known.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
+  if (!SETTINGS_KEYS.some((k) => k in cfg)) throw new Error('Plik nie zawiera ustawień asystentki (brak pól engine / logging / rules / overrides).');
   return sanitizeConfig(cfg);
 }
 
