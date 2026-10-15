@@ -534,8 +534,28 @@ export const EXTRAS_CASES = ['C', 'D'];
 //   sym     — symetria marginesów: none | vertical (góra = dół) | horizontal (lewo = prawo) | both
 //   pack    — równe odstępy w pionie (kafelki dosunięte w kolumnach, bez pustych miejsc)
 //   autoWidth — szerokość kafelka dopasowana do tekstu (zamiast 3 równych kolumn)
-export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
+//   order   — kolejność kafelków: default (z ustawień) | priced (najpierw z ceną) | cheap (od najtańszej) | expensive (od najdroższej)
+export const DEFAULT_TILES = Object.freeze({ fit: false, nobreak: false, pack: false, autoWidth: false, order: 'default', padding: Object.freeze({ t: 10, r: 11, b: 10, l: 11 }), sym: 'none' });
 export const TILES = { ...DEFAULT_TILES, padding: { ...DEFAULT_TILES.padding } };
+
+// Kolejność kafelków według ustawienia „order”. Sortowanie stabilne — przy równych cenach
+// zostaje kolejność z ustawień; kafelki bez ceny zawsze na końcu (oprócz „default”).
+export const TILE_ORDERS = ['default', 'priced', 'cheap', 'expensive'];
+export function orderTiles(tiles, order = TILES.order) {
+  if (!order || order === 'default') return tiles;
+  const price = (l) => {
+    const n = String(l.label).split(' · ')[1]?.match(/\d+/)?.[0];
+    return n ? Number(n) : null;
+  };
+  const withIdx = tiles.map((l, i) => ({ l, i, p: price(l) }));
+  withIdx.sort((a, b) => {
+    if ((a.p === null) !== (b.p === null)) return a.p === null ? 1 : -1;
+    if (order === 'cheap' && a.p !== b.p) return a.p - b.p;
+    if (order === 'expensive' && a.p !== b.p) return b.p - a.p;
+    return a.i - b.i;
+  });
+  return withIdx.map((x) => x.l);
+}
 
 // Komunikaty okresowe (np. „24–26.12 infolinia nieczynna”) — widżet pokazuje aktywne w danym dniu.
 let NOTICES = [];

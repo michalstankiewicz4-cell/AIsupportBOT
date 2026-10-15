@@ -270,6 +270,11 @@ expect('panel: kafelki — domyślnie bez zmian', JSON.stringify(sanitizeConfig(
   expect('panel: kafelki — symetria pełna i zakres 0–24 px', tl.fit && tl.nobreak && tl.padding.t === 4 && tl.padding.b === 4 && tl.padding.l === 4 && tl.padding.r === 4, tl);
   const tp = sanitizeConfig({ tiles: { pack: true, autoWidth: true, fit: 'tak' } }).tiles;
   expect('panel: kafelki — równe odstępy i szerokość do tekstu (tylko true)', tp.pack && tp.autoWidth && !tp.fit, tp);
+  const { orderTiles } = await import('../shared/js/knowledge.js');
+  const ts = [{ label: 'A · od 79 zł' }, { label: 'B' }, { label: 'C · 259 zł' }, { label: 'D · od 45 zł' }];
+  expect('kafelki: kolejność od najtańszej (bez ceny na końcu)', orderTiles(ts, 'cheap').map((x) => x.label[0]).join('') === 'DACB');
+  expect('kafelki: od najdroższej / najpierw z ceną / domyślna', orderTiles(ts, 'expensive').map((x) => x.label[0]).join('') === 'CADB' && orderTiles(ts, 'priced').map((x) => x.label[0]).join('') === 'ACDB' && orderTiles(ts, 'default') === ts);
+  expect('kafelki: zła kolejność odrzucona', !sanitizeConfig({ tiles: { order: 'xxx' } }).tiles.order && sanitizeConfig({ tiles: { order: 'cheap' } }).tiles.order === 'cheap');
   const tv = sanitizeConfig({ tiles: { sym: 'vertical', padding: { t: 6, b: 18, l: 2, r: 30 } } }).tiles;
   expect('panel: kafelki — symetria pionowa (dół = góra)', tv.padding.b === 6 && tv.padding.l === 2 && tv.padding.r === 24, tv);
 }

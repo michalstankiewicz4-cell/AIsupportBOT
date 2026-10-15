@@ -225,6 +225,7 @@ Kolorowe kafelki usług (z ceną) prowadzą prosto do formularza wybranej usług
   - *Równe odstępy w pionie* — kafelki dosunięte do siebie w kolumnach, bez pustych miejsc pod niższymi (najlepiej razem z „Dopasuj wysokość”);
   - *Szerokość dopasowana do tekstu* — kafelek tak szeroki jak napis, w rzędach zamiast 3 równych kolumn (odstępy w pionie są wtedy równe same z siebie);
   - *Bez przenoszenia pojedynczych liter* — wyraz nie jest łamany w środku, przechodzi w całości do nowej linii; gdy się nie mieści, napis jest odrobinę mniejszy;
+  - *kolejność kafelków* — domyślna (jak w ustawieniach przycisków), najpierw kafelki z ceną, od najtańszej albo od najdroższej usługi; kafelki bez ceny (np. „Umów wizytę”) przy sortowaniu są na końcu, a szare podpowiedzi („Jaki specjalista?”, „Cennik”) zawsze na samym dole;
   - *marginesy wewnętrzne* góra / dół / lewo / prawo (0–24 px) z symetrią: brak, pionowa (góra = dół), pozioma (lewo = prawo) albo pełna.
   Domyślnie wygląd jak dotąd: wszystkie przełączniki wyłączone, marginesy 10 px (góra, dół) i 11 px (boki).
 

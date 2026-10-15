@@ -3,7 +3,7 @@
 // (panel/admin/) i serwer panelu (panel/server/worker.js), więc zasady
 // są jednakowe wszędzie, a serwer i tak sprawdza wszystko ponownie.
 import { anonymize } from '../shared/js/privacy.js';
-import { SERVICES, BUTTONS, DEFAULT_TILES, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, DEFAULT_TILES, TILE_ORDERS, DEFAULT_SITE, DEFAULT_PAGES, INTENT_BY_ID, EXTRAS_CASES } from '../shared/js/knowledge.js';
 import { normalize } from '../shared/js/text.js';
 import { TEXTS } from '../shared/js/texts.js';
 
@@ -167,6 +167,7 @@ export function cleanTiles(input) {
   if (src.nobreak === true) out.nobreak = true;
   if (src.pack === true) out.pack = true;
   if (src.autoWidth === true) out.autoWidth = true;
+  if (TILE_ORDERS.includes(src.order) && src.order !== 'default') out.order = src.order;
   const sym = TILE_SYMS.includes(src.sym) ? src.sym : 'none';
   if (sym !== 'none') out.sym = sym;
   const p = { ...DEFAULT_TILES.padding };

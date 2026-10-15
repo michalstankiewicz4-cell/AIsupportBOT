@@ -15,6 +15,15 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 ## 2026-10-15
 
+### bot 1.9.4
+- Panel: kolejność kafelków — domyślna, najpierw z ceną, od najtańszej, od najdroższej (podpowiedzi zawsze na dole)
+
+### ai 1.10.4
+- Panel: kolejność kafelków — domyślna, najpierw z ceną, od najtańszej, od najdroższej (podpowiedzi zawsze na dole)
+
+### trained 1.9.4
+- Panel: kolejność kafelków — domyślna, najpierw z ceną, od najtańszej, od najdroższej (podpowiedzi zawsze na dole)
+
 ### bot 1.9.3
 - Panel: wygląd kafelków — równe odstępy w pionie (kafelki dosunięte w kolumnach) i szerokość dopasowana do tekstu (domyślnie wyłączone)
 

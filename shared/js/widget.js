@@ -4,7 +4,7 @@
 // (a nasz CSS nie psuł strony).
 // Cały tekst pacjenta i modelu wstawiamy przez textContent — nigdy innerHTML.
 import { respond } from './pipeline.js';
-import { SITE, TILES, textOf, replyFor, fill, activeNotices } from './knowledge.js';
+import { SITE, TILES, textOf, replyFor, fill, activeNotices, orderTiles } from './knowledge.js';
 import { UI_TEXTS } from './texts.js';
 import { getPanelConfig, logTurn, logClick, newSessionId } from '../../panel/client.js';
 import { isSafeUrl } from '../../panel/schema.js';
@@ -219,7 +219,10 @@ export function mountWidget(opts) {
       // informacje (cennik, kontakt, „Jaki specjalista?”) — małe szare przyciski; 112 — czerwony.
       const tiles = el('div', 'tiles');
       const links = el('div', 'links');
-      for (const l of msg.links) {
+      // Kafelki usług w kolejności z ustawień panelu; podpowiedzi (szare) i 112 — na swoich miejscach.
+      const isTile = (l) => l.kind !== 'alarm' && (l.tile || (l.main && l.kind !== 'info'));
+      const ordered = [...orderTiles(msg.links.filter(isTile)), ...msg.links.filter((l) => !isTile(l))];
+      for (const l of ordered) {
         const alarm = l.kind === 'alarm';
         const tile = !alarm && (l.tile || (l.main && l.kind !== 'info'));
         const cls = alarm ? 'link main k-alarm' : tile ? `tile${l.outline ? ' outline' : ''}` : 'link';

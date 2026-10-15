@@ -7,7 +7,7 @@ import { LOCAL_CONFIG_KEY, LOCAL_LOGS_KEY, SOURCE_KEY, SETTINGS_FILE_URL, setPan
 import { INTENT_LABELS, ENGINE_LABELS, SOURCE_LABELS, intentLabel, isUnanswered } from '../labels.js';
 import { INTENTS, defaultAnswer, SITE } from '../../shared/js/knowledge.js';
 import { TEXTS, CASE_LABELS } from '../../shared/js/texts.js';
-import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
+import { SERVICES, BUTTONS, CASE_BUTTONS, resolveButton, setDesignOverrides, PALETTE, DEFAULT_TILES, orderTiles, DEFAULT_SITE, DEFAULT_PAGES, DEFAULT_KEYWORDS, DEFAULT_EXTRAS, EXTRAS_CASES } from '../../shared/js/knowledge.js';
 import { SITE_FIELDS, IMAGE_MAX_CHARS, cleanKeyword, cleanTiles, TILE_PADDING_MAX } from '../schema.js';
 import { botEngine } from '../../bot/bot-engine.js';
 import { contrastWithWhite, applyTileStyle, layoutTiles } from '../../shared/js/widget.js';
@@ -1032,6 +1032,14 @@ function renderTilesCfg() {
   sym.addEventListener('change', () => setTiles({ ...t, sym: sym.value }));
   symF.append(labelSpan('Symetria marginesów', 'Przy symetrii zmiana jednego suwaka ustawia też przeciwny (pionowa: góra i dół; pozioma: lewo i prawo; pełna: wszystkie cztery).'), sym);
   form.append(symF);
+  // Kolejność kafelków.
+  const ordF = el('label', 'field');
+  const ord = el('select');
+  for (const [k, v] of Object.entries({ default: 'Domyślna (jak w ustawieniach przycisków)', priced: 'Najpierw kafelki z ceną', cheap: 'Od najtańszej usługi', expensive: 'Od najdroższej usługi' })) ord.append(option(k, v));
+  ord.value = t.order || 'default';
+  ord.addEventListener('change', () => setTiles({ ...t, order: ord.value }));
+  ordF.append(labelSpan('Kolejność kafelków', 'Dotyczy kafelków usług w każdej odpowiedzi. Kafelki bez ceny (np. „Umów wizytę”) przy sortowaniu trafiają na koniec. Szare podpowiedzi („Jaki specjalista?”, „Cennik”, „Kontakt”) są zawsze na samym dole, pod kafelkami.'), ord);
+  form.append(ordF);
   // Suwaki marginesów.
   const linked = (k) => {
     if (t.sym === 'both') return ['t', 'r', 'b', 'l'];
@@ -1068,7 +1076,8 @@ function renderTilesCfg() {
 
   // Podgląd — te same klasy i zmienne co w czacie.
   const preview = el('div', 'tile-preview');
-  for (const id of ['wizyta_umow', 'recepta', 'kontynuacja', 'umow_wizyte', 'l4', 'psycholog_terapeuta', 'skierowanie', 'trt', 'leki_psych']) preview.append(previewButton(id));
+  const sample = ['wizyta_umow', 'recepta', 'kontynuacja', 'umow_wizyte', 'l4', 'psycholog_terapeuta', 'skierowanie', 'trt', 'leki_psych'];
+  for (const b of orderTiles(sample.map((id) => resolveButton(id)), t.order)) preview.append(previewButton(b.id));
   const applyPreview = (tt) => {
     applyTileStyle(preview, tt);
     requestAnimationFrame(() => layoutTiles(preview, tt));
