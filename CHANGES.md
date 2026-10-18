@@ -13,6 +13,12 @@ Zgodność pilnuje: `npm run check` (uruchamiane też automatycznie przy każdym
 
 <!-- NEW ENTRIES BELOW -->
 
+## 2026-10-18
+
+### bot 1.10.8
+- Instrukcja wgrania czatu na własny serwer (docs/WDROZENIE.md) i polecenie npm run paczka
+
+
 ## 2026-10-15
 
 ### bot 1.10.7

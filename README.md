@@ -94,6 +94,7 @@ npm test            # testy: silniki, panel, serwer panelu, kontrola strony
 npm run check       # kontrola wersji, CHANGES.md i aktualności modelu
 npm run train       # trening silnika "trained" po zmianie przykładów
 npm run check-site  # kontrola strony kliniki z konsoli (linki, ceny, telefon)
+npm run paczka      # paczka czatu do wgrania na własny serwer (paczka/aisupportbot/, opis: docs/WDROZENIE.md)
 npm run bump -- <bot|ai|trained|all> <patch|minor|major> "Opis zmiany"
 ```
 
